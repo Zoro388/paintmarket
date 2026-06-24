@@ -16,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Providers>{children}</Providers>
-        <Script id="smartsupp-chat" strategy="afterInteractive">
+        {/* <Script id="smartsupp-chat" strategy="afterInteractive">
           {`
             var _smartsupp = _smartsupp || {};
             _smartsupp.key = "9ed28a42b8f0d2dcd0af12c0b8c032da08036ef7"
@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               s.parentNode.insertBefore(c, s);
             })(document);
           `}
-        </Script>
+        </Script> */}
       </body>
     </html>
   );
