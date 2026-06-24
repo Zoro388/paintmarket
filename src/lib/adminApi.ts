@@ -50,7 +50,7 @@ export const adminUpdatePainterRequestStatus = (id: string, body: { status: stri
   endpointRoute.patch(`/painter-requests/${id}`, body).then((r) => r.data);
 
 export const adminReplyPainterRequest = (id: string, body: { message: string }) =>
-  endpointRoute.post(`/painter-requests/${id}/reply`, body).then((r) => r.data);
+  endpointRoute.patch(`/painter-requests/${id}/respond`, body).then((r) => r.data);
 
 // ── SITE ESTIMATOR ────────────────────────────────────────────────────────────
 export const adminGetSiteEstimators = (params?: { page?: number; status?: string }) =>
@@ -62,8 +62,8 @@ export const adminGetSiteEstimator = (id: string) =>
 export const adminUpdateSiteEstimatorStatus = (id: string, body: { status: string }) =>
   endpointRoute.patch(`/site-estimator/${id}`, body).then((r) => r.data);
 
-export const adminReplySiteEstimator = (id: string, body: { adminResponse: string; status: string; estimateAmount: number }) =>
-  endpointRoute.patch(`/site-estimator/${id}/respond`, body).then((r) => r.data);
+// export const adminReplySiteEstimator = (id: string, body: { adminResponse: string; status: string; estimateAmount: number }) =>
+//   endpointRoute.patch(`/site-estimator/${id}/respond`, body).then((r) => r.data);
 
 // ── PORTFOLIO ─────────────────────────────────────────────────────────────────
 // export const adminCreatePortfolioProject = (body: {

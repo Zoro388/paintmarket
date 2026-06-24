@@ -6,9 +6,9 @@ import { apiSubmitContact } from "@/lib/userApi";
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle, ArrowRight } from "lucide-react";
 
 const contactInfo = [
-  { icon: Phone,  label: "Phone",   value: "+234 800 000 0000",           accent: "text-brand-accent" },
-  { icon: Mail,   label: "Email",   value: "paintmarket7@gmail.com",       accent: "text-brand-accent" },
-  { icon: MapPin, label: "Address", value: "Victoria Island, Lagos",      accent: "text-brand-accent" },
+  { icon: Phone,  label: "Phone",   value: "+234 8105 757 406",           accent: "text-brand-accent" },
+  { icon: Mail,   label: "Email",   value: "Paintdomain.ng@gmail.com",       accent: "text-brand-accent" },
+  { icon: MapPin, label: "Address", value: "Shop 81p F01 BUILDING MATERIAL MARKET KUBWA ABUJA Nigeria",      accent: "text-brand-accent" },
   { icon: Clock,  label: "Hours",   value: "Mon – Sat: 8am – 6pm WAT",   accent: "text-brand-accent" },
 ];
 
@@ -85,7 +85,7 @@ export default function ContactPage() {
             <div className="bg-brand-card border border-brand-border rounded-xl h-44
               flex flex-col items-center justify-center gap-2 mt-1">
               <MapPin size={26} className="text-brand-accent" />
-              <p className="text-brand-mid text-sm">Victoria Island, Lagos</p>
+              <p className="text-brand-mid text-sm">Shop 81p F01 BUILDING MATERIAL MARKET KUBWA ABUJA Nigeria</p>
               <p className="text-brand-subtle text-xs">6°4&apos;31&quot;N 3°24&apos;45&quot;E</p>
             </div>
           </div>

@@ -6,7 +6,6 @@ import { apiCreateSiteEstimator } from "@/lib/userApi";
 import { Calculator, CheckCircle, ClipboardList, Clock, Star, ArrowRight } from "lucide-react";
 
 const propertyTypes = ["House", "Apartment", "Office", "Commercial", "Other"];
-const projectTypes = ["Interior Painting","Exterior Painting","Full Renovation","Ceiling Work","Waterproofing","Other"];
 
 const inputCls = "w-full bg-brand-raised border border-brand-border text-white placeholder-brand-subtle px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-brand-accent/60 transition-all";
 

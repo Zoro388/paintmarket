@@ -5,11 +5,12 @@ import toast from "react-hot-toast";
 import {
   adminGetSiteEstimators,
   adminUpdateSiteEstimatorStatus,
-  adminReplySiteEstimator,
+  // adminReplySiteEstimator,
 } from "@/lib/adminApi";
 import LoadingSkeleton from "../components/Loading";
 import { formatDate, getStatusColor } from "@/lib/utils";
 import { MessageCircle, Eye, ChevronDown, Send, X, Loader, Calendar, MapPin } from "lucide-react";
+import endpointRoute from "@/lib/endpointRoute";
 
 interface SiteEstimator {
   _id: string;
@@ -27,7 +28,12 @@ interface SiteEstimator {
 
 const statuses = [ "cancelled", "quoted"];
 
+//  export const adminReplySiteEstimator = (id: string, body: { adminResponse: string; status: string; estimateAmount: number }) =>
+//   endpointRoute.patch(`/site-estimator/${id}/respond`, body).then((r) => r.data);
 
+ // Change the name here to something unique
+const localAdminReplySiteEstimator = (id: string, body: { adminResponse: string; status: string; estimateAmount: number }) =>
+  endpointRoute.patch(`/site-estimator/${id}/respond`, body).then((r) => r.data);
 
 // ─── Reply Modal ──────────────────────────────────────────────────────────────
 function ReplyModal({ estimator, onClose }: { estimator: SiteEstimator; onClose: () => void }) {
@@ -35,15 +41,25 @@ function ReplyModal({ estimator, onClose }: { estimator: SiteEstimator; onClose:
   const [sent, setSent] = useState(false);
   const [estimateAmount, setEstimateAmount] = useState(0);
 
-  const replyMutation = useMutation({
-    mutationFn: (msg: string) => adminReplySiteEstimator(estimator._id, { adminResponse: msg, status: "quoted", estimateAmount: estimateAmount }),
+ const replyMutation = useMutation({
+    mutationFn: (msg: string) => {
+      const payload = { 
+        adminResponse: msg, 
+        status: "quoted", 
+        estimateAmount: estimateAmount 
+      };
+      
+      console.log("Sending to server:", payload); // log here
+      console.log("Estimator ID:", estimator._id);
+      
+      return localAdminReplySiteEstimator(estimator._id, payload);
+    },
     onSuccess: () => {
       setSent(true);
       toast.success(`Reply sent to ${estimator.fullName}`);
     },
     onError: (err: Error) => toast.error(err.message || "Failed to send reply"),
-  });
-
+});
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />

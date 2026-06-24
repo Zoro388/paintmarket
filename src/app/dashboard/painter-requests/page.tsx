@@ -34,7 +34,7 @@ function ReplyModal({ request, onClose }: { request: PainterRequest; onClose: ()
       setSent(true);
       toast.success(`Reply sent to ${request.fullName}`);
     },
-    onError: (err: Error) => toast.error(err.message || "Failed to send reply"),
+    onError: (err: Error) => toast.error(err.message+'omo' || "Failed to send reply"),
   });
 
   return (

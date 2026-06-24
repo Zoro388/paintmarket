@@ -8,7 +8,7 @@ import { Menu, X, ChevronDown, ShoppingCart, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiGetCart, userGetStatus } from "@/lib/userApi";
 import { useQuery } from "@tanstack/react-query";
-
+import Image from "next/image";
 const navLinks = [
   { label: "Home",      href: "/" },
   { label: "Shop",      href: "/shop" },
@@ -143,7 +143,7 @@ console.log(authData)
       className={cn(
         "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
         scrolled
-          ? "bg-brand-black/96 backdrop-blur-md border-b border-brand-border/60 py-3"
+          ? "bg-brand-black/90 backdrop-blur-md border-b border-brand-border/60 py-3"
           : "bg-transparent py-5"
       )}
     >
@@ -152,13 +152,15 @@ console.log(authData)
 
           {/* Logo */}
           <Link href="/" className="flex flex-col leading-none group">
-            <span className="text-white font-display text-xl font-bold tracking-tight
+            {/* <span className="text-white font-display text-xl font-bold tracking-tight
               group-hover:text-brand-accent transition-colors duration-200">
               Paint Domain
             </span>
             <span className="text-brand-accent text-[10px] tracking-[0.18em] uppercase font-medium">
               &amp; Primary Interior Builders
-            </span>
+            </span> */}
+          <Image 
+          src={'https://scontent.fiba2-2.fna.fbcdn.net/v/t39.30808-6/547504351_732447909817246_5335740926313215272_n.jpg?stp=dst-jpg_tt6&cstp=mx1014x1024&ctp=s1014x1024&_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeHkm6KVGw4FrvX_3hOh0FAPpYn_R0DvznClif9HQO_OcOXujRrTf026cgx9L_tLfX825tzLyfpruOpva4KwwcPN&_nc_ohc=4aC3emvt2-4Q7kNvwGSqbS_&_nc_oc=Adpew1ftMAOiEJJrYAJpnhDlOopNntcaIMGHYGgzIqEGfMDfp74Vw1p7ZRc2lItFRxA&_nc_zt=23&_nc_ht=scontent.fiba2-2.fna&_nc_gid=2ORWPfAlxrGpj6njokt6Jw&_nc_ss=7b2a8&oh=00_Af-6EEEB5Pn_2RUlm-mi4ohSpsYD5pN3muxq40movpVCaA&oe=6A41F3CE'} className="h-10 object-cover" alt="logo" height={50} width={100} />
           </Link>
 
           {/* Desktop nav */}

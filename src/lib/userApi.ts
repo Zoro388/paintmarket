@@ -161,4 +161,4 @@ export const apiResetPassword = (body: {
 }) => endpointRoute.put("auth/forgot-password", body).then((r) => r.data);
 
 export const apiSetNewPassword = (body: { token: string; password: string }) =>
-  endpointRoute.post("auth/reset-password", body).then((r) => r.data);
+  endpointRoute.put("auth/reset-password", body).then((r) => r.data);

@@ -26,10 +26,12 @@ const footerLinks = {
 };
 
 const socials = [
-  { icon: Facebook,  href: "#", label: "Facebook" },
-  { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Twitter,   href: "#", label: "Twitter" },
-  { icon: Youtube,   href: "#", label: "YouTube" },
+  { icon: Facebook,  href: "https://www.facebook.com/share/18jU4qaeHY/", label: "Facebook" },
+
+
+  { icon: Instagram, href: "https://www.instagram.com/smart.choiceinteriors?igsh=MXE5NDhvdTV2Z3AxYQ==", label: "Instagram" },
+  // { icon: Twitter,   href: "#", label: "Twitter" },
+  // { icon: Youtube,   href: "#", label: "YouTube" },
 ];
 
 export default function Footer() {
@@ -110,6 +112,7 @@ export default function Footer() {
                 <a
                   key={label}
                   href={href}
+                  target="blank"
                   aria-label={label}
                   className="w-8 h-8 rounded-full border border-brand-border flex items-center
                     justify-center text-brand-mid hover:text-brand-accent hover:border-brand-accent
@@ -148,7 +151,7 @@ export default function Footer() {
           items-start md:items-center gap-4 md:gap-8">
           {[
             { icon: Phone,  text: "+234 8105 757 406" },
-            { icon: Mail,   text: "paintmarket7@gmail.com" },
+            { icon: Mail,   text: "Paintdomain.ng@gmail.com" },
             { icon: MapPin, text: "Shop 81p F01 BUILDING MATERIAL MARKET KUBWA ABUJA Nigeria" },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-2 text-brand-mid text-sm">

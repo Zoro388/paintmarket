@@ -2,24 +2,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, ShoppingCart, Users, X, LogOut, Package,Brush,Calculator,ImageIcon, FileText,Mail,MessageSquare,CreditCard } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Users, X, LogOut } from "lucide-react";
 import { clearToken } from "@/lib/endpointRoute";
 
 const navItems = [
-  { label: "Overview",          href: "/dashboard",                   icon: LayoutDashboard },
-  { label: "Products",          href: "/dashboard/products",          icon: Package },
-  { label: "Orders",            href: "/dashboard/orders",            icon: ShoppingCart },
-  // { label: "Customers",         href: "/dashboard/customers",         icon: Users },
-  { label: "Painter Requests",  href: "/dashboard/painter-requests",  icon: Brush },
-  { label: "Site Estimators",   href: "/dashboard/site-estimators",   icon: Calculator },
-  { label: "Portfolio",         href: "/dashboard/portfolio",         icon: ImageIcon },
-  // { label: "Blog",              href: "/dashboard/blog",              icon: FileText },
-  { label: "Newsletter",        href: "/dashboard/newsletter",        icon: Mail },
-  { label: "Contact",           href: "/dashboard/contact",           icon: MessageSquare },
-    { label: "Profile",       href: "/dashboard/profile",      icon: Users },
-
-  // { label: "Payments",          href: "/dashboard/payments",          icon: CreditCard },
-  // { label: "Leads",             href: "/dashboard/leads",             icon: Users },
+  { label: "Overview",      href: "/user-dashboard",              icon: LayoutDashboard },
+  { label: "Order History", href: "/user-dashboard/orderhistory", icon: ShoppingCart },
+  { label: "Profile",       href: "/user-dashboard/profile",      icon: Users },
 ];
 
 interface Props { mobileOpen?: boolean; onClose?: () => void; }
