@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ────────────────────────────────────────────────────────── */
+:root {
+  --brand-black:       #13110F; /* deep charcoal background */
+  --brand-surface:     #1F1C19; /* subtle surface */
+  --brand-card:        #1C1916; /* card backgrounds */
+  --brand-raised:      #2E2A26; /* slightly raised surfaces */
+  --brand-border:      #4B4640; /* borders */
+  --brand-border-lt:   #625C55; /* lighter borders */
+  --brand-white:       #F5F2E9; /* primary text (light) */
+  --brand-lt-gray:     #BDB6AA; /* secondary text */
+  --brand-mid:         #9C9387; /* muted text */
+  --brand-subtle:      #7E776D; /* subtle labels */
+  --brand-accent:      #D4AF37; /* gold accent */
+  --brand-accent-lt:   #F0DA93; /* light gold */
+  --brand-accent-dk:   #A67C1D; /* dark gold */
+  --brand-accent-muted:#5A4516; /* muted/darker accent */
+}
+
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: var(--brand-black);
+  color: var(--brand-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar              { width: 8px; height: 8px; }
+::-webkit-scrollbar-track        { background: var(--brand-surface); }
+::-webkit-scrollbar-thumb        { background: var(--brand-border-lt); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover  { background: var(--brand-accent); }
+
+/* ── Focus ────────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
+/* ── Typography upgrades ──────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--brand-white);
+  letter-spacing: -0.01em;
+}
+
+/* ── Selection ───────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(212, 175, 120, 0.28);
+  color: var(--brand-white);
+}
+
+/* ── Utility: accent underline ────────────────────────────────────────────── */
+.accent-underline {
+  text-decoration: underline;
+  text-decoration-color: var(--brand-accent);
+  text-underline-offset: 4px;
+}
+
+/* ── Utility: glass card  ─────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 0.5px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(8px);
+}
+
+/* ── Noise texture overlay (subtle premium feel) ──────────────────────────── */
+.noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── Animation delays ─────────────────────────────────────────────────────── */
+@layer utilities {
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+}
+
+/* ── Prose on light cream backgrounds ────────────────────────────────────── */
+.on-light { color: #1C1C1C; }
+.on-light h1, .on-light h2, .on-light h3 { color: #0F0F0F; }
+.on-light p  { color: #444444; }
+
+/* Override some Tailwind utilities so 'text-white' maps to brand primary text on the new light background */
+.text-white { color: var(--brand-white) !important; }
+.hover\:text-white:hover { color: var(--brand-white) !important; }
+.group:hover .group-hover\:text-white { color: var(--brand-white) !important; }
+
