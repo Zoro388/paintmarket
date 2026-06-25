@@ -167,3 +167,31 @@ export const adminReplyContact = (id: string, body: { adminResponse: string;  })
 
 export const adminUpdateContactResponse = (id: string, body: { adminResponse: string; status: string }) =>
   endpointRoute.patch(`/contact/${id}/respond`, body).then((r) => r.data);
+
+//  ,  
+export const apiCreateTool = (formData: FormData) =>
+  endpointRoute.post("/tools", formData, {
+    headers: { "Content-Type": undefined }, // Let Axios/browser set multipart boundary automatically
+  }).then((r) => r.data);
+
+  // export const apiUpdateTool = (id: string, body: { name: string; description: string }) =>
+  // endpointRoute.put(`/tools/${id}/`, body).then((r) => r.data);
+
+  // Update your API helper definition to allow FormData
+export const apiUpdateTool = (id: string, body: FormData) =>
+  endpointRoute.put(`/tools/${id}/`, body).then((r) => r.data);
+
+  export const apiDeleteTool = (id: string) =>
+  endpointRoute.put(`/tools/${id}/`).then((r) => r.data);
+
+  export const apiGetTools = () =>
+  endpointRoute.get("/tools").then((r) => r.data);
+
+
+  // omoh
+  
+  // send campaign,
+  export const apiSendCampaign = (body: {
+  title: string; message: string; buttonText: string;
+  buttonLink: string;
+}) => endpointRoute.post("/newsletter/send-campaign", body).then((r) => r.data);

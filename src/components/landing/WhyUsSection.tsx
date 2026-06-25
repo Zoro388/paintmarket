@@ -5,7 +5,7 @@ const reasons = [
   { icon: Clock,  title: "Fast Turnaround",       desc: "Same-day delivery in Lagos, next-day delivery across major Nigerian cities." },
   { icon: Star,   title: "Premium Brands",        desc: "We stock Nigeria's best paint brands alongside exclusive Paint Domain formulations." },
   { icon: Award,  title: "Certified Painters",    desc: "Our painter network is background-checked, trained, and fully insured." },
-  { icon: Truck,  title: "Free Delivery",         desc: "Free nationwide delivery on orders above ₦50,000. No hidden charges." },
+  { icon: Truck,  title: "2-3 days Delivery",         desc: "nationwide delivery between 1-2 days." },
   { icon: Users,  title: "Expert Support",        desc: "Dedicated support team available Mon–Sat to answer all your paint questions." },
 ];
 

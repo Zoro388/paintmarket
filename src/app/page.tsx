@@ -6,15 +6,19 @@ import WhyUsSection from "@/components/landing/WhyUsSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import CTASection from "@/components/landing/CTASection";
 import Link from "next/link";
-
+import ToolsSection from "@/components/landing/Tools";
+import FAQSection from "@/components/landing/FaqSection";
 export default function HomePage() {
   return (
     <main>
       <Navbar />
       <HeroSection />
       <ServicesSection />
+      <ToolsSection /> 
       <WhyUsSection />
       <TestimonialsSection />
+      <FAQSection />       
+
       <CTASection />
       <Footer />
       <Link 

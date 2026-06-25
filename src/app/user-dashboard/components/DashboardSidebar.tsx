@@ -2,13 +2,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, ShoppingCart, Users, X, LogOut } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Users, X, LogOut, ShoppingBag } from "lucide-react";
 import { clearToken } from "@/lib/endpointRoute";
 
 const navItems = [
   { label: "Overview",      href: "/user-dashboard",              icon: LayoutDashboard },
   { label: "Order History", href: "/user-dashboard/orderhistory", icon: ShoppingCart },
-  { label: "Profile",       href: "/user-dashboard/profile",      icon: Users },
+  { label: "Shop",       href: "/shop",      icon: ShoppingBag },
+    { label: "Profile",       href: "/user-dashboard/profile",      icon: Users },
+
 ];
 
 interface Props { mobileOpen?: boolean; onClose?: () => void; }

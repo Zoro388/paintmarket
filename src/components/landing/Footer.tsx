@@ -55,7 +55,7 @@ export default function Footer() {
     <footer className="bg-brand-surface border-t border-brand-border/50">
 
       {/* Newsletter banner */}
-      <div className="bg-brand-accent">
+      <div className="bg-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>

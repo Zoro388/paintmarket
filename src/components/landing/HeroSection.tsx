@@ -70,7 +70,7 @@ export default function HeroSection() {
             {/* Stats row */}
             <div className="flex flex-wrap gap-8 pt-7 border-t border-brand-border/60">
               {[
-                { value: "2,000+", label: "Projects Completed" },
+                { value: "800+", label: "Projects Completed" },
                 { value: "200+",   label: "Paint Colours" },
                 { value: "98%",    label: "Client Satisfaction" },
               ].map((s) => (

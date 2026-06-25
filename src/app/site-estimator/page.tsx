@@ -66,15 +66,13 @@ export default function SiteEstimatorPage() {
           backgroundSize:"52px 52px",
         }}>
         <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-emerald-950/50 border border-emerald-800/40 text-emerald-400 text-xs font-semibold tracking-widest uppercase px-4 py-2 rounded-full mb-5">
-            Free Service
-          </div>
+         
           <h1 className="font-display text-5xl font-bold text-white mb-4 leading-tight">
             Book a Site Estimator
           </h1>
           <p className="text-brand-mid text-lg max-w-xl mx-auto mb-8">
             Our expert estimators visit your property, assess the scope, and provide an accurate
-            material &amp; labour estimate — completely free, no obligation.
+            material &amp; labour estimate
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             {perks.map(({ icon: Icon, label }) => (

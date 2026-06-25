@@ -3,7 +3,7 @@ import { ArrowRight, Phone } from "lucide-react";
 
 export default function CTASection() {
   return (
-    <section className="bg-brand-accent py-20 px-4 sm:px-6 lg:px-8">
+    <section className="bg-gray-100 py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="font-display text-4xl sm:text-5xl font-bold text-brand-black mb-5 leading-tight">
           Ready to Transform Your Space?
