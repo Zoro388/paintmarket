@@ -1,3 +1,6 @@
+
+
+
 "use client";
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,59 +13,140 @@ interface Tool {
   id?: string;
   name: string;
   description: string;
-  image?: string;
+  images?: string[];
 }
 
 const inputCls =
-  "w-full bg-brand-black border border-brand-mid/40 text-white placeholder-brand-mid px-3 py-2.5 rounded-lg text-sm focus:outline-none focus:border-brand-accent/60 transition-all";
+  "w-full bg-brand-black border border-brand-mid text-white placeholder-brand-mid px-3 py-2 rounded-md text-sm focus:outline-none focus:border-brand-accent";
 
-// ── Create / Edit Modal ────────────────────────────────────────────────────────
-function ToolFormModal({
-  tool,
-  onClose,
-}: {
-  tool?: Tool;
-  onClose: () => void;
-}) {
+// ── Create / Edit Modal ── follows the SAME pattern as ProductFormModal ────────
+function ToolFormModal({ tool, onClose }: { tool?: Tool; onClose: () => void }) {
   const qc = useQueryClient();
   const isEdit = !!tool;
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Plain controlled state — same as product form
   const [name, setName] = useState(tool?.name ?? "");
   const [description, setDescription] = useState(tool?.description ?? "");
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string>(tool?.image ?? "");
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>(tool?.images ?? []);
 
-  const mutation = useMutation({
-    mutationFn: () => {
-      const fd = new FormData();
-      fd.append("name", name);
-      fd.append("description", description);
-      if (file) fd.append("image", file);
-      return isEdit
-        ? apiUpdateTool(tool!._id ?? tool!.id!, fd)
-        : apiCreateTool(fd);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tools"] });
-      toast.success(isEdit ? "Tool updated" : "Tool created");
-      onClose();
-    },
-    onError: (err: Error) => toast.error(err.message || "Operation failed"),
-  });
+  console.log('name', name, "description", description, "previews", previews)
+  // Mutation reads directly from state at call time — same as product pattern
+  // const mutation = useMutation({
+  //   mutationFn: async () => {
+  //     const fd = new FormData();
+  //     fd.append("name", name);
+  //     fd.append("description", description);
+  //     // Append each selected file under the "images" key — exactly what backend expects
+  //     files.forEach((file) => fd.append("image", file));
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
+  //     return isEdit
+  //       ? apiUpdateTool(tool!._id ?? tool!.id!, fd)
+  //       : apiCreateTool(fd);
+  //   },
+  //   onSuccess: () => {
+  //     qc.invalidateQueries({ queryKey: ["tools"] });
+  //     toast.success(isEdit ? "Tool updated" : "Tool created");
+  //     onClose();
+  //   },
+  //   onError:(err: Error) =>{ toast.error(err.message || "Operation failed"), console.log(err)}
+  // });
+
+  // Mutation reads directly from state at call time
+const mutation = useMutation({
+  mutationFn: async () => {
+    const fd = new FormData();
+    fd.append("name", name);
+    fd.append("description", description);
+
+    // Append new uploaded files under the exact key "images"
+    files.forEach((file) => {
+      fd.append("images", file);
+    });
+
+    // 💡 IMPORTANT: If your backend endpoint for UPDATING requires the 
+    // existing images to be sent back when no new files are uploaded:
+    if (isEdit && files.length === 0) {
+      const existingUrls = previews.filter((p) => !p.startsWith("blob:"));
+      
+      // If your backend accepts the existing array of URLs under "images":
+      existingUrls.forEach((url) => fd.append("images", url));
+      
+      // ALTERNATIVE: If your backend update endpoint breaks when "images" contains a string URL 
+      // instead of a file binary, you might need a separate field like:
+      // fd.append("existingImages", JSON.stringify(existingUrls));
+    }
+
+    return isEdit
+      ? apiUpdateTool(tool!._id ?? tool!.id!, fd)
+      : apiCreateTool(fd);
+  },
+  onSuccess: () => {
+    qc.invalidateQueries({ queryKey: ["tools"] });
+    toast.success(isEdit ? "Tool updated" : "Tool created");
+    onClose();
+  },
+  onError: (err: Error) => { 
+    toast.error(err.message || "Operation failed");
+    console.error("Backend Error Details:", err);
+  }
+});
+
+// Update your submit button check to match
+const handleSubmit = () => {
+  if (!name.trim()) { toast.error("Tool name is required"); return; }
+  if (!description.trim()) { toast.error("Description is required"); return; }
+  console.log("Raw files being sent to backend:", files);
+  // Create mode requires at least one brand new file
+  if (!isEdit && files.length === 0) { 
+    toast.error("Please upload at least one image"); 
+    return; 
+  }
+  
+  // Edit mode requires either an existing preview OR a new file
+  if (isEdit && previews.length === 0 && files.length === 0) {
+    toast.error("An edited tool must retain or add at least one image");
+    return;
+  }
+
+  mutation.mutate();
+};
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = e.target.files ? Array.from(e.target.files) : [];
+    if (!picked.length) return;
+    setFiles((prev) => [...prev, ...picked]);
+    setPreviews((prev) => [...prev, ...picked.map((f) => URL.createObjectURL(f))]);
+    e.target.value = ""; // allow re-selecting same file
   };
+
+  const removeImage = (idx: number) => {
+    // Revoke blob URL to avoid memory leak
+    if (previews[idx]?.startsWith("blob:")) {
+      URL.revokeObjectURL(previews[idx]);
+      // Find its position among blob-only previews to remove the matching file
+      const blobPreviews = previews.filter((p) => p.startsWith("blob:"));
+      const blobIdx = blobPreviews.indexOf(previews[idx]);
+      if (blobIdx !== -1) setFiles((prev) => prev.filter((_, i) => i !== blobIdx));
+    }
+    setPreviews((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  // Inline validation on click — same style as product's onClick handler
+  // const handleSubmit = () => {
+  //   if (!name.trim()) { toast.error("Tool name is required"); return; }
+  //   if (!description.trim()) { toast.error("Description is required"); return; }
+  //   if (!isEdit && files.length === 0) { toast.error("Please upload at least one image"); return; }
+  //   mutation.mutate();
+  // };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 bg-brand-card border border-brand-mid/40 rounded-xl shadow-2xl w-full max-w-md animate-fade-in">
-        <div className="flex items-center justify-between p-5 border-b border-brand-mid/20 sticky top-0 bg-brand-card z-10">
+      <div className="relative z-10 bg-brand-card border border-brand-mid rounded-xl shadow-2xl
+        w-full max-w-lg animate-fade-in max-h-[90vh] overflow-y-auto">
+
+        <div className="flex items-center justify-between p-5 border-b border-brand-mid/30 sticky top-0 bg-brand-card z-10">
           <h3 className="font-display text-lg font-bold text-white">
             {isEdit ? "Edit Tool" : "Add New Tool"}
           </h3>
@@ -72,36 +156,6 @@ function ToolFormModal({
         </div>
 
         <div className="p-5 flex flex-col gap-4">
-          {/* Image upload */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-brand-lt-gray text-xs font-medium">Tool Image</label>
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="relative w-full h-36 border border-dashed border-brand-mid/40 rounded-lg
-                flex flex-col items-center justify-center gap-2 text-brand-mid
-                hover:border-brand-accent/60 hover:text-white transition-colors overflow-hidden"
-            >
-              {preview ? (
-                <img src={preview} alt="preview" className="absolute inset-0 w-full h-full object-cover rounded-lg" />
-              ) : (
-                <>
-                  <Upload size={22} />
-                  <span className="text-xs">Click to upload image</span>
-                </>
-              )}
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleFile} />
-            {preview && (
-              <button
-                type="button"
-                onClick={() => { setFile(null); setPreview(""); }}
-                className="text-brand-subtle text-xs hover:text-red-400 transition-colors text-left"
-              >
-                Remove image
-              </button>
-            )}
-          </div>
 
           {/* Name */}
           <div className="flex flex-col gap-1.5">
@@ -126,25 +180,64 @@ function ToolFormModal({
             />
           </div>
 
-          <div className="flex gap-3 pt-1">
+          {/* Images */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-brand-lt-gray text-xs font-medium">
+              Images {!isEdit && <span className="text-red-400">*</span>}
+            </label>
+
+            {/* Upload trigger */}
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="flex items-center justify-center gap-2 border border-dashed border-brand-mid
+                text-brand-mid hover:border-brand-accent hover:text-white rounded-md py-3 text-sm transition-colors"
+            >
+              <Upload size={15} /> Click to upload images
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={handleFileChange}
+            />
+
+            {/* Previews */}
+            {previews.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                {previews.map((src, i) => (
+                  <div key={i} className="relative aspect-square rounded-md overflow-hidden border border-brand-mid group">
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute top-1 right-1 bg-black/70 hover:bg-red-600 text-white
+                        rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={11} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 mt-2">
             <button
               onClick={onClose}
-              className="flex-1 border border-brand-mid/40 text-brand-mid py-2.5 rounded-lg text-sm
+              className="flex-1 border border-brand-mid text-brand-mid py-2.5 rounded-md text-sm
                 hover:border-white hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
-              onClick={() => {
-                if (!name.trim() || !description.trim()) {
-                  toast.error("Name and description are required");
-                  return;
-                }
-                mutation.mutate();
-              }}
+              onClick={handleSubmit}
               disabled={mutation.isPending}
               className="flex-1 flex items-center justify-center gap-2 bg-brand-accent text-brand-black
-                font-semibold py-2.5 rounded-lg text-sm hover:bg-brand-accent-lt transition-colors disabled:opacity-50"
+                font-semibold py-2.5 rounded-md text-sm hover:bg-brand-accent-lt transition-colors disabled:opacity-50"
             >
               {mutation.isPending ? <Loader size={15} className="animate-spin" /> : <Plus size={15} />}
               {mutation.isPending ? "Saving..." : isEdit ? "Update Tool" : "Add Tool"}
@@ -185,7 +278,6 @@ export default function ToolsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-white">Tools</h1>
@@ -200,7 +292,6 @@ export default function ToolsPage() {
         </button>
       </div>
 
-      {/* Grid */}
       {isLoading ? (
         <div className="py-16 flex justify-center">
           <Loader size={28} className="animate-spin text-brand-accent" />
@@ -209,10 +300,7 @@ export default function ToolsPage() {
         <div className="py-16 flex flex-col items-center gap-3">
           <Wrench size={40} className="text-brand-mid" />
           <p className="text-brand-mid text-sm">No tools added yet</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="text-brand-accent text-sm font-medium hover:underline"
-          >
+          <button onClick={() => setShowForm(true)} className="text-brand-accent text-sm font-medium hover:underline">
             Add your first tool
           </button>
         </div>
@@ -220,34 +308,26 @@ export default function ToolsPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {list.map((tool) => {
             const id = tool._id ?? tool.id!;
+            const hasImages = tool.images && tool.images.length > 0;
             return (
-              <div
-                key={id}
-                className="bg-brand-card border border-brand-mid/30 rounded-xl overflow-hidden
-                  hover:border-brand-accent/30 transition-all group flex flex-col"
-              >
-                {/* Image */}
-                <div className="h-36 bg-brand-raised flex items-center justify-center overflow-hidden">
-                  {tool.image ? (
-                    <img
-                      src={tool.image}
-                      alt={tool.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Wrench size={32} className="text-brand-mid/30" />
+              <div key={id} className="bg-brand-card border border-brand-mid/30 rounded-xl overflow-hidden
+                hover:border-brand-accent/30 transition-all group flex flex-col">
+                <div className="h-36 bg-brand-raised flex items-center justify-center overflow-hidden relative">
+                  {hasImages
+                    ? <img src={tool.images![0]} alt={tool.name} className="w-full h-full object-cover" />
+                    : <Wrench size={32} className="text-brand-mid/30" />
+                  }
+                  {hasImages && tool.images!.length > 1 && (
+                    <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                      +{tool.images!.length - 1} more
+                    </span>
                   )}
                 </div>
-
-                {/* Content */}
                 <div className="p-4 flex flex-col gap-2 flex-1">
                   <h3 className="text-white font-semibold text-sm leading-snug group-hover:text-brand-accent transition-colors">
                     {tool.name}
                   </h3>
-                  <p className="text-brand-mid text-xs leading-relaxed line-clamp-2 flex-1">
-                    {tool.description}
-                  </p>
-                  {/* Actions */}
+                  <p className="text-brand-mid text-xs leading-relaxed line-clamp-2 flex-1">{tool.description}</p>
                   <div className="flex gap-2 pt-2 border-t border-brand-mid/20 mt-auto">
                     <button
                       onClick={() => { setEditTool(tool); setShowForm(true); }}
@@ -257,9 +337,7 @@ export default function ToolsPage() {
                       <Pencil size={12} /> Edit
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm("Delete this tool?")) deleteMutation.mutate(id);
-                      }}
+                      onClick={() => { if (confirm("Delete this tool?")) deleteMutation.mutate(id); }}
                       className="flex-1 flex items-center justify-center gap-1.5 text-red-500
                         hover:text-red-400 hover:bg-red-900/10 py-1.5 rounded-md text-xs transition-colors"
                     >
@@ -273,7 +351,6 @@ export default function ToolsPage() {
         </div>
       )}
 
-      {/* Modal */}
       {(showForm || editTool) && (
         <ToolFormModal
           tool={editTool}

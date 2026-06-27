@@ -26,6 +26,7 @@ function ResetPasswordForm() {
     }
   }, [token]);
 
+  console.log('token',token)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -46,17 +47,20 @@ function ResetPasswordForm() {
     }
 
     setLoading(true);
+   
     try {
-      await apiSetNewPassword({ token, password });
-      setSuccess(true);
-      setTimeout(() => {
-        router.push("/login");
-      }, 3000);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to reset password");
-    } finally {
-      setLoading(false);
-    }
+  // Pass the token first, followed by the body object
+  await apiSetNewPassword(token, { password, confirmPassword });
+  
+  setSuccess(true);
+  setTimeout(() => {
+    router.push("/login");
+  }, 3000);
+} catch (err: unknown) {
+  setError(err instanceof Error ? err.message : "Failed to reset password");
+} finally {
+  setLoading(false);
+}
   };
 
   return (
@@ -86,7 +90,6 @@ function ResetPasswordForm() {
             </span>
           </Link>
         </div>
-
         {/* Card */}
         <div className="bg-brand-card border border-brand-border rounded-2xl p-8 shadow-2xl">
           {!tokenValid ? (

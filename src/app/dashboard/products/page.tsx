@@ -16,12 +16,7 @@ interface Product {
 
 const CATS = ["Interior","Exterior","Primer/Undercoat","Textured","Waterproof","Anti-Rust","Floor Coating"];
 
-const MOCK: Product[] = [
-  { _id: "p1", productName: "Premium Interior Emulsion", productCategory: "Interior", productDescription: "High quality washable emulsion for interior walls.", productImages: [], colourCode: "#F5F0E8", colourName: "Cream White", price: 18500, stockQuantity: 240, coverageInformation: "12–14 m² per litre", productFeatures: ["Washable","Low VOC","Fast Dry"], status: "active" },
-  { _id: "p2", productName: "WeatherShield Exterior Gloss", productCategory: "Exterior", productDescription: "Durable weather-resistant exterior paint.", productImages: [], colourCode: "#6B6B6B", colourName: "Mid Grey", price: 22000, stockQuantity: 180, coverageInformation: "10–12 m² per litre", productFeatures: ["UV Resistant","Waterproof","Anti-Fungal"], status: "active" },
-  { _id: "p3", productName: "Luxury Matt Finish", productCategory: "Interior", productDescription: "Smooth matt finish for a sophisticated look.", productImages: [], colourCode: "#C9A84C", colourName: "Gold Sand", price: 25000, stockQuantity: 85, coverageInformation: "13–15 m² per litre", productFeatures: ["Luxury Finish","Scrubbable","Non-Reflective"], status: "active" },
-  { _id: "p4", productName: "Anti-Rust Industrial Paint", productCategory: "Anti-Rust", productDescription: "Heavy duty corrosion protection for metal.", productImages: [], colourCode: "#8B0000", colourName: "Red Oxide", price: 32000, stockQuantity: 40, coverageInformation: "8–10 m² per litre", productFeatures: ["Rust Prevention","High Adhesion","Chemical Resistant"], status: "inactive" },
-];
+
 
 const EMPTY_FORM = { productName:"", productCategory:"", productDescription:"", colourCode:"#C9A84C", colourName:"", price:0, stockQuantity:0, coverageInformation:"", productFeatures:"", status:"active" as "active"|"inactive" };
 

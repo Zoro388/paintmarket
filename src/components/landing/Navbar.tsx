@@ -20,6 +20,8 @@ const navLinks = [
       { label: "Site Estimator",    href: "/site-estimator" },
     ],
   },
+    { label: "Tools", href: "/tools" },
+
   { label: "Contact", href: "/contact" },
 ];
 
@@ -152,21 +154,21 @@ console.log(authData)
 
           {/* Logo */}
           <Link href="/" className="flex flex-col rounded-lg leading-none group">
-            {/* <span className="text-white font-display text-xl font-bold tracking-tight
+            <span className="text-white font-display text-xl font-bold tracking-tight
               group-hover:text-brand-accent transition-colors duration-200">
               Paint Domain
             </span>
             <span className="text-brand-accent text-[10px] tracking-[0.18em] uppercase font-medium">
               &amp; Primary Interior Builders
-            </span> */}
-          <Image 
+            </span>
+          {/* <Image 
           src={"https://www.image2url.com/r2/default/images/1782374205744-637a3eeb-522f-45bb-8406-b9fa513d453f.png"}
            alt="logo"
                className="h-10  object-cover rounded-md"
      height={40} 
      width={100} 
 
-           />
+           /> */}
           </Link>
 
           {/* Desktop nav */}

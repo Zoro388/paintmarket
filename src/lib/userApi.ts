@@ -129,7 +129,8 @@ export const apiGetCart = () =>
   endpointRoute.get("/cart").then((r) => r.data);
 
 export const apiUpdateCartItem = (id: string, body: { quantity: number }) =>
-  endpointRoute.put(`/cart/${id}`, body).then((r) => r.data);
+  endpointRoute.patch(`/cart/${id}`, body).then((r) => r.data);
+
 
 export const apiRemoveFromCart = (id: string) =>
   endpointRoute.delete(`/cart/${id}`).then((r) => r.data);
@@ -160,5 +161,5 @@ export const apiResetPassword = (body: {
   
 }) => endpointRoute.put("auth/forgot-password", body).then((r) => r.data);
 
-export const apiSetNewPassword = (body: { token: string; password: string }) =>
-  endpointRoute.put("auth/reset-password", body).then((r) => r.data);
+export const apiSetNewPassword = (token:string,body: { password: string,confirmPassword:string }) =>
+  endpointRoute.put(`auth/reset-password?${`token=${token}`}`, body).then((r) => r.data);

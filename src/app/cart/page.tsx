@@ -158,13 +158,11 @@ export default function CartPage() {
     );
   };
 
-  const removeItem = (id: string) => {
-    setCart((prev) => prev.filter((item) => item.product._id !== id));
-  };
+ 
 
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  const deliveryFee = subtotal > 50000 || subtotal === 0 ? 0 : 3500;
-  const total = subtotal + deliveryFee;
+  // const deliveryFee = subtotal > 50000 || subtotal === 0 ? 0 : 3500;
+  const total = subtotal;
 
   const canGoToDelivery = cart.length > 0;
   const canGoToPayment = Boolean(
@@ -772,7 +770,7 @@ export default function CartPage() {
                 </span>
                 <span className="text-white font-medium">{formatCurrency(subtotal)}</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
+              {/* <div className="flex items-center justify-between text-sm">
                 <span className="text-brand-mid">Delivery Fee</span>
                 <span className="text-white font-medium">
                   {deliveryFee === 0 ? (
@@ -781,7 +779,7 @@ export default function CartPage() {
                     formatCurrency(deliveryFee)
                   )}
                 </span>
-              </div>
+              </div> */}
               {/* {subtotal > 0 && subtotal <= 50000 && (
                 <p className="text-[11px] text-brand-subtle leading-normal">
                   Add{" "}

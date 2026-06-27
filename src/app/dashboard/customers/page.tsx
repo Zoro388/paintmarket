@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import {
   apiSendCampaign,
   // apiSendUserMessage,
-  adminGetSubscribers,
+  adminGetAllUsers,
 } from "@/lib/adminApi";
 import { Send, Users, User, X, Loader, Mail, Link2, Type, AlignLeft } from "lucide-react";
 
@@ -29,12 +29,14 @@ export default function NewsletterCampaignPage() {
 
   // Fetch subscribers for single-user picker
   const { data: subData, isLoading: subLoading } = useQuery({
-    queryKey: ["newsletter-subscribers"],
+    queryKey: ["users"],
     queryFn: async () => {
-      const res = (await adminGetSubscribers()) as {
+      const res = (await adminGetAllUsers()) as {
+        
         subscribers?: Subscriber[] | boolean;
         count?: number;
       };
+      console.log('users',res)
       const list: Subscriber[] = Array.isArray(res?.subscribers) ? res.subscribers : [];
       return list;
     },

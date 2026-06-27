@@ -2,7 +2,7 @@ import axios from "axios";
 
 const endpointRoute = axios.create({
   baseURL: "https://paint-market-backend.onrender.com/api",
-  headers: { "Content-Type": "application/json" },
+  // headers: { "Content-Type": "application/json" },
 });
 
 // Attach JWT token from localStorage on every request

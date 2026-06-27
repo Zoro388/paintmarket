@@ -169,17 +169,17 @@ export const adminUpdateContactResponse = (id: string, body: { adminResponse: st
   endpointRoute.patch(`/contact/${id}/respond`, body).then((r) => r.data);
 
 //  ,  
-export const apiCreateTool = (formData: FormData) =>
-  endpointRoute.post("/tools", formData, {
-    headers: { "Content-Type": undefined }, // Let Axios/browser set multipart boundary automatically
-  }).then((r) => r.data);
 
+
+  // ✅ Fix: Let Axios handle it completely by removing the headers object
+export const apiCreateTool = (formData: FormData) =>
+  endpointRoute.post("/tools", formData).then((r) => r.data);
   // export const apiUpdateTool = (id: string, body: { name: string; description: string }) =>
   // endpointRoute.put(`/tools/${id}/`, body).then((r) => r.data);
 
   // Update your API helper definition to allow FormData
-export const apiUpdateTool = (id: string, body: FormData) =>
-  endpointRoute.put(`/tools/${id}/`, body).then((r) => r.data);
+export const apiUpdateTool = (id: string, formData: FormData) =>
+  endpointRoute.put(`/tools/${id}`, formData).then((r) => r.data);
 
   export const apiDeleteTool = (id: string) =>
   endpointRoute.put(`/tools/${id}/`).then((r) => r.data);
@@ -195,3 +195,9 @@ export const apiUpdateTool = (id: string, body: FormData) =>
   title: string; message: string; buttonText: string;
   buttonLink: string;
 }) => endpointRoute.post("/newsletter/send-campaign", body).then((r) => r.data);
+
+
+// get all users
+export const adminGetAllUsers = () =>
+  endpointRoute.get("/admin/users").then((r) => r.data);
+// Response shape: { subscribers: true, count: 2, subscribers: [{ id, email, createdAt }] }
