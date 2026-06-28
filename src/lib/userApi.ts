@@ -163,3 +163,14 @@ export const apiResetPassword = (body: {
 
 export const apiSetNewPassword = (token:string,body: { password: string,confirmPassword:string }) =>
   endpointRoute.put(`auth/reset-password?${`token=${token}`}`, body).then((r) => r.data);
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// PASTE INTO src/lib/userApi.ts
+// ════════════════════════════════════════════════════════════════════════════
+
+export const apiGetAllMedia = () =>
+  endpointRoute.get("/media").then((r) => r.data);
+
+export const apiGetSingleMedia = (id: string) =>
+  endpointRoute.get(`/media/${id}`).then((r) => r.data);

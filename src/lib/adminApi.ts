@@ -201,3 +201,37 @@ export const apiUpdateTool = (id: string, formData: FormData) =>
 export const adminGetAllUsers = () =>
   endpointRoute.get("/admin/users").then((r) => r.data);
 // Response shape: { subscribers: true, count: 2, subscribers: [{ id, email, createdAt }] }
+
+
+
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// PASTE INTO src/lib/adminApi.ts
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── MEDIA / LESSONS ──────────────────────────────────────────────────────────
+
+export const adminCreateMedia = (formData: FormData) =>
+  endpointRoute.post("/media", formData).then((r) => r.data);
+// Body (multipart/form-data):
+//   title        — Text
+//   description  — Text
+//   images       — File (repeated, min 1)
+//   video        — File (optional, max 50MB)
+
+export const adminGetAllMedia = () =>
+  endpointRoute.get("/media").then((r) => r.data);
+// Response: { success, media: [{ _id, title, description, images[], video, createdAt }] }
+
+export const adminGetSingleMedia = (id: string) =>
+  endpointRoute.get(`/media/${id}`).then((r) => r.data);
+
+export const adminUpdateMedia = (id: string, formData: FormData) =>
+  endpointRoute.put(`/media/${id}`, formData).then((r) => r.data);
+// Same body shape as create
+
+export const adminDeleteMedia = (id: string) =>
+  endpointRoute.delete(`/media/${id}`).then((r) => r.data);
+
+

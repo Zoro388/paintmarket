@@ -2,13 +2,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, ShoppingCart, Users, X, LogOut, Package,Brush,Calculator,PenTool, ImageIcon, FileText,Mail,MessageSquare,CreditCard } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Users, X, LogOut, Package,Brush,Calculator,PenTool, ImageIcon, FileText,Mail,MessageSquare,CreditCard, PenBox } from "lucide-react";
 import { clearToken } from "@/lib/endpointRoute";
 
 const navItems = [
   { label: "Overview",          href: "/dashboard",                   icon: LayoutDashboard },
   { label: "Products",          href: "/dashboard/products",          icon: Package },
     { label: "Tools",          href: "/dashboard/tools",          icon: PenTool},
+        { label: "Lesson",          href: "/dashboard/lesson",          icon: PenBox},
+
+
 
   { label: "Orders",            href: "/dashboard/orders",            icon: ShoppingCart },
   { label: "Customers",         href: "/dashboard/customers",         icon: Users },
