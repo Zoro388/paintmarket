@@ -182,7 +182,7 @@ export const apiUpdateTool = (id: string, formData: FormData) =>
   endpointRoute.put(`/tools/${id}`, formData).then((r) => r.data);
 
   export const apiDeleteTool = (id: string) =>
-  endpointRoute.put(`/tools/${id}/`).then((r) => r.data);
+  endpointRoute.delete(`/tools/${id}/`).then((r) => r.data);
 
   export const apiGetTools = () =>
   endpointRoute.get("/tools").then((r) => r.data);

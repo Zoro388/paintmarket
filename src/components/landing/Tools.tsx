@@ -4,7 +4,7 @@ import { Calculator, Layers, ArrowRight, RotateCcw } from "lucide-react";
 
 // ── Paint Coverage Calculator ──────────────────────────────────────────────────
 function PaintCalculator() {
-  const [length, setLength] = useState("");
+  // const [length, setLength] = useState("");
   const [width, setWidth] = useState("");
   const [height, setHeight] = useState("");
   const [coats, setCoats] = useState("2");
@@ -15,16 +15,15 @@ function PaintCalculator() {
     "w-full bg-brand-black border border-brand-border text-white placeholder-brand-subtle px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-brand-accent/60 transition-all";
 
   const calculate = () => {
-    const l = parseFloat(length);
     const w = parseFloat(width);
     const h = parseFloat(height);
     const c = parseInt(coats);
     const cov = parseFloat(coverage);
 
-    if (!l || !w || !h || isNaN(l) || isNaN(w) || isNaN(h)) return;
+    if ( !w || !h || isNaN(w) || isNaN(h)) return;
 
     // Total wall area = perimeter × height (two lengths + two widths)
-    const wallArea = 2 * (l + w) * h;
+    const wallArea = 2 * ( + w) * h;
     const totalLitres = (wallArea * c) / cov;
 
     setResult({
@@ -35,7 +34,7 @@ function PaintCalculator() {
   };
 
   const reset = () => {
-    setLength(""); setWidth(""); setHeight("");
+   ; setWidth(""); setHeight("");
     setCoats("2"); setCoverage("12"); setResult(null);
   };
 
@@ -43,8 +42,7 @@ function PaintCalculator() {
     <div className="flex flex-col gap-5">
       <div className="grid sm:grid-cols-3 gap-3">
         {[
-          { label: "Room Length (m)", value: length, set: setLength, ph: "e.g. 5" },
-          { label: "Room Width (m)",  value: width,  set: setWidth,  ph: "e.g. 4" },
+          { label: "Wall Width (m)",  value: width,  set: setWidth,  ph: "e.g. 4" },
           { label: "Wall Height (m)", value: height, set: setHeight, ph: "e.g. 3" },
         ].map(({ label, value, set, ph }) => (
           <div key={label} className="flex flex-col gap-1.5">
@@ -242,12 +240,7 @@ const TOOLS = [
     label: "Paint Calculator",
     desc: "Find out exactly how much paint you need for your room",
   },
-  {
-    key: "area",
-    icon: Layers,
-    label: "Wall Area Estimator",
-    desc: "Calculate total paintable wall area across multiple rooms",
-  },
+ 
 ];
 
 export default function ToolsSection() {
@@ -297,19 +290,12 @@ export default function ToolsSection() {
 
         {/* Active tool panel */}
         <div className="bg-brand-card border border-brand-border rounded-2xl p-6 sm:p-8">
-          {activeTool === "coverage" ? (
             <>
               <h3 className="font-display text-xl font-bold text-white mb-1">Paint Coverage Calculator</h3>
               <p className="text-brand-mid text-sm mb-6">Enter your room dimensions to find out how many litres and tins you need.</p>
               <PaintCalculator />
             </>
-          ) : (
-            <>
-              <h3 className="font-display text-xl font-bold text-white mb-1">Wall Area Estimator</h3>
-              <p className="text-brand-mid text-sm mb-6">Add all your rooms and get the combined paintable wall area in one click.</p>
-              <WallAreaEstimator />
-            </>
-          )}
+        
         </div>
 
       </div>

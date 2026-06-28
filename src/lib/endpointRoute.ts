@@ -14,12 +14,27 @@ endpointRoute.interceptors.request.use((config) => {
 });
 
 // Surface backend error messages cleanly
+// endpointRoute.interceptors.response.use(
+//   (res) => res,
+//   (err) => {
+//     const msg =
+//       err?.response?.data?.message ||
+//       err?.response?.data?.error ||
+//       err?.message ||
+//       "Something went wrong";
+//     return Promise.reject(new Error(msg));
+//   }
+// );
+
+// Surface backend error messages cleanly without crashing
 endpointRoute.interceptors.response.use(
   (res) => res,
   (err) => {
+    // ✅ Added critical optional chaining lines here to stop interceptor crashes
     const msg =
       err?.response?.data?.message ||
       err?.response?.data?.error ||
+      err?.response?.statusText ||
       err?.message ||
       "Something went wrong";
     return Promise.reject(new Error(msg));

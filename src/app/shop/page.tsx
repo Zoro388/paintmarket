@@ -30,6 +30,7 @@ const router=useRouter()
       }
     },
   });
+  console.log('products', data)
   const category = data
     ? Array.from(new Set(data.map((p) => p.productCategory))).filter(Boolean)
     : [];
@@ -166,14 +167,18 @@ const router=useRouter()
                       </div>
 
                       <div className="p-4 flex flex-col gap-3 flex-1">
-                        <div>
+                        <div className="flex flex-col gap-1">
                           <h3 className="text-white font-semibold text-sm leading-snug
                             group-hover:text-brand-accent transition-colors">
                             {p.productName}
                           </h3>
-                          <p className="text-brand-mid text-xs mt-1 leading-relaxed line-clamp-2">
+                          <p className="text-brand-mid text-xs leading-relaxed line-clamp-2">
                             {p.productDescription}
                           </p>
+                          <h3 className="text-white font-semibold text-sm leading-snug
+                            group-hover:text-brand-accent transition-colors">
+                            {p.colourCode}
+                          </h3>
                         </div>
 
                         <div className="flex items-center justify-between">

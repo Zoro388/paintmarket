@@ -1,6 +1,5 @@
 
 
-
 "use client";
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +23,7 @@ function ToolFormModal({ tool, onClose }: { tool?: Tool; onClose: () => void }) 
   const qc = useQueryClient();
   const isEdit = !!tool;
   const fileRef = useRef<HTMLInputElement>(null);
-
+console.log('tool',tool)
   // Plain controlled state — same as product form
   const [name, setName] = useState(tool?.name ?? "");
   const [description, setDescription] = useState(tool?.description ?? "");
@@ -32,86 +31,56 @@ function ToolFormModal({ tool, onClose }: { tool?: Tool; onClose: () => void }) 
   const [previews, setPreviews] = useState<string[]>(tool?.images ?? []);
 
   console.log('name', name, "description", description, "previews", previews)
-  // Mutation reads directly from state at call time — same as product pattern
-  // const mutation = useMutation({
-  //   mutationFn: async () => {
-  //     const fd = new FormData();
-  //     fd.append("name", name);
-  //     fd.append("description", description);
-  //     // Append each selected file under the "images" key — exactly what backend expects
-  //     files.forEach((file) => fd.append("image", file));
-
-  //     return isEdit
-  //       ? apiUpdateTool(tool!._id ?? tool!.id!, fd)
-  //       : apiCreateTool(fd);
-  //   },
-  //   onSuccess: () => {
-  //     qc.invalidateQueries({ queryKey: ["tools"] });
-  //     toast.success(isEdit ? "Tool updated" : "Tool created");
-  //     onClose();
-  //   },
-  //   onError:(err: Error) =>{ toast.error(err.message || "Operation failed"), console.log(err)}
-  // });
 
   // Mutation reads directly from state at call time
-const mutation = useMutation({
-  mutationFn: async () => {
-    const fd = new FormData();
-    fd.append("name", name);
-    fd.append("description", description);
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const fd = new FormData();
+      fd.append("name", name);
+      fd.append("description", description);
 
-    // Append new uploaded files under the exact key "images"
-    files.forEach((file) => {
-      fd.append("images", file);
-    });
+      // Append each selected file under the exact key "images" expected by your backend
+      files.forEach((file) => {
+        fd.append("images", file);
+      });
 
-    // 💡 IMPORTANT: If your backend endpoint for UPDATING requires the 
-    // existing images to be sent back when no new files are uploaded:
-    if (isEdit && files.length === 0) {
-      const existingUrls = previews.filter((p) => !p.startsWith("blob:"));
-      
-      // If your backend accepts the existing array of URLs under "images":
-      existingUrls.forEach((url) => fd.append("images", url));
-      
-      // ALTERNATIVE: If your backend update endpoint breaks when "images" contains a string URL 
-      // instead of a file binary, you might need a separate field like:
-      // fd.append("existingImages", JSON.stringify(existingUrls));
+      // Keep existing images on update if no new ones are added
+      if (isEdit && files.length === 0) {
+        const existingUrls = previews.filter((p) => p && !p.startsWith("blob:"));
+        existingUrls.forEach((url) => fd.append("images", url));
+      }
+
+      // ✅ FIX: Extract ID dynamically with safe optional checks
+      // const targetId = tool?._id || tool?.id;
+      // if (isEdit && !targetId) {
+      //   throw new Error("Cannot update tool: Missing valid ID parameters");
+      // }
+
+      // return isEdit
+      //   ? apiUpdateTool(targetId, fd)
+      //   : apiCreateTool(fd);
+      // Extract ID dynamically with safe optional checks
+      const targetId =
+       tool?._id || tool?.id;
+      if (isEdit && !targetId) {
+        throw new Error("Cannot update tool: Missing valid ID parameters");
+      }
+
+      return isEdit
+        ? apiUpdateTool(targetId!, fd) 
+        : apiCreateTool(fd);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tools"] });
+      toast.success(isEdit ? "Tool updated" : "Tool created");
+      onClose();
+    },
+    onError: (err: Error) => { 
+      toast.error(err.message || "Operation failed");
+      console.error("Backend Error Details:", err);
     }
+  });
 
-    return isEdit
-      ? apiUpdateTool(tool!._id ?? tool!.id!, fd)
-      : apiCreateTool(fd);
-  },
-  onSuccess: () => {
-    qc.invalidateQueries({ queryKey: ["tools"] });
-    toast.success(isEdit ? "Tool updated" : "Tool created");
-    onClose();
-  },
-  onError: (err: Error) => { 
-    toast.error(err.message || "Operation failed");
-    console.error("Backend Error Details:", err);
-  }
-});
-
-// Update your submit button check to match
-const handleSubmit = () => {
-  if (!name.trim()) { toast.error("Tool name is required"); return; }
-  if (!description.trim()) { toast.error("Description is required"); return; }
-  console.log("Raw files being sent to backend:", files);
-  // Create mode requires at least one brand new file
-  if (!isEdit && files.length === 0) { 
-    toast.error("Please upload at least one image"); 
-    return; 
-  }
-  
-  // Edit mode requires either an existing preview OR a new file
-  if (isEdit && previews.length === 0 && files.length === 0) {
-    toast.error("An edited tool must retain or add at least one image");
-    return;
-  }
-
-  mutation.mutate();
-};
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files ? Array.from(e.target.files) : [];
     if (!picked.length) return;
@@ -125,20 +94,33 @@ const handleSubmit = () => {
     if (previews[idx]?.startsWith("blob:")) {
       URL.revokeObjectURL(previews[idx]);
       // Find its position among blob-only previews to remove the matching file
-      const blobPreviews = previews.filter((p) => p.startsWith("blob:"));
+      const blobPreviews = previews.filter((p) => p && p.startsWith("blob:"));
       const blobIdx = blobPreviews.indexOf(previews[idx]);
       if (blobIdx !== -1) setFiles((prev) => prev.filter((_, i) => i !== blobIdx));
     }
     setPreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // Inline validation on click — same style as product's onClick handler
-  // const handleSubmit = () => {
-  //   if (!name.trim()) { toast.error("Tool name is required"); return; }
-  //   if (!description.trim()) { toast.error("Description is required"); return; }
-  //   if (!isEdit && files.length === 0) { toast.error("Please upload at least one image"); return; }
-  //   mutation.mutate();
-  // };
+  // Inline validation on click
+  const handleSubmit = () => {
+    if (!name.trim()) { toast.error("Tool name is required"); return; }
+    if (!description.trim()) { toast.error("Description is required"); return; }
+    console.log("Raw files being sent to backend:", files);
+
+    // Create mode requires at least one brand new file
+    if (!isEdit && files.length === 0) { 
+      toast.error("Please upload at least one image"); 
+      return; 
+    }
+    
+    // Edit mode requires either an existing preview OR a new file
+    if (isEdit && previews.length === 0 && files.length === 0) {
+      toast.error("An edited tool must retain or add at least one image");
+      return;
+    }
+
+    mutation.mutate();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -262,19 +244,21 @@ export default function ToolsPage() {
       return (res?.tools ?? res?.data ?? []) as Tool[];
     },
   });
+  console.log('data', data);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiDeleteTool(id),
     onSuccess: (_, id) => {
       qc.setQueryData(["tools"], (old: Tool[] = []) =>
-        old.filter((t) => (t._id ?? t.id) !== id)
+        old.filter((t) => t && (t._id || t.id) !== id)
       );
       toast.success("Tool deleted");
     },
     onError: (err: Error) => toast.error(err.message || "Delete failed"),
   });
 
-  const list = data ?? [];
+  // Safe filter out null/undefined elements before mapping
+  const list = (data ?? []).filter((t) => t && (t._id || t.id));
 
   return (
     <div className="flex flex-col gap-6">
@@ -307,14 +291,18 @@ export default function ToolsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {list.map((tool) => {
-            const id = tool._id ?? tool.id!;
+            // ✅ FIX: Guard against missing tools or fields elegantly
+            if (!tool) return null;
+            const id = tool._id || tool.id;
+            if (!id) return null;
+
             const hasImages = tool.images && tool.images.length > 0;
             return (
               <div key={id} className="bg-brand-card border border-brand-mid/30 rounded-xl overflow-hidden
                 hover:border-brand-accent/30 transition-all group flex flex-col">
                 <div className="h-36 bg-brand-raised flex items-center justify-center overflow-hidden relative">
                   {hasImages
-                    ? <img src={tool.images![0]} alt={tool.name} className="w-full h-full object-cover" />
+                    ? <img src={tool.images?.[0]} alt={tool.name ?? ""} className="w-full h-full object-cover" />
                     : <Wrench size={32} className="text-brand-mid/30" />
                   }
                   {hasImages && tool.images!.length > 1 && (
@@ -330,7 +318,7 @@ export default function ToolsPage() {
                   <p className="text-brand-mid text-xs leading-relaxed line-clamp-2 flex-1">{tool.description}</p>
                   <div className="flex gap-2 pt-2 border-t border-brand-mid/20 mt-auto">
                     <button
-                      onClick={() => { setEditTool(tool); setShowForm(true); }}
+                      onClick={() => { if (tool) { setEditTool(tool); setShowForm(true); } }}
                       className="flex-1 flex items-center justify-center gap-1.5 text-brand-mid
                         hover:text-white hover:bg-brand-raised py-1.5 rounded-md text-xs transition-colors"
                     >
