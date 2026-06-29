@@ -42,7 +42,7 @@ export default function LessonsLandingPage() {
         {/* Header Block Section */}
         <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 border-b border-brand-border/40 max-w-7xl mx-auto w-full">
           <p className="text-brand-accent text-xs font-semibold tracking-[0.2em] uppercase mb-2">Knowledge Base</p>
-          <h1 className="font-display text-4xl font-bold text-white">Interactive Paint Lessons</h1>
+          <h1 className="font-display text-4xl font-bold text-white">Interactive Paint Training</h1>
           <p className="text-brand-mid mt-2 text-sm">Visual guides, application workflows, and expert structural tutorials.</p>
         </section>
 
@@ -53,7 +53,7 @@ export default function LessonsLandingPage() {
           ) : !lessons || lessons.length === 0 ? (
             <div className="text-center py-20 border border-brand-border/30 rounded-2xl bg-brand-card/40">
               <Film className="text-brand-subtle mx-auto mb-2 opacity-50" size={36} />
-              <p className="text-brand-mid text-sm">No workspace tutorials published yet.</p>
+              <p className="text-brand-mid text-sm">No workspace training published yet.</p>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

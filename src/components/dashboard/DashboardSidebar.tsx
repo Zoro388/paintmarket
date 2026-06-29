@@ -9,7 +9,7 @@ const navItems = [
   { label: "Overview",          href: "/dashboard",                   icon: LayoutDashboard },
   { label: "Products",          href: "/dashboard/products",          icon: Package },
     { label: "Tools",          href: "/dashboard/tools",          icon: PenTool},
-        { label: "Lesson",          href: "/dashboard/lesson",          icon: PenBox},
+        { label: "Training",          href: "/dashboard/lesson",          icon: PenBox},
 
 
 
