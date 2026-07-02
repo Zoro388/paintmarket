@@ -14,10 +14,7 @@ const FAQS = [
         q: "Do you deliver nationwide?",
         a: "Yes — we deliver to all 36 states and the FCT. Whether you're in Lagos, Abuja, Port Harcourt, Kano, or anywhere in between, we've got you covered. Delivery fees vary by location and are calculated at checkout.",
       },
-      {
-        q: "Is there free delivery?",
-        a: "Yes! Orders above ₦50,000 qualify for free nationwide delivery. For orders below that threshold, a flat delivery fee of ₦3,500 applies.",
-      },
+      
       {
         q: "Can I track my order?",
         a: "Absolutely. Once your order is dispatched, you'll receive an SMS and email with your tracking reference. You can also view your order status in real time from your account dashboard.",
@@ -50,12 +47,9 @@ const FAQS = [
     items: [
       {
         q: "What is the Site Estimator service?",
-        a: "Our site estimator service sends an expert to physically inspect your property and provide an accurate estimate of the materials and labour required for your painting project — completely free and with zero obligation.",
+        a: "Our site estimator service sends an expert to physically inspect your property and provide an accurate estimate of the materials and labour required for your painting project.",
       },
-      {
-        q: "Is the site inspection free?",
-        a: "Yes, 100% free. Our estimators visit your property, assess the scope of work, and give you a detailed breakdown of costs before any commitment is made.",
-      },
+      
       {
         q: "How long does it take to confirm a booking?",
         a: "We typically confirm your inspection booking within 2 hours of submission and contact you to finalise the date and time. Inspections are usually scheduled within 2–3 business days.",

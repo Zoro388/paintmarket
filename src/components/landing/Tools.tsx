@@ -224,7 +224,7 @@ function WallAreaEstimator() {
             href="/site-estimator"
             className="mt-4 flex items-center justify-center gap-2 border border-brand-accent/40 text-brand-accent text-sm font-medium py-2.5 rounded-lg hover:bg-brand-accent-muted transition-all"
           >
-            Book a Free Site Estimate <ArrowRight size={13} />
+            Book a  Site Estimate <ArrowRight size={13} />
           </a>
         </div>
       )}
@@ -253,13 +253,13 @@ export default function ToolsSection() {
         {/* Header */}
         <div className="text-center mb-14">
           <p className="text-brand-accent text-xs font-semibold tracking-[0.2em] uppercase mb-3">
-            Free Tools
+            Tools
           </p>
           <h2 className="font-display text-4xl sm:text-5xl font-bold text-white mb-4">
             Plan Your Project Smarter
           </h2>
           <p className="text-brand-mid text-lg max-w-xl mx-auto">
-            Use our free calculators to estimate paint quantities and wall areas before you order — no guesswork.
+            Use our calculators to estimate paint quantities and wall areas before you order — no guesswork.
           </p>
         </div>
 

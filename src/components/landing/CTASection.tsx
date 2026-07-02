@@ -9,7 +9,7 @@ export default function CTASection() {
           Ready to Transform Your Space?
         </h2>
         <p className="text-brand-black/65 text-lg mb-10 max-w-xl mx-auto">
-          Get a free consultation with our experts. No commitment, just clarity.
+          Get a consultation with our experts. No commitment, just clarity.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <Link

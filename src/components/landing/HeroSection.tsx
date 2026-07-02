@@ -117,12 +117,7 @@ export default function HeroSection() {
                 <p className="text-brand-mid text-xs mt-1">Professionally matched for every interior style</p>
               </div>
 
-              {/* Floating top-right badge */}
-              <div className="absolute -top-5 -right-5 bg-brand-accent text-brand-black
-                rounded-xl px-4 py-3 shadow-xl">
-                <p className="text-xs font-bold">Free Delivery</p>
-                <p className="text-[10px] opacity-70">Orders over ₦50,000</p>
-              </div>
+             
 
               {/* Floating bottom-left badge */}
               <div className="absolute -bottom-5 -left-5 bg-brand-card border border-brand-border

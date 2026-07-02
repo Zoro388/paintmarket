@@ -770,25 +770,7 @@ export default function CartPage() {
                 </span>
                 <span className="text-white font-medium">{formatCurrency(subtotal)}</span>
               </div>
-              {/* <div className="flex items-center justify-between text-sm">
-                <span className="text-brand-mid">Delivery Fee</span>
-                <span className="text-white font-medium">
-                  {deliveryFee === 0 ? (
-                    <span className="text-emerald-400 font-semibold text-xs uppercase tracking-wider">Free</span>
-                  ) : (
-                    formatCurrency(deliveryFee)
-                  )}
-                </span>
-              </div> */}
-              {/* {subtotal > 0 && subtotal <= 50000 && (
-                <p className="text-[11px] text-brand-subtle leading-normal">
-                  Add{" "}
-                  <span className="text-brand-accent font-medium">
-                    {formatCurrency(50000 - subtotal)}
-                  </span>{" "}
-                  more to unlock free delivery!
-                </p>
-              )} */}
+            
             </div>
 
             <div className="flex items-center justify-between">
