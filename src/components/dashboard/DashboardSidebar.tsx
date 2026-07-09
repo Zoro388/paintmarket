@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, ShoppingCart, Users, X, LogOut, Package,Brush,Calculator,PenTool, ImageIcon, FileText,Mail,MessageSquare,CreditCard, PenBox } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Users, X, Settings,LogOut, Package,Brush,Calculator,PenTool, ImageIcon, FileText,Mail,MessageSquare,CreditCard, PenBox } from "lucide-react";
 import { clearToken } from "@/lib/endpointRoute";
 
 const navItems = [
@@ -20,7 +20,10 @@ const navItems = [
   { label: "Portfolio",         href: "/dashboard/portfolio",         icon: ImageIcon },
   // { label: "Blog",              href: "/dashboard/blog",              icon: FileText },
   { label: "Newsletter",        href: "/dashboard/newsletter",        icon: Mail },
+
   { label: "Contact",           href: "/dashboard/contact",           icon: MessageSquare },
+    { label: "Settings",        href: "/dashboard/settings",        icon: Settings },
+
     { label: "Profile",       href: "/dashboard/profile",      icon: Users },
 
   // { label: "Payments",          href: "/dashboard/payments",          icon: CreditCard },

@@ -1,16 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { apiSubmitContact } from "@/lib/userApi";
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle, ArrowRight } from "lucide-react";
+import { useSettingsStore } from "../store/settingStore";
 
-const contactInfo = [
-  { icon: Phone,  label: "Phone",   value: "+234 8105 757 406",           accent: "text-brand-accent" },
-  { icon: Mail,   label: "Email",   value: "Paintdomain.ng@gmail.com",       accent: "text-brand-accent" },
-  { icon: MapPin, label: "Address", value: "Shop 81p F01 BUILDING MATERIAL MARKET KUBWA ABUJA Nigeria",      accent: "text-brand-accent" },
-  { icon: Clock,  label: "Hours",   value: "Mon – Sat: 8am – 6pm WAT",   accent: "text-brand-accent" },
-];
 
 const inputCls = "w-full bg-brand-raised border border-brand-border text-white placeholder-brand-subtle px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-brand-accent/60 transition-all";
 
@@ -26,7 +21,21 @@ export default function ContactPage() {
     catch (err: unknown) { setError(err instanceof Error ? err.message : "Something went wrong"); }
     finally { setLoading(false); }
   };
+const {
+    settings, 
+    fetchSettings,
+  } = useSettingsStore();
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
+  console.log('settings',settings)
+  const contactInfo = [
+  { icon: Phone,  label: "Phone",   value: settings.phone,           accent: "text-brand-accent" },
+  { icon: Mail,   label: "Email",   value: settings.email,       accent: "text-brand-accent" },
+  { icon: MapPin, label: "Address", value: settings?.address,      accent: "text-brand-accent" },
+  { icon: Clock,  label: "Hours",   value: settings.workingHours,   accent: "text-brand-accent" },
+];
   return (
     <main className="bg-brand-black min-h-screen">
       <Navbar />
@@ -85,7 +94,10 @@ export default function ContactPage() {
             <div className="bg-brand-card border border-brand-border rounded-xl h-44
               flex flex-col items-center justify-center gap-2 mt-1">
               <MapPin size={26} className="text-brand-accent" />
-              <p className="text-brand-mid text-sm">Shop 81p F01 BUILDING MATERIAL MARKET KUBWA ABUJA Nigeria</p>
+              <p className="text-brand-mid text-sm">
+
+                {settings?.address}
+              </p>
               <p className="text-brand-subtle text-xs">6°4&apos;31&quot;N 3°24&apos;45&quot;E</p>
             </div>
           </div>

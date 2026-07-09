@@ -235,3 +235,5 @@ export const adminDeleteMedia = (id: string) =>
   endpointRoute.delete(`/media/${id}`).then((r) => r.data);
 
 
+export const adminGetAllSettings = () =>
+  endpointRoute.get("/settings").then((r) => r.data);
