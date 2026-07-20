@@ -29,15 +29,7 @@ const services = [
     accent: "rgba(104,211,145,0.06)",
     border: "rgba(104,211,145,0.15)",
   },
-  {
-    icon: Layers,
-    title: "Interior Design",
-    description: "Get expert colour consultation and interior finishing advice tailored to your space and lifestyle.",
-    href: "/contact",
-    cta: "Learn More",
-    accent: "rgba(182,130,255,0.06)",
-    border: "rgba(182,130,255,0.15)",
-  },
+ 
 ];
 
 export default function ServicesSection() {
@@ -56,7 +48,7 @@ export default function ServicesSection() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {services.map((s) => {
             const Icon = s.icon;
             return (

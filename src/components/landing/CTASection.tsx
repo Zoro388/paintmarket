@@ -6,10 +6,10 @@ export default function CTASection() {
     <section className="bg-gray-100 py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="font-display text-4xl sm:text-5xl font-bold text-brand-black mb-5 leading-tight">
-          Ready to Transform Your Space?
+         Ready to Make Your House Stand Out?
         </h2>
         <p className="text-brand-black/65 text-lg mb-10 max-w-xl mx-auto">
-          Get a consultation with our experts. No commitment, just clarity.
+         No dull yourself. Whether you don already know wetin you want or you still dey find ideas, we don gather everything for one place.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <Link
@@ -17,7 +17,8 @@ export default function CTASection() {
             className="flex items-center gap-2 bg-brand-black text-white font-semibold
               px-8 py-4 rounded-md hover:bg-brand-surface transition-colors"
           >
-            Request a Painter <ArrowRight size={16} />
+            Shop Premium Paints →
+ <ArrowRight size={16} />
           </Link>
           <Link
             href="/site-estimator"
@@ -25,7 +26,7 @@ export default function CTASection() {
               text-brand-black font-semibold px-8 py-4 rounded-md
               hover:bg-brand-black hover:text-white transition-colors"
           >
-            <Phone size={16} /> Book Site Estimator
+            <Phone size={16} /> Book Site Inspection
           </Link>
         </div>
       </div>

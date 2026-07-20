@@ -83,16 +83,32 @@ export const adminUpdateSiteEstimatorStatus = (id: string, body: { status: strin
 //   endpointRoute.delete(`/portfolio/${id}`).then((r) => r.data);
 
 // ── BLOG ──────────────────────────────────────────────────────────────────────
-export const adminCreateBlog = (body: {
-  title: string; featuredImages: string[]; shortDescription: string;
-  content: string; author: string; status: "draft" | "published"; tags: string[];
-}) => endpointRoute.post("/blogs", body).then((r) => r.data);
+// export const adminCreateBlog = (body: {
+//   title: string; featuredImages: string[]; shortDescription: string;
+//   content: string; author: string; status: "draft" | "published"; tags: string[];
+// }) => endpointRoute.post("/blogs", body).then((r) => r.data);
+// export const adminCreateBlog = (body: FormData) => endpointRoute.post("/blogs", body).then((r) => r.data);
 
+// Update your API wrappers to append the multi-part content-type configuration explicitly:
+
+export const adminCreateBlog = (body: FormData) => 
+  endpointRoute.post("/blogs", body, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }).then((r) => r.data);
+
+export const adminUpdateBlog = (id: string, body: FormData) => 
+  endpointRoute.put(`/blogs/${id}`, body, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }).then((r) => r.data);
 export const adminGetBlogs = (params?: { page?: number; status?: string }) =>
   endpointRoute.get("/blogs", { params }).then((r) => r.data);
 
-export const adminUpdateBlog = (id: string, body: object) =>
-  endpointRoute.put(`/blogs/${id}`, body).then((r) => r.data);
+// export const adminUpdateBlog = (id: string, body: object) =>
+//   endpointRoute.put(`/blogs/${id}`, body).then((r) => r.data);
 
 export const adminDeleteBlog = (id: string) =>
   endpointRoute.delete(`/blogs/${id}`).then((r) => r.data);
@@ -237,3 +253,16 @@ export const adminDeleteMedia = (id: string) =>
 
 export const adminGetAllSettings = () =>
   endpointRoute.get("/settings").then((r) => r.data);
+
+
+
+export const adminToggleReview = (id: string) =>
+  endpointRoute.patch(`/reviews/${id}/toggle`).then((r) => r.data);
+// Toggles hidden/visible; hidden reviews excluded from rating calculation
+ 
+export const adminDeleteReview = (id: string) =>
+  endpointRoute.delete(`/reviews/${id}`).then((r) => r.data);
+ 
+
+export const adminGetAllReviews = () =>
+  endpointRoute.get("/reviews").then((r) => r.data);

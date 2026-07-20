@@ -11,7 +11,7 @@ import { ShoppingCart, Search, Loader, Package, CheckCircle, HelpCircle, Chevron
 import LoadingSkeleton from "../dashboard/components/Loading";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-
+import Image from "next/image";
 // Updated Interface to support the nested structure of questions and product images
 interface QuestionAnswer {
   question: string;
@@ -56,6 +56,7 @@ export default function ShopPage() {
       }
     },
   });
+  console.log('data',data)
 
   const category = data
     ? Array.from(new Set(data.map((p) => p.productCategory))).filter(Boolean)
@@ -166,7 +167,7 @@ export default function ShopPage() {
                         hover:border-brand-accent/30 transition-all duration-300 group flex flex-col">
                       
                       {/* Swatch Background / Or optional handling for product images */}
-                      <div className="h-28 relative" style={{ backgroundColor: p.colourCode }}>
+                      {/* <div className="h-28 relative" style={{ backgroundColor: p.colourCode }}>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                         <div className="absolute bottom-2.5 left-3 flex items-center gap-2">
                           <div className="w-3 h-3 rounded-full border-2 border-white/50"
@@ -179,7 +180,46 @@ export default function ShopPage() {
                           text-[9px] font-medium px-2 py-0.5 rounded-full backdrop-blur-sm">
                           {p.productCategory}
                         </span>
-                      </div>
+                      </div> */}
+                      {/* Swatch Background / Layered Product Image Component */}
+<div 
+  className="h-28 relative flex items-center justify-center overflow-hidden transition-all"
+  style={{ backgroundColor: p.colourCode || '#1e1e1e' }}
+>
+  {/* If a product image exists, render it cleanly inside the colored canvas */}
+  {p.productImages && p.productImages.length > 0 && (
+    <Image
+      src={p.productImages[0]} 
+      alt={p.productName || "Product image"} 
+      width={1000}
+      height={1000}
+      className="h-[85%] w-auto object-contain mix-blend-multiply drop-shadow-md z-10"
+      onError={(e) => {
+        // Fallback guard if the hosted image fails to load
+        (e.target as HTMLElement).style.display = 'none';
+      }}
+    />
+  )}
+
+  {/* Smooth bottom shadow overlay to keep absolute metadata elements scannable */}
+  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 pointer-events-none z-10" />
+
+  {/* Bottom Left Label Segment matching the color chart profile */}
+  <div className="absolute bottom-2.5 left-3 flex items-center gap-2 z-20">
+    <div 
+      className="w-3 h-3 rounded-full border border-white/80 shadow-sm"
+      style={{ backgroundColor: p.colourCode }} 
+    />
+    <span className="text-white text-[10px] font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] uppercase tracking-wider">
+      {p.colourName || "No Name Color"} ({ p.colourCode||'No Color Code'})
+    </span>
+  </div>
+
+  {/* Category Pill Tag */}
+  <span className="absolute top-2.5 right-2.5 bg-black/60 text-white/90 text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm z-20 shadow-sm">
+    {p.productCategory}
+  </span>
+</div>
 
                       <div className="p-4 flex flex-col gap-3 flex-1">
                         <div className="flex flex-col gap-1">
@@ -190,9 +230,7 @@ export default function ShopPage() {
                           <p className="text-brand-mid text-xs leading-relaxed line-clamp-2">
                             {p.productDescription}
                           </p>
-                          <h3 className="text-brand-subtle text-xs font-mono">
-                            {p.colourCode}
-                          </h3>
+                        
                         </div>
 
                         <div className="flex items-center justify-between">

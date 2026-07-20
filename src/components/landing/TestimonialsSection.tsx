@@ -8,7 +8,7 @@ const testimonials = [
     quote: "We've used Paint Domain across 12 properties. Their site estimators are accurate, their delivery is reliable, and quality is always consistent.",
   },
   {
-    name: "Fatima Abdullahi", role: "Interior Designer, Kano", rating: 5,
+    name: "Fatima Abdullahi", role: "Property Developer Kano", rating: 5,
     quote: "The colour range is exceptional and the team genuinely understands interior aesthetics. My clients always love the results.",
   },
 ];

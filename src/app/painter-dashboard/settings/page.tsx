@@ -297,21 +297,7 @@ console.log('settings',settings)
               </div>
 
               {/* About Us Segment */}
-              {/* <h3 className="text-xl font-display text-brand-accent-lt border-b border-brand-border-lt pt-4 pb-2">About Us Profile Segment</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-medium text-brand-lt-gray uppercase mb-2">About Segment Title</label>
-                  <input type="text" name="aboutTitle" value={settings.aboutTitle} onChange={handleInputChange} className="w-full bg-brand-surface border border-brand-border rounded-lg px-4 py-3 text-brand-white focus:outline-none focus:border-brand-accent transition" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-brand-lt-gray uppercase mb-2">About Header Subtitle</label>
-                  <input type="text" name="aboutSubtitle" value={settings.aboutSubtitle} onChange={handleInputChange} className="w-full bg-brand-surface border border-brand-border rounded-lg px-4 py-3 text-brand-white focus:outline-none focus:border-brand-accent transition" />
-                </div>
-              </div> */}
-              {/* <div>
-                <label className="block text-xs font-medium text-brand-lt-gray uppercase mb-2">Profile Description Copy</label>
-                <textarea name="aboutDescription" value={settings.aboutDescription} onChange={handleInputChange} rows={3} className="w-full bg-brand-surface border border-brand-border rounded-lg px-4 py-3 text-brand-white focus:outline-none focus:border-brand-accent transition resize-none" />
-              </div> */}
+              
             </div>
           )}
 

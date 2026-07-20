@@ -75,10 +75,10 @@ export default function PainterRequestPage() {
             <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
               <h3 className="font-display text-lg font-bold text-white mb-5">How It Works</h3>
               {[
-                { step:"01", title:"Submit Request",  desc:"Fill in your project details and preferred start date." },
-                { step:"02", title:"We Match You",    desc:"Our team reviews and connects you with the right painter." },
-                { step:"03", title:"Get a Quote",     desc:"Receive a detailed quote before any work begins." },
-                { step:"04", title:"Project Begins",  desc:"Your painter arrives and transforms your space." },
+                { step:"01", title:"Tell Us About Your Project ",  desc:"Share your location, project details, and what you're looking for." },
+                { step:"02", title:" Get a Site Estimate",    desc:"Book a site inspection or use our paint calculator to estimate your project." },
+                { step:"03", title:"Review Your Quotation ",     desc:"Receive a detailed quotation based on your project requirements." },
+                { step:"04", title:"Shop or Hire",  desc:"Order your preferred paint or connect with a painter to bring your project to life." },
               ].map((s,i) => (
                 <div key={s.step} className={`flex gap-4 pb-5 ${i<3?"border-b border-brand-border/40 mb-5":""}`}>
                   <span className="text-brand-accent font-bold text-sm font-display w-6 flex-shrink-0">{s.step}</span>

@@ -2,30 +2,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, ShoppingCart, Users, X, Rotate3dIcon, Settings,LogOut, Package,Brush,Calculator,PenTool, ImageIcon, FileText,Mail,MessageSquare,CreditCard, PenBox } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Users, X, Settings,LogOut, Package,Brush,Calculator,PenTool, ImageIcon, FileText,Mail,MessageSquare,CreditCard, PenBox } from "lucide-react";
 import { clearToken } from "@/lib/endpointRoute";
 
 const navItems = [
-  { label: "Overview",          href: "/dashboard",                   icon: LayoutDashboard },
-  // { label: "Products",          href: "/dashboard/products",          icon: Package },
-    { label: "Tools",          href: "/dashboard/tools",          icon: PenTool},
-        { label: "Training",          href: "/dashboard/lesson",          icon: PenBox},
+  { label: "Overview",          href: "/painter-dashboard",                   icon: LayoutDashboard },
+  { label: "Reviews",          href: "/painter-dashboard/reviews",          icon: Package },
+    // { label: "Tools",          href: "/dashboard/tools",          icon: PenTool},
+        // { label: "Training",          href: "/dashboard/lesson",          icon: PenBox},
 
 
 
-  // { label: "Orders",            href: "/dashboard/orders",            icon: ShoppingCart },
-  { label: "Customers",         href: "/dashboard/customers",         icon: Users },
-  // { label: "Painter Requests",  href: "/dashboard/painter-requests",  icon: Brush },
-  // { label: "Site Estimators",   href: "/dashboard/site-estimators",   icon: Calculator },
-  { label: "Portfolio",         href: "/dashboard/portfolio",         icon: ImageIcon },
-  { label: "Blog",              href: "/dashboard/blog",              icon: FileText },
-  { label: "Newsletter",        href: "/dashboard/newsletter",        icon: Mail },
+//   { label: "Orders",            href: "/dashboard/orders",            icon: ShoppingCart },
+//   { label: "Customers",         href: "/dashboard/customers",         icon: Users },
+  { label: " Requests",  href: "/painter-dashboard/painter-requests",  icon: Brush },
+//   { label: "Site Estimators",   href: "/dashboard/site-estimators",   icon: Calculator },
+//   { label: "Portfolio",         href: "/dashboard/portfolio",         icon: ImageIcon },
+//   { label: "Blog",              href: "/dashboard/blog",              icon: FileText },
+//   { label: "Newsletter",        href: "/dashboard/newsletter",        icon: Mail },
 
-  { label: "Contact",           href: "/dashboard/contact",           icon: MessageSquare },
-    { label: "Settings",        href: "/dashboard/settings",        icon: Settings },
+//   { label: "Contact",           href: "/dashboard/contact",           icon: MessageSquare },
+//     { label: "Settings",        href: "/dashboard/settings",        icon: Settings },
 
-    { label: "Profile",       href: "/dashboard/profile",      icon: Users },
+    { label: "Profile",       href: "/painter-dashboard/profile",      icon: Users },
 
+  // { label: "Payments",          href: "/dashboard/payments",          icon: CreditCard },
   // { label: "Leads",             href: "/dashboard/leads",             icon: Users },
 ];
 
@@ -46,9 +47,9 @@ export default function DashboardSidebar({ mobileOpen, onClose }: Props) {
         <div className="flex items-center justify-between">
           <div className="flex flex-col leading-none">
             <span className="font-display text-lg font-bold text-white">Paint Domain</span>
-            <span className="text-brand-accent text-[9px] tracking-[0.18em] uppercase font-medium">
-             
-            </span>
+            {/* <span className="text-brand-accent text-[9px] tracking-[0.18em] uppercase font-medium">
+              Painters panel
+            </span> */}
           </div>
           {onClose && (
             <button

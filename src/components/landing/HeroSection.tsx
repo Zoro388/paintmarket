@@ -1,8 +1,19 @@
 "use client";
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
+import { useSettingsStore } from "@/app/store/settingStore";
+import { useEffect } from "react";
 
 export default function HeroSection() {
+  const {
+      settings, 
+      fetchSettings,
+    } = useSettingsStore();
+    useEffect(() => {
+      fetchSettings();
+    }, [fetchSettings]);
+
+    console.log('settings', settings)
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-brand-black">
 
@@ -32,21 +43,20 @@ export default function HeroSection() {
               border border-brand-accent/25 bg-brand-accent-muted">
               <span className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
               <span className="text-brand-accent text-xs font-semibold tracking-[0.18em] uppercase">
-                Nigeria's Premier Paint Specialists
+                Making Your House Strong And Beautiful For Generations
               </span>
             </div>
 
             <h1 className="font-display text-5xl sm:text-6xl lg:text-[68px] font-bold leading-[1.04] tracking-tight">
-              <span className="text-white">Transform</span>
+              <span className="text-white"> {settings.heroTitle?settings.heroTitle:"Shop Paints That Stand the Test of Time."}
+</span>
               <br />
-              <span className="text-brand-accent">Every Space</span>
-              <br />
-              <span className="text-white">You Live In</span>
+              {/* <span className="text-brand-accent">Stand the Test of Time.</span> */}
+            
             </h1>
 
             <p className="text-brand-mid text-lg leading-relaxed max-w-md">
-              Premium paints, professional painters, and expert estimators — everything you
-              need to bring your interior vision to life. Trusted by thousands across Nigeria.
+              {settings.heroSubtitle?settings.heroSubtitle:'             Explore our expertly crafted range of premium paints designed for beauty, strength and long-lasting protection.'}
             </p>
 
             <div className="flex flex-wrap gap-3 mt-1">

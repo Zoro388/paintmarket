@@ -1,3 +1,4 @@
+
 // "use client";
 // import { useState } from "react";
 // import { Calculator, Layers, ArrowRight, RotateCcw } from "lucide-react";
@@ -8,8 +9,8 @@
 //   const [width, setWidth] = useState("");
 //   const [height, setHeight] = useState("");
 //   const [coats, setCoats] = useState("2");
-//   const [coverage, setCoverage] = useState("12"); // m² per litre (standard)
-//   const [result, setResult] = useState<{ litres: number; tins4L: number; tins20L: number } | null>(null);
+//   const [coverage, setCoverage] = useState("5"); // m² per bucket (updated from 8m to 5m)
+//   const [result, setResult] = useState<{ buckets: number; tins1B: number; tins4B: number } | null>(null);
 
 //   const inputCls =
 //     "w-full bg-brand-black border border-brand-border text-white placeholder-brand-subtle px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-brand-accent/60 transition-all";
@@ -20,22 +21,22 @@
 //     const c = parseInt(coats);
 //     const cov = parseFloat(coverage);
 
-//     if ( !w || !h || isNaN(w) || isNaN(h)) return;
+//     if (!w || !h || isNaN(w) || isNaN(h)) return;
 
 //     // Total wall area = perimeter × height (two lengths + two widths)
-//     const wallArea = 2 * ( + w) * h;
-//     const totalLitres = (wallArea * c) / cov;
+//     const wallArea = 2 * (w + w) * h;
+//     const totalBuckets = (wallArea * c) / cov;
 
 //     setResult({
-//       litres: Math.ceil(totalLitres),
-//       tins4L: Math.ceil(totalLitres / 4),
-//       tins20L: Math.ceil(totalLitres / 20),
+//       buckets: Math.ceil(totalBuckets),
+//       tins1B: Math.ceil(totalBuckets / 1),
+//       tins4B: Math.ceil(totalBuckets / 4),
 //     });
 //   };
 
 //   const reset = () => {
-//    ; setWidth(""); setHeight("");
-//     setCoats("2"); setCoverage("12"); setResult(null);
+//     setWidth(""); setHeight("");
+//     setCoats("2"); setCoverage("5"); setResult(null);
 //   };
 
 //   return (
@@ -70,12 +71,12 @@
 //           </select>
 //         </div>
 //         <div className="flex flex-col gap-1.5">
-//           <label className="text-brand-lt-gray text-xs font-medium">Paint Coverage (m² per litre)</label>
+//           <label className="text-brand-lt-gray text-xs font-medium">Paint Coverage (m² per bucket)</label>
 //           <select value={coverage} onChange={(e) => { setCoverage(e.target.value); setResult(null); }} className={inputCls}>
-//             <option value="8">8 m²/L — Textured / Heavy</option>
-//             <option value="10">10 m²/L — Exterior Gloss</option>
-//             <option value="12">12 m²/L — Standard Emulsion</option>
-//             <option value="14">14 m²/L — Silk / Matt</option>
+//             <option value="5">5 m²/Bucket — Textured / Heavy</option>
+//             <option value="10">10 m²/Bucket — Exterior Gloss</option>
+//             <option value="12">12 m²/Bucket — Standard Emulsion</option>
+//             <option value="14">14 m²/Bucket — Silk / Matt</option>
 //           </select>
 //         </div>
 //       </div>
@@ -102,9 +103,9 @@
 //           </p>
 //           <div className="grid grid-cols-3 gap-3 text-center">
 //             {[
-//               { label: "Total Litres", value: `${result.litres}L` },
-//               { label: "4L Tins", value: result.tins4L },
-//               { label: "20L Tins", value: result.tins20L },
+//               { label: "Total Buckets", value: `${result.buckets}B` },
+//               { label: "1B Buckets", value: result.tins1B },
+//               { label: "4B Buckets", value: result.tins4B },
 //             ].map(({ label, value }) => (
 //               <div key={label} className="bg-brand-card border border-brand-border rounded-lg py-3 px-2">
 //                 <p className="text-brand-accent font-bold text-2xl font-display">{value}</p>
@@ -240,7 +241,6 @@
 //     label: "Paint Calculator",
 //     desc: "Find out exactly how much paint you need for your room",
 //   },
- 
 // ];
 
 // export default function ToolsSection() {
@@ -290,18 +290,18 @@
 
 //         {/* Active tool panel */}
 //         <div className="bg-brand-card border border-brand-border rounded-2xl p-6 sm:p-8">
-//             <>
-//               <h3 className="font-display text-xl font-bold text-white mb-1">Paint Coverage Calculator</h3>
-//               <p className="text-brand-mid text-sm mb-6">Enter your room dimensions to find out how many litres and tins you need.</p>
-//               <PaintCalculator />
-//             </>
-        
+//           <>
+//             <h3 className="font-display text-xl font-bold text-white mb-1">Paint Coverage Calculator</h3>
+//             <p className="text-brand-mid text-sm mb-6">Enter your room dimensions to find out how many buckets you need.</p>
+//             <PaintCalculator />
+//           </>
 //         </div>
 
 //       </div>
 //     </section>
 //   );
 // }
+
 
 "use client";
 import { useState } from "react";
@@ -313,7 +313,7 @@ function PaintCalculator() {
   const [width, setWidth] = useState("");
   const [height, setHeight] = useState("");
   const [coats, setCoats] = useState("2");
-  const [coverage, setCoverage] = useState("5"); // m² per bucket (updated from 8m to 5m)
+  const [coverage, setCoverage] = useState("4.5"); // Default to Gravitex / Trowel (Average of 4-5)
   const [result, setResult] = useState<{ buckets: number; tins1B: number; tins4B: number } | null>(null);
 
   const inputCls =
@@ -340,7 +340,7 @@ function PaintCalculator() {
 
   const reset = () => {
     setWidth(""); setHeight("");
-    setCoats("2"); setCoverage("5"); setResult(null);
+    setCoats("2"); setCoverage("4.5"); setResult(null);
   };
 
   return (
@@ -375,12 +375,14 @@ function PaintCalculator() {
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-brand-lt-gray text-xs font-medium">Paint Coverage (m² per bucket)</label>
+          <label className="text-brand-lt-gray text-xs font-medium">Paint Coverage (Product Class)</label>
           <select value={coverage} onChange={(e) => { setCoverage(e.target.value); setResult(null); }} className={inputCls}>
-            <option value="5">5 m²/Bucket — Textured / Heavy</option>
-            <option value="10">10 m²/Bucket — Exterior Gloss</option>
-            <option value="12">12 m²/Bucket — Standard Emulsion</option>
-            <option value="14">14 m²/Bucket — Silk / Matt</option>
+            <option value="4.5">Gravitex (4–5 m²/bucket)</option>
+            <option value="4.5">Trowel Paint (4–5 m²/bucket)</option>
+            <option value="85">Penetrating Primer (80–90 m²/bucket)</option>
+            <option value="85">Alkali Primer (80–90 m²/bucket)</option>
+            <option value="78.5">Matt Paint (77–80 m²/bucket)</option>
+            <option value="116.5">Satin Paint (110–123 m²/bucket)</option>
           </select>
         </div>
       </div>
@@ -417,8 +419,8 @@ function PaintCalculator() {
               </div>
             ))}
           </div>
-          <p className="text-brand-subtle text-[11px] mt-3 leading-relaxed">
-            * Estimate based on wall area only (ceiling not included). We recommend buying 10% extra as a buffer.
+          <p className="text-brand-subtle text-[11px] mt-4 leading-relaxed italic">
+            Coverage is approximate and based on one coat. Actual coverage may vary depending on surface condition and application method.
           </p>
           <a
             href="/shop"

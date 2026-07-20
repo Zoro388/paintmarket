@@ -1,37 +1,114 @@
+
+
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { adminGetBlogs, adminCreateBlog, adminUpdateBlog, adminDeleteBlog } from "@/lib/adminApi";
 import { formatDate } from "@/lib/utils";
-import { Plus, Pencil, Trash2, X, Loader, FileText, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Loader, FileText, Upload } from "lucide-react";
 
 interface Blog {
-  _id: string; title: string; shortDescription: string; content: string;
-  author: string; status: "draft" | "published"; tags: string[];
-  featuredImages: string[]; createdAt: string;
+  _id: string; 
+  title: string; 
+  shortDescription: string; 
+  content: string;
+  author: string; 
+  status: "draft" | "published"; 
+  tags: string[];
+  featuredImage?: string; 
+  createdAt: string;
 }
 
 const MOCK: Blog[] = [
-  { _id: "b1", title: "5 Tips for Choosing the Perfect Interior Paint Colour", shortDescription: "Picking the right colour can transform any room. Here's how to get it right.", content: "", author: "Paint Domain Team", status: "published", tags: ["Interior","Colour","Tips"], featuredImages: [], createdAt: "2025-06-01" },
-  { _id: "b2", title: "Why Exterior Paint Quality Matters More Than You Think", shortDescription: "Your exterior paint is your home's first line of defence against the elements.", content: "", author: "Paint Domain Team", status: "published", tags: ["Exterior","Quality"], featuredImages: [], createdAt: "2025-05-20" },
-  { _id: "b3", title: "The Complete Guide to Surface Preparation", shortDescription: "Great paint starts with great prep. Learn the steps pros never skip.", content: "", author: "Paint Domain Team", status: "draft", tags: ["Guide","Preparation"], featuredImages: [], createdAt: "2025-05-10" },
+  { _id: "b1", title: "5 Tips for Choosing the Perfect Interior Paint Colour", shortDescription: "Picking the right colour can transform any room. Here's how to get it right.", content: "", author: "Paint Domain Team", status: "published", tags: ["Interior","Colour","Tips"], createdAt: "2025-06-01" },
+  { _id: "b2", title: "Why Exterior Paint Quality Matters More Than You Think", shortDescription: "Your exterior paint is your home's first line of defence against the elements.", content: "", author: "Paint Domain Team", status: "published", tags: ["Exterior","Quality"], createdAt: "2025-05-20" },
+  { _id: "b3", title: "The Complete Guide to Surface Preparation", shortDescription: "Great paint starts with great prep. Learn the steps pros never skip.", content: "", author: "Paint Domain Team", status: "draft", tags: ["Guide","Preparation"], createdAt: "2025-05-10" },
 ];
 
-const EMPTY: Omit<Blog,"_id"|"createdAt"> = { title:"", shortDescription:"", content:"", author:"Paint Domain Team", status:"draft", tags:[], featuredImages:[] };
+const EMPTY = { title: "", shortDescription: "", content: "", author: "Paint Domain Team", status: "draft" as const };
 
 function BlogFormModal({ blog, onClose }: { blog?: Blog; onClose: () => void }) {
   const qc = useQueryClient();
   const isEdit = !!blog;
-  const [form, setForm] = useState(blog ? { title: blog.title, shortDescription: blog.shortDescription, content: blog.content, author: blog.author, status: blog.status, tags: blog.tags.join(", ") } : { ...EMPTY, tags: "" });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form State text variables
+  const [form, setForm] = useState(
+    blog
+      ? { 
+          title: blog.title, 
+          shortDescription: blog.shortDescription, 
+          content: blog.content, 
+          author: blog.author, 
+          status: blog.status, 
+          tags: blog.tags.join(", ")
+        }
+      : { ...EMPTY, tags: "" }
+  );
+
+  // Track the actual binary File object for Multipart upload
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Preview URL for UI display rendering
+  const [previewUrl, setPreviewUrl] = useState<string | null>(blog?.featuredImage || null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const body = { ...form, tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean), featuredImages: [] };
-      return isEdit ? adminUpdateBlog(blog!._id, body) : adminCreateBlog(body as Parameters<typeof adminCreateBlog>[0]);
+      if (!isEdit && !selectedFile) {
+        throw new Error("Please upload a featured image before submitting.");
+      }
+      
+      const formData = new FormData();
+      formData.append("title", form.title);
+      formData.append("author", form.author);
+      formData.append("status", form.status);
+      formData.append("shortDescription", form.shortDescription);
+      formData.append("content", form.content);
+      
+      // ✅ FIX: Process raw tags string into a proper stringified JSON Array to resolve the parsing error
+      const tagsArray = form.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      
+      formData.append("tags", JSON.stringify(tagsArray));
+
+      // Append standard native file binary directly under singular configuration requested by backend
+      if (selectedFile) {
+        formData.append("featuredImage", selectedFile);
+      }
+
+      return isEdit 
+        ? adminUpdateBlog(blog!._id, formData as any) 
+        : adminCreateBlog(formData as any);
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["blogs"] }); toast.success(isEdit ? "Post updated" : "Post created"); onClose(); },
-    onError: (err: Error) => toast.error(err.message || "Failed"),
+    onSuccess: () => { 
+      qc.invalidateQueries({ queryKey: ["blogs"] }); 
+      toast.success(isEdit ? "Post updated" : "Post created"); 
+      onClose(); 
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || err.message || "Failed execution action");
+      console.log('err', err);
+    },
   });
 
   return (
@@ -46,11 +123,55 @@ function BlogFormModal({ blog, onClose }: { blog?: Blog; onClose: () => void }) 
           {[["title","Title","text","Post title..."],["author","Author","text","Author name..."],["tags","Tags (comma-separated)","text","Interior, Tips, Colour..."]].map(([name,label,type,ph]) => (
             <div key={name} className="flex flex-col gap-1.5">
               <label className="text-brand-lt-gray text-xs font-medium">{label}</label>
-              <input type={type} value={(form as Record<string,string>)[name]} placeholder={ph}
+              <input type={type} value={(form as Record<string,any>)[name]} placeholder={ph}
                 onChange={(e) => setForm((p) => ({ ...p, [name]: e.target.value }))}
                 className="bg-brand-black border border-brand-mid text-brand-white placeholder-brand-mid px-3 py-2 rounded-md text-sm focus:outline-none focus:border-brand-accent" />
             </div>
           ))}
+
+          {/* Corrected Binary File Upload Handler Wrapper */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-brand-lt-gray text-xs font-medium">Featured Image</label>
+            
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-brand-mid hover:border-brand-accent transition-colors rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer bg-brand-black/40"
+            >
+              <Upload size={24} className="text-brand-mid" />
+              <span className="text-xs text-brand-lt-gray font-medium">Click to upload an image from your device</span>
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleFileChange} 
+                accept="image/*" 
+                className="hidden" 
+              />
+            </div>
+
+            {/* Single Image Preview Layout */}
+            {previewUrl && (
+              <div className="grid grid-cols-4 gap-2 mt-2">
+                <div className="group relative aspect-video w-full rounded-md overflow-hidden bg-brand-black border border-brand-mid/50">
+                  <img 
+                    src={previewUrl} 
+                    alt="Featured Image preview" 
+                    className="w-full h-full object-cover" 
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveImage();
+                    }}
+                    className="absolute top-1 right-1 bg-black/80 hover:bg-red-600 text-white p-1 rounded-full opacity-100"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <label className="text-brand-lt-gray text-xs font-medium">Status</label>
             <select value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as "draft"|"published" }))}
@@ -138,8 +259,12 @@ export default function BlogPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((b) => (
             <div key={b._id} className="bg-brand-card border border-brand-mid/30 rounded-xl overflow-hidden hover:border-brand-accent/30 transition-all flex flex-col">
-              <div className="h-32 bg-gradient-to-br from-brand-black via-brand-card to-brand-black flex items-center justify-center">
-                <FileText size={36} className="text-brand-accent/30" />
+              <div className="h-32 bg-gradient-to-br from-brand-black via-brand-card to-brand-black flex items-center justify-center overflow-hidden relative">
+                {b.featuredImage ? (
+                  <img src={b.featuredImage} alt={b.title} className="w-full h-full object-cover" />
+                ) : (
+                  <FileText size={36} className="text-brand-accent/30" />
+                )}
               </div>
               <div className="p-4 flex flex-col gap-3 flex-1">
                 <div className="flex items-start justify-between gap-2">

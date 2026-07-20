@@ -50,14 +50,16 @@ export default function BlogPage() {
     queryFn: async () => {
       try {
         const res = await apiGetBlogs();
-        const blogs: BlogPost[] = res?.blogs ?? res?.data ?? [];
-        return blogs.filter((b) => b.status === "published");
+        const blogs: BlogPost[] = res?? [];
+        // return blogs.filter((b) => b.status === "published");
+          return blogs
       } catch {
         return MOCK_BLOGS;
       }
     },
     placeholderData: MOCK_BLOGS,
   });
+  console.log('blogs', data)
 
   const list: BlogPost[] = data ?? MOCK_BLOGS;
   const allTags: string[] = ["All", ...Array.from(new Set(list.flatMap((b) => b.tags)))];

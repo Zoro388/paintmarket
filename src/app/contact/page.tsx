@@ -29,7 +29,6 @@ const {
     fetchSettings();
   }, [fetchSettings]);
 
-  console.log('settings',settings)
   const contactInfo = [
   { icon: Phone,  label: "Phone",   value: settings.phone,           accent: "text-brand-accent" },
   { icon: Mail,   label: "Email",   value: settings.email,       accent: "text-brand-accent" },

@@ -174,3 +174,63 @@ export const apiGetAllMedia = () =>
 
 export const apiGetSingleMedia = (id: string) =>
   endpointRoute.get(`/media/${id}`).then((r) => r.data);
+
+
+// painters
+export const apiGetPainters = () => endpointRoute.get("/painters").then((r) => r.data);
+
+
+// get painter by id
+export const apiGetPainterReview = (id: string) =>
+  endpointRoute.get(`/reviews/painter/${id}`).then((r) => r.data);
+
+export const apiRequestAPainter = (body: {
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  propertyLocation: string;
+  projectType: string;
+  propertyType: string;
+  projectDescription: string;
+  preferredStartDate: string;
+  additionalNotes: string;
+  selectedPainter: string; // PAINTER_PROFILE_ID
+}) => endpointRoute.post("/painter-requests", body).then((r) => r.data);
+
+
+
+export const apiCreateReview = (body: {
+  requestId: string;
+  rating: number;
+  review: string;
+}) => endpointRoute.post("/reviews", body).then((r) => r.data);
+// No auth required per spec
+
+export const apiGetPainterReviews = (painterId: string) =>
+  endpointRoute.get(`/reviews/painter/${painterId}`).then((r) => r.data);
+// Response: { success, reviews: [{ _id, requestId, rating, review, createdAt, hidden }] }
+
+export const apiGetMyReviews = () =>
+  endpointRoute.get("/reviews/my-reviews").then((r) => r.data);
+// Auth: Painter Token
+// Response: { success, reviews: [{ _id, requestId, rating, review, createdAt, hidden }] }
+
+export const getMyBookedPainters = () =>
+  endpointRoute.get("/reviews/my-booked-painters").then((r) => r.data);
+
+export const apiAddReview = (body: {
+  requestId: string;
+  rating: number;
+  review: string;
+  comment:string
+
+}) => endpointRoute.post("/reviews", body).then((r) => r.data);
+// No 
+/**
+ * Register a new Painter Account
+ * Endpoint: /painters/register
+ * Method: POST
+ * Body payload structure: multipart/form-data
+ */
+export const apiSignUpAsAPainter = (formData: FormData) =>
+  endpointRoute.post("/painters/register", formData).then((r) => r.data);

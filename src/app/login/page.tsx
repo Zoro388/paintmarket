@@ -154,9 +154,14 @@ export default function LoginPage() {
     try {
       const data = await apiLogin(form);
       saveToken(data.token);
-console.log(data)
-
-data?.user.role=="admin" ? router.push("/dashboard") : router.push("/user-dashboard");
+// console.log(data)
+if (data?.user?.role === "admin") {
+  router.push("/dashboard");
+} else if (data?.user?.role === "painter") {
+  router.push("/painter-dashboard");
+} else {
+  router.push("/user-dashboard");
+}
       // window.location.href = "/dashboard";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");

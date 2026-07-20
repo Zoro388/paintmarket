@@ -237,6 +237,8 @@ const quickLinks = [
   { label: "Add Product",       href: "/dashboard/products",         dot: "bg-emerald-500" },
   { label: "Painter Requests", href: "/dashboard/painter-requests", dot: "bg-orange-500" },
   { label: "Site Estimators",  href: "/dashboard/site-estimators",  dot: "bg-cyan-500" },
+    { label: "Reviews",          href: "/dashboard/reviews",         dot:"bg-emerald-700" },
+
 ];
 
 interface Order {
