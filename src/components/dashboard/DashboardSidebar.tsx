@@ -15,10 +15,10 @@ const navItems = [
 
   // { label: "Orders",            href: "/dashboard/orders",            icon: ShoppingCart },
   { label: "Customers",         href: "/dashboard/customers",         icon: Users },
-  // { label: "Painter Requests",  href: "/dashboard/painter-requests",  icon: Brush },
-  // { label: "Site Estimators",   href: "/dashboard/site-estimators",   icon: Calculator },
   { label: "Portfolio",         href: "/dashboard/portfolio",         icon: ImageIcon },
   { label: "Blog",              href: "/dashboard/blog",              icon: FileText },
+  { label: "Banner",        href: "/dashboard/banner",        icon: Settings },
+
   { label: "Newsletter",        href: "/dashboard/newsletter",        icon: Mail },
 
   { label: "Contact",           href: "/dashboard/contact",           icon: MessageSquare },

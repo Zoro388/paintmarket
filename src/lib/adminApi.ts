@@ -266,3 +266,36 @@ export const adminDeleteReview = (id: string) =>
 
 export const adminGetAllReviews = () =>
   endpointRoute.get("/reviews").then((r) => r.data);
+
+
+// GET Public Banners
+export const getPublicHeroBanners = () =>
+  endpointRoute.get("/hero").then((r) => r.data);
+
+// GET Single Banner by ID
+export const getHeroBannerById = (id: string) =>
+  endpointRoute.get(`/hero/${id}`).then((r) => r.data);
+
+// GET Admin All Banners
+export const adminGetAllHeroBanners = () =>
+  endpointRoute.get("/hero/admin/all").then((r) => r.data);
+
+// POST Create Hero Banner (Form-Data)
+export const adminCreateHeroBanner = (data: FormData) =>
+  endpointRoute
+    .post("/hero", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then((r) => r.data);
+
+// PATCH Update Hero Banner (Form-Data or Partial Object)
+export const adminUpdateHeroBanner = (id: string, data: FormData) =>
+  endpointRoute
+    .patch(`/hero/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then((r) => r.data);
+
+// DELETE Hero Banner
+export const adminDeleteHeroBanner = (id: string) =>
+  endpointRoute.delete(`/hero/${id}`).then((r) => r.data);

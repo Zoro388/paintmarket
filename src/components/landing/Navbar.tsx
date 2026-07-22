@@ -13,6 +13,8 @@ const navLinks = [
   { label: "Home",      href: "/" },
   { label: "Shop",      href: "/shop" },
   { label: "Portfolio", href: "/portfolio" },
+    { label: "Blog", href: "/blog" },
+
   {
     label: "Services",
     children: [
@@ -145,7 +147,7 @@ console.log(authData)
         "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
         scrolled
           ? "bg-brand-black/90 backdrop-blur-md border-b border-brand-border/60 py-3"
-          : "bg-transparent py-5"
+          : "bg-brand-black/40 backdrop-blur-md py-5"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -153,17 +155,17 @@ console.log(authData)
 
           {/* Logo */}
           <Link href="/" className="flex flex-col leading-none group">
-            {/* <span className="text-white font-display text-xl font-bold tracking-tight
+            <span className="text-white font-display text-xl font-bold tracking-tight
               group-hover:text-brand-accent transition-colors duration-200">
               Paint Domain
             </span>
             <span className="text-brand-accent text-[10px] tracking-[0.18em] uppercase font-medium">
               &amp; Primary Interior Builders
-            </span> */}
-          <Image 
+            </span>
+          {/* <Image 
           src={"https://www.image2url.com/r2/default/images/1782374205744-637a3eeb-522f-45bb-8406-b9fa513d453f.png"}
            className
-          ="h-10 object-cover" alt="logo" height={50} width={100} />
+          ="h-10 object-cover" alt="logo" height={50} width={100} /> */}
           </Link>
 
           {/* Desktop nav */}
@@ -208,7 +210,7 @@ console.log(authData)
                     "px-3 py-2 text-sm rounded-md transition-colors",
                     pathname === link.href
                       ? "text-brand-accent"
-                      : "text-brand-mid hover:text-white"
+                      : "text-white hover:text-white"
                   )}
                 >
                   {link.label}

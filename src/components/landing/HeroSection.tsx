@@ -1,25 +1,305 @@
+
+// "use client";
+
+// import Link from "next/link";
+// import Image from "next/image";
+// import { ArrowRight, Play, Loader2 } from "lucide-react";
+// import { useEffect, useState, useCallback } from "react";
+// import { userGetAllHeroBanners } from "../../lib/userApi"; // Adjust path if needed
+
+// interface HeroBanner {
+//   _id?: string;
+//   id?: string;
+//   title: string;
+//   subtitle?: string;
+//   description?: string;
+//   buttonText?: string;
+//   buttonLink?: string;
+//   displayOrder?: number | null;
+//   image?: {
+//     url: string;
+//     publicId?: string;
+//   } | string;
+//   imageUrl?: string;
+// }
+
+// export default function HeroSection() {
+//   const [banners, setBanners] = useState<HeroBanner[]>([]);
+//   const [loading, setLoading] = useState<boolean>(true);
+//   const [currentIndex, setCurrentIndex] = useState<number>(0);
+
+//   // Fetch banners on mount
+//   useEffect(() => {
+//     let isMounted = true;
+
+//     userGetAllHeroBanners()
+//       .then((res) => {
+//         if (!isMounted) return;
+        
+//         // Target res.heroes as specified
+//         const bannerList: HeroBanner[] = Array.isArray(res?.heroes)
+//           ? res.heroes
+//           : Array.isArray(res)
+//           ? res
+//           : Array.isArray(res?.data)
+//           ? res.data
+//           : [];
+// console.log('raw', res)
+//         setBanners(bannerList);
+//       })
+//       .catch((err) => {
+//         console.error("Failed to fetch hero banners:", err);
+//       })
+//       .finally(() => {
+//         if (isMounted) setLoading(false);
+//       });
+
+//     return () => {
+//       isMounted = false;
+//     };
+//   }, []);
+
+//   // Slide advancement
+//   const nextSlide = useCallback(() => {
+//     setBanners((prevBanners) => {
+//       if (prevBanners.length === 0) return prevBanners;
+//       setCurrentIndex((prevIndex) => (prevIndex + 1) % prevBanners.length);
+//       return prevBanners;
+//     });
+//   }, []);
+
+//   // Auto-play slider every 5 seconds
+//   useEffect(() => {
+//     if (banners.length <= 1) return;
+
+//     const interval = setInterval(() => {
+//       nextSlide();
+//     }, 5000);
+
+//     return () => clearInterval(interval);
+//   }, [banners.length, nextSlide]);
+
+//   const currentBanner = banners[currentIndex];
+
+//   // Helper to extract image URL safely
+//   const getImageUrl = (banner?: HeroBanner): string => {
+//     if (!banner) return "";
+//     if (typeof banner.image === "object" && banner.image?.url) {
+//       return banner.image.url;
+//     }
+//     if (typeof banner.image === "string" && banner.image) {
+//       return banner.image;
+//     }
+//     return banner.imageUrl || "";
+//   };
+
+//   const backgroundImage = getImageUrl(currentBanner);
+
+//   return (
+//     <section className="relative min-h-screen flex items-center justify-left overflow-hidden bg-brand-black">
+//       {/* ── Full Background Image & Overlays ── */}
+//       {backgroundImage && (
+//         <div className="absolute inset-0 z-0">
+//           <Image
+//             src={backgroundImage}
+//             alt={currentBanner?.title || "Hero background"}
+//             fill
+//             priority
+//             unoptimized
+//             className="object-cover transition-opacity duration-1000"
+//           />
+//           {/* Dark gradient overlay to ensure copy contrast */}
+//           <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-brand-black/40" />
+//         </div>
+//       )}
+
+//       {/* Subtle grid pattern */}
+//       <div
+//         className="absolute inset-0 opacity-40 z-10 pointer-events-none"
+//         style={{
+//           backgroundImage: `linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+//                             linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)`,
+//           backgroundSize: "52px 52px",
+//         }}
+//       />
+
+//       {loading ? (
+//         <div className="relative z-20 flex flex-col items-center justify-center min-h-[400px]">
+//           <Loader2 className="w-8 h-8 text-brand-accent animate-spin" />
+//         </div>
+//       ) : (
+//         <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 w-full text-center flex flex-col items-center">
+//           <div className="flex flex-col items-center gap-7 transition-all duration-500 ease-in-out">
+//             {/* Subtitle / Eyebrow pill */}
+//             {currentBanner?.subtitle && (
+//               <div className="inline-flex items-center gap-2.5 w-fit rounded-full px-4 py-2 border border-brand-accent/25 bg-brand-accent-muted/80 backdrop-blur-md">
+//                 <span className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
+//                 <span className="text-brand-accent text-xs font-semibold tracking-[0.18em] uppercase">
+//                   {currentBanner.subtitle}
+//                 </span>
+//               </div>
+//             )}
+
+//             {/* Title */}
+//             <h1 className="font-display text-5xl sm:text-6xl lg:text-[68px] font-bold leading-[1.04] tracking-tight text-white max-w-3xl">
+//               {currentBanner?.title || "Shop Paints That Stand the Test of Time."}
+//             </h1>
+
+//             {/* Description */}
+//             <p className="text-brand-mid text-lg leading-relaxed max-w-xl">
+//               {currentBanner?.description ||
+//                 "Explore our expertly crafted range of premium paints designed for beauty, strength and long-lasting protection."}
+//             </p>
+
+//             {/* CTA Buttons */}
+//             <div className="flex flex-wrap items-center justify-center gap-4 mt-2">
+//               <Link
+//                 href={currentBanner?.buttonLink || "/shop"}
+//                 className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold px-8 py-3.5 rounded-md hover:bg-brand-accent-lt transition-all duration-200 text-sm shadow-lg"
+//               >
+//                 {currentBanner?.buttonText || "Shop Paints"} <ArrowRight size={15} />
+//               </Link>
+//               <Link
+//                 href="/painter-request"
+//                 className="flex items-center gap-2 border border-brand-border-lt text-brand-lt-gray bg-black/30 backdrop-blur-md px-8 py-3.5 rounded-md hover:border-brand-accent hover:text-brand-accent transition-all duration-200 text-sm"
+//               >
+//                 <Play size={13} fill="currentColor" /> Request a Painter
+//               </Link>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* ── Bottom Center Dots Navigation ── */}
+//       {banners.length > 1 && (
+//         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+//           {banners.map((_, idx) => (
+//             <button
+//               key={idx}
+//               onClick={() => setCurrentIndex(idx)}
+//               aria-label={`Go to slide ${idx + 1}`}
+//               className={`h-2.5 rounded-full transition-all duration-300 ${
+//                 idx === currentIndex
+//                   ? "w-8 bg-brand-accent"
+//                   : "w-2.5 bg-white/40 hover:bg-white/70"
+//               }`}
+//             />
+//           ))}
+//         </div>
+//       )}
+//     </section>
+//   );
+// }
+
 "use client";
+
 import Link from "next/link";
-import { ArrowRight, Play } from "lucide-react";
-import { useSettingsStore } from "@/app/store/settingStore";
-import { useEffect } from "react";
+import Image from "next/image";
+import { ArrowRight, Play, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { userGetAllHeroBanners } from "../../lib/userApi"; // Adjust path if needed
+
+interface HeroBanner {
+  _id?: string;
+  id?: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  buttonText?: string;
+  buttonLink?: string;
+  displayOrder?: number | null;
+  image?: {
+    url: string;
+    publicId?: string;
+  } | string;
+  imageUrl?: string;
+}
 
 export default function HeroSection() {
-  const {
-      settings, 
-      fetchSettings,
-    } = useSettingsStore();
-    useEffect(() => {
-      fetchSettings();
-    }, [fetchSettings]);
+  const [banners, setBanners] = useState<HeroBanner[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
 
-    console.log('settings', settings)
+  // Fetch banners on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    userGetAllHeroBanners()
+      .then((res) => {
+        if (!isMounted) return;
+
+        // Target res.heroes as specified
+        const bannerList: HeroBanner[] = Array.isArray(res?.heroes)
+          ? res.heroes
+          : Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+          ? res.data
+          : [];
+
+        console.log("raw", res);
+        setBanners(bannerList);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch hero banners:", err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Reliable Auto-play slider every 5 seconds
+  useEffect(() => {
+    if (banners.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % banners.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [banners.length]);
+
+  const currentBanner = banners[currentIndex];
+
+  // Helper to extract image URL safely
+  const getImageUrl = (banner?: HeroBanner): string => {
+    if (!banner) return "";
+    if (typeof banner.image === "object" && banner.image?.url) {
+      return banner.image.url;
+    }
+    if (typeof banner.image === "string" && banner.image) {
+      return banner.image;
+    }
+    return banner.imageUrl || "";
+  };
+
+  const backgroundImage = getImageUrl(currentBanner);
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-brand-black">
+    <section className="relative min-h-screen flex items-center justify-start overflow-hidden bg-brand-black">
+      {/* ── Full Background Image & Overlays ── */}
+      {backgroundImage && (
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={backgroundImage}
+            alt={currentBanner?.title || "Hero background"}
+            fill
+            priority
+            unoptimized
+            className="object-cover transition-opacity duration-1000"
+          />
+          {/* Dark gradient overlay to ensure copy contrast */}
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-black/5 via-brand-black/80 to-brand-black/40" />
+        </div>
+      )}
 
-      {/* Subtle grid */}
+      {/* Subtle grid pattern */}
       <div
-        className="absolute inset-0 opacity-100"
+        className="absolute inset-0 opacity-40 z-10 pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
                             linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)`,
@@ -27,124 +307,70 @@ export default function HeroSection() {
         }}
       />
 
-      {/* Ambient glow — warm champagne, low opacity */}
-      <div className="absolute top-0 right-0 w-[700px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, rgba(212,175,120,0.07) 0%, transparent 70%)" }} />
-      <div className="absolute bottom-0 left-[-100px] w-[500px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, rgba(212,175,120,0.04) 0%, transparent 70%)" }} />
+      {loading ? (
+        <div className="relative z-20 flex flex-col items-center justify-center w-full min-h-[400px]">
+          <Loader2 className="w-8 h-8 text-brand-accent animate-spin" />
+        </div>
+      ) : (
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 w-full text-left flex flex-col items-start">
+          <div className="flex flex-col items-start gap-7 transition-all duration-500 ease-in-out max-w-2xl">
+            {/* Subtitle / Eyebrow pill */}
+            {currentBanner?.subtitle && (
+              <div className="inline-flex items-center gap-2.5 w-fit rounded-full px-4 py-2 border border-brand-accent/25 bg-brand-accent-muted/80 backdrop-blur-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
+                <span className="text-brand-accent text-xs font-semibold tracking-[0.18em] uppercase">
+                  {currentBanner.subtitle}
+                </span>
+              </div>
+            )}
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
-        <div className="grid lg:grid-cols-2 gap-14 items-center">
-
-          {/* ── Left copy ── */}
-          <div className="flex flex-col gap-7">
-            {/* Eyebrow pill */}
-            <div className="inline-flex items-center gap-2.5 w-fit rounded-full px-4 py-2
-              border border-brand-accent/25 bg-brand-accent-muted">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
-              <span className="text-brand-accent text-xs font-semibold tracking-[0.18em] uppercase">
-                Making Your House Strong And Beautiful For Generations
-              </span>
-            </div>
-
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-[68px] font-bold leading-[1.04] tracking-tight">
-              <span className="text-white"> {settings.heroTitle?settings.heroTitle:"Shop Paints That Stand the Test of Time."}
-</span>
-              <br />
-              {/* <span className="text-brand-accent">Stand the Test of Time.</span> */}
-            
+            {/* Title */}
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-[68px] font-bold leading-[1.04] tracking-tight text-white">
+              {currentBanner?.title || "Shop Paints That Stand the Test of Time."}
             </h1>
 
-            <p className="text-brand-mid text-lg leading-relaxed max-w-md">
-              {settings.heroSubtitle?settings.heroSubtitle:'             Explore our expertly crafted range of premium paints designed for beauty, strength and long-lasting protection.'}
+            {/* Description */}
+            <p className="text-brand text-lg leading-relaxed">
+              {currentBanner?.description ||
+                "Explore our expertly crafted range of premium paints designed for beauty, strength and long-lasting protection."}
             </p>
 
-            <div className="flex flex-wrap gap-3 mt-1">
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap items-center justify-start gap-4 mt-2">
               <Link
-                href="/shop"
-                className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold
-                  px-7 py-3.5 rounded-md hover:bg-brand-accent-lt transition-all duration-200 text-sm"
+                href={currentBanner?.buttonLink || "/shop"}
+                className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold px-8 py-3.5 rounded-md hover:bg-brand-accent-lt transition-all duration-200 text-sm shadow-lg"
               >
-                Shop Paints <ArrowRight size={15} />
+                {currentBanner?.buttonText || "Shop Paints"} <ArrowRight size={15} />
               </Link>
               <Link
                 href="/painter-request"
-                className="flex items-center gap-2 border border-brand-border-lt text-brand-lt-gray
-                  px-7 py-3.5 rounded-md hover:border-brand-accent hover:text-brand-accent
-                  transition-all duration-200 text-sm"
+                className="flex items-center gap-2 border border-brand-border-lt text-brand-lt-gray bg-black/30 backdrop-blur-md px-8 py-3.5 rounded-md hover:border-brand-accent hover:text-brand-accent transition-all duration-200 text-sm"
               >
                 <Play size={13} fill="currentColor" /> Request a Painter
               </Link>
             </div>
-
-            {/* Stats row */}
-            <div className="flex flex-wrap gap-8 pt-7 border-t border-brand-border/60">
-              {[
-                { value: "800+", label: "Projects Completed" },
-                { value: "200+",   label: "Paint Colours" },
-                { value: "98%",    label: "Client Satisfaction" },
-              ].map((s) => (
-                <div key={s.label}>
-                  <p className="text-brand-accent text-2xl font-bold font-display">{s.value}</p>
-                  <p className="text-brand-mid text-xs mt-0.5 tracking-wide">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── Right visual ── */}
-          <div className="relative hidden lg:flex items-center justify-center">
-            <div className="relative w-full max-w-[420px]">
-
-              {/* Main card */}
-              <div className="bg-brand-card border border-brand-border rounded-2xl p-6 shadow-2xl">
-                {/* Colour grid */}
-                <div className="aspect-video rounded-xl bg-brand-raised overflow-hidden mb-5 relative">
-                  <div className="grid grid-cols-4 gap-0.5 p-3 w-full h-full">
-                    {[
-                      "#D4AF78","#1C1C1C","#F0EEE9","#4A4A3A",
-                      "#0F0F0F","#A8842E","#C8C8C8","#8A8A8A",
-                      "#E8D0A5","#2A2A2A","#FFFFFF","#333333",
-                    ].map((c, i) => (
-                      <div
-                        key={i}
-                        className="rounded-sm"
-                        style={{ backgroundColor: c, minHeight: "36px" }}
-                      />
-                    ))}
-                  </div>
-                  {/* Overlay label */}
-                  <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-                    <span className="text-white text-[10px] font-semibold bg-black/50 rounded px-2 py-0.5">
-                      Premium Colour Collection
-                    </span>
-                    <span className="text-brand-mid text-[10px] bg-black/50 rounded px-2 py-0.5">
-                      200+ shades
-                    </span>
-                  </div>
-                </div>
-                <p className="text-white font-semibold text-sm">Curated Paint Collections</p>
-                <p className="text-brand-mid text-xs mt-1">Professionally matched for every interior style</p>
-              </div>
-
-             
-
-              {/* Floating bottom-left badge */}
-              <div className="absolute -bottom-5 -left-5 bg-brand-card border border-brand-border
-                rounded-xl px-4 py-3 shadow-xl">
-                <p className="text-brand-accent text-xs font-semibold mb-0.5">✓ Professional Painters</p>
-                <p className="text-brand-mid text-[11px]">Vetted &amp; insured experts</p>
-              </div>
-            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Scroll cue */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-brand-subtle">
-        <span className="text-[10px] tracking-[0.2em] uppercase">Scroll</span>
-        <div className="w-px h-10 bg-gradient-to-b from-brand-subtle to-transparent" />
-      </div>
+      {/* ── Bottom Center Dots Navigation ── */}
+      {banners.length > 1 && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+          {banners.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              aria-label={`Go to slide ${idx + 1}`}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                idx === currentIndex
+                  ? "w-8 bg-brand-accent"
+                  : "w-2.5 bg-white/40 hover:bg-white/70"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

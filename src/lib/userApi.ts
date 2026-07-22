@@ -234,3 +234,7 @@ export const apiAddReview = (body: {
  */
 export const apiSignUpAsAPainter = (formData: FormData) =>
   endpointRoute.post("/painters/register", formData).then((r) => r.data);
+
+
+export const userGetAllHeroBanners = () =>
+  endpointRoute.get("/hero").then((r) => r.data);

@@ -64,7 +64,7 @@ export default function Footer() {
                 Get tips, offers, and project inspiration to your inbox.
               </p>
             </div>
-            <form onSubmit={handleSubscribe} className="flex gap-2 w-full md:w-auto">
+            <form onSubmit={handleSubscribe} className="flex flex-wrap gap-2 w-full md:w-auto">
               <input
                 type="email"
                 value={email}
