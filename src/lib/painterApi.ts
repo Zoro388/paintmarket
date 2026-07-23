@@ -20,17 +20,31 @@ export const painterReviews = ( ) =>
 
 
 // 1. Fetch MasterData Lookups
-export const apiGetSkills = () => 
-  endpointRoute.get("/masterdata/skills").then((r) => r.data);
+export const apiGetData = () => 
+  endpointRoute.get("/master-data").then((r) => r.data);
 
-export const apiGetServices = () => 
-  endpointRoute.get("/masterdata/services").then((r) => r.data);
 
-export const apiGetPreferredBrands = () => 
-  endpointRoute.get("/masterdata/brands").then((r) => r.data);
+
 
 // 2. Register Painter (Multipart Form-Data Request)
 export const apiRegisterPainter = (formData: FormData) => 
   endpointRoute.post("/painters/register", formData, {
     headers: { "Content-Type": "multipart/form-data" }
   }).then((r) => r.data);
+
+
+  export const painterGetStatus = (params?: { page?: number; status?: string }) =>
+  endpointRoute.get("/painters/me/status", { params }).then((r) => r.data);
+
+  export const painterUploadVerificationVideo = async (formData: FormData) => {
+  const response = await endpointRoute.patch(
+    "/painters/upload-verification-video",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+};

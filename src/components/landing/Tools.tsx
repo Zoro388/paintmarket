@@ -409,7 +409,7 @@ function PaintCalculator() {
           </p>
           <div className="grid grid-cols-3 gap-3 text-center">
             {[
-              { label: "Total Buckets", value: `${result.buckets}B` },
+              { label: "Total Buckets", value: `${result.buckets}` },
               { label: "1B Buckets", value: result.tins1B },
               { label: "4B Buckets", value: result.tins4B },
             ].map(({ label, value }) => (

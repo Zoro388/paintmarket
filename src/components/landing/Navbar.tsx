@@ -160,7 +160,7 @@ console.log(authData)
               Paint Domain
             </span>
             <span className="text-brand-accent text-[10px] tracking-[0.18em] uppercase font-medium">
-              &amp; Primary Interior Builders
+              {/* &amp; Primary Interior Builders */}
             </span>
           {/* <Image 
           src={"https://www.image2url.com/r2/default/images/1782374205744-637a3eeb-522f-45bb-8406-b9fa513d453f.png"}

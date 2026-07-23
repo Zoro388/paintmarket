@@ -124,7 +124,8 @@ import {
   painterGetDashboardStats, 
   painterRequests, 
   acceptPainterRequest, 
-  declinePainterRequest 
+  declinePainterRequest ,
+  painterGetStatus
 } from "@/lib/painterApi";
 import LoadingSkeleton from "./components/Loading";
 import { formatDate } from "@/lib/utils";
@@ -179,7 +180,22 @@ export default function PainterDashboard() {
       } catch { return null; }
     },
   });
+// 
+ const { data: status } = useQuery({
+  queryKey: ["painters-status"],
+  queryFn: async () => {
+    try {
+      const res = await painterGetStatus();
+      console.log("r", res);
+      return res;
+    } catch (error) {
+      console.error("painterGetStatus failed:", error); // <-- Add this!
+      return null;
+    }
+  },
+});
 
+console.log("status", status);
   // Fetch Requests Data
   const { data: requestsData, isLoading: isRequestsLoading } = useQuery<PainterRequest[]>({
     queryKey: ["painter-requests"],
@@ -234,6 +250,15 @@ export default function PainterDashboard() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 max-w-full overflow-hidden">
       {/* Header section */}
+      {!status.verificationVideoUploaded ? (
+  <div className="rounded-md border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+    {status?.message}
+  </div>
+) : status?.approvalStatus === 'approved' ? (
+  <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+    Verification approved
+  </div>
+) : null}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-white">
@@ -243,10 +268,10 @@ export default function PainterDashboard() {
             Here is your current performance overview and job pipeline status.
           </p>
         </div>
-        <div className="self-start sm:self-center flex items-center gap-2 text-xs text-brand-mid bg-brand-card border border-brand-border rounded-lg px-3 py-2">
+        {/* <div className="self-start sm:self-center flex items-center gap-2 text-xs text-brand-mid bg-brand-card border border-brand-border rounded-lg px-3 py-2">
           <span className={`w-1.5 h-1.5 rounded-full ${painter?.availabilityStatus === "available" ? "bg-emerald-400" : "bg-red-400"}`} />
           Status: <span className="capitalize text-white font-medium">{painter?.availabilityStatus || "unknown"}</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Dynamic Statistics Cards Grid */}

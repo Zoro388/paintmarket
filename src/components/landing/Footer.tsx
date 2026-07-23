@@ -9,7 +9,7 @@ const footerLinks = {
     { label: "About Us",  href: "/" },
     { label: "Portfolio", href: "/portfolio" },
     { label: "Blog",      href: "/blog" },
-    { label: "Careers",   href: "/contact" },
+    { label: "Lessons",   href: "/lessons" },
   ],
   Services: [
     { label: "Shop Paints",       href: "/shop" },
@@ -99,9 +99,9 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="flex flex-col leading-none mb-4">
               <span className="font-display text-2xl font-bold text-white">Paint Domain</span>
-              <span className="text-brand-accent text-[10px] tracking-[0.18em] uppercase">
+              {/* <span className="text-brand-accent text-[10px] tracking-[0.18em] uppercase">
                 &amp; Primary Interior Builders
-              </span>
+              </span> */}
             </Link>
             <p className="text-brand-mid text-sm leading-relaxed max-w-xs">
               Nigeria&apos;s trusted partner for premium paints and professional interior finishing.

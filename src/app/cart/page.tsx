@@ -598,7 +598,7 @@ export default function CartPage() {
                       <span className="text-brand-mid">Account Number:</span>
                       <span className="text-white">0123456789</span>
                       <span className="text-brand-mid">Account Name:</span>
-                      <span className="text-white">Paint Domain &amp; Primary Interior Builders</span>
+                      <span className="text-white">Paint Domain</span>
                     </div>
                     <p className="text-brand-subtle text-[11px] mt-2">
                       Please use your reference details as the transfer narration.

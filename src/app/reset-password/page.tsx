@@ -86,7 +86,7 @@ function ResetPasswordForm() {
               Paint Domain
             </span>
             <span className="text-brand-accent text-[10px] tracking-[0.18em] uppercase">
-              &amp; Primary Interior Builders
+              {/* &amp; Primary Interior Builders */}
             </span>
           </Link>
         </div>

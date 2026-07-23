@@ -5,7 +5,7 @@ import Script from "next/script";
 
 
 export const metadata: Metadata = {
-  title: "Paint Domain & Primary | Interior Builders",
+  title: "Paint Domain",
   description:
     "Nigeria's premier paint and interior solutions company. Quality paints, professional painters, and expert site estimators.",
   keywords: "paint, interior design, Nigeria, Paint Domain, painters, estimators",

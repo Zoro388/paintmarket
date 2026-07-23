@@ -25,6 +25,9 @@ export const adminDeleteProduct = (id: string) =>
 export const adminGetOrders = (params?: { page?: number; status?: string }) =>
   endpointRoute.get("/orders", { params }).then((r) => r.data);
 
+// 
+
+
 export const adminGetOrder = (id: string) =>
   endpointRoute.get(`/orders/${id}`).then((r) => r.data);
 
@@ -41,7 +44,8 @@ export const adminExportLeads = () =>
 
 // ── PAINTER REQUESTS ──────────────────────────────────────────────────────────
 export const adminGetPainterRequests = (params?: { page?: number; status?: string }) =>
-  endpointRoute.get("/painter-requests", { params }).then((r) => r.data);
+  endpointRoute.get("/painters/pending", { params }).then((r) => r.data);
+
 
 export const adminGetPainterRequest = (id: string) =>
   endpointRoute.get(`/painter-requests/${id}`).then((r) => r.data);
@@ -299,3 +303,28 @@ export const adminUpdateHeroBanner = (id: string, data: FormData) =>
 // DELETE Hero Banner
 export const adminDeleteHeroBanner = (id: string) =>
   endpointRoute.delete(`/hero/${id}`).then((r) => r.data);
+
+
+
+
+// Get Pending Painters
+export const adminGetPendingPainters = (params?: { page?: number }) =>
+  endpointRoute.get("/painters/pending", { params }).then((r) => r.data);
+
+// Get Approved Painters
+export const adminGetApprovedPainters = (params?: { page?: number }) =>
+  endpointRoute.get("/painters/approved", { params }).then((r) => r.data);
+
+// Get Painter Details
+export const adminGetPainterDetails = (id: string) =>
+  endpointRoute.get(`/painters/admin/${id}`).then((r) => r.data);
+
+// Approve Painter
+export const adminApprovePainter = (id: string, body?: { deleteVerificationVideo?: boolean }) =>
+  endpointRoute
+    .patch(`/painters/${id}/approve`, body ?? { deleteVerificationVideo: false })
+    .then((r) => r.data);
+
+// Reject Painter
+export const adminRejectPainter = (id: string, body: { reason: string }) =>
+  endpointRoute.patch(`/painters/${id}/reject`, body).then((r) => r.data);
