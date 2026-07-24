@@ -9,7 +9,7 @@ const footerLinks = {
     { label: "About Us",  href: "/" },
     { label: "Portfolio", href: "/portfolio" },
     { label: "Blog",      href: "/blog" },
-    { label: "Lessons",   href: "/lessons" },
+    { label: "Training",   href: "/lessons" },
   ],
   Services: [
     { label: "Shop Paints",       href: "/shop" },

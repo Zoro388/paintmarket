@@ -20,7 +20,9 @@ const navLinks = [
     children: [
       { label: "Request a Painter", href: "/painter-request" },
       { label: "Site Estimator",    href: "/site-estimator" },
-      { label: "Painter",    href: "/painters" }
+      { label: "Painter",    href: "/painters" },
+    { label: "Training",   href: "/lessons" },
+
     ],
   },
   { label: "Contact", href: "/contact" }, 

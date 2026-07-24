@@ -312,7 +312,7 @@ function PaintCalculator() {
   // const [length, setLength] = useState("");
   const [width, setWidth] = useState("");
   const [height, setHeight] = useState("");
-  const [coats, setCoats] = useState("2");
+  // const [coats, setCoats] = useState("2");
   const [coverage, setCoverage] = useState("4.5"); // Default to Gravitex / Trowel (Average of 4-5)
   const [result, setResult] = useState<{ buckets: number; tins1B: number; tins4B: number } | null>(null);
 
@@ -322,14 +322,14 @@ function PaintCalculator() {
   const calculate = () => {
     const w = parseFloat(width);
     const h = parseFloat(height);
-    const c = parseInt(coats);
+    // const c = parseInt(coats);
     const cov = parseFloat(coverage);
 
     if (!w || !h || isNaN(w) || isNaN(h)) return;
 
     // Total wall area = perimeter × height (two lengths + two widths)
     const wallArea = 2 * (w + w) * h;
-    const totalBuckets = (wallArea * c) / cov;
+    const totalBuckets = wallArea / cov;
 
     setResult({
       buckets: Math.ceil(totalBuckets),
@@ -340,7 +340,7 @@ function PaintCalculator() {
 
   const reset = () => {
     setWidth(""); setHeight("");
-    setCoats("2"); setCoverage("4.5"); setResult(null);
+    // setCoats("2"); setCoverage("4.5"); setResult(null);
   };
 
   return (
@@ -366,14 +366,14 @@ function PaintCalculator() {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
+        {/* <div className="flex flex-col gap-1.5">
           <label className="text-brand-lt-gray text-xs font-medium">Number of Coats</label>
           <select value={coats} onChange={(e) => { setCoats(e.target.value); setResult(null); }} className={inputCls}>
             <option value="1">1 coat</option>
             <option value="2">2 coats (recommended)</option>
             <option value="3">3 coats</option>
           </select>
-        </div>
+        </div> */}
         <div className="flex flex-col gap-1.5">
           <label className="text-brand-lt-gray text-xs font-medium">Paint Coverage (Product Class)</label>
           <select value={coverage} onChange={(e) => { setCoverage(e.target.value); setResult(null); }} className={inputCls}>
@@ -410,8 +410,8 @@ function PaintCalculator() {
           <div className="grid grid-cols-3 gap-3 text-center">
             {[
               { label: "Total Buckets", value: `${result.buckets}` },
-              { label: "1B Buckets", value: result.tins1B },
-              { label: "4B Buckets", value: result.tins4B },
+              // { label: "1B Buckets", value: result.tins1B },
+              // { label: "4B Buckets", value: result.tins4B },
             ].map(({ label, value }) => (
               <div key={label} className="bg-brand-card border border-brand-border rounded-lg py-3 px-2">
                 <p className="text-brand-accent font-bold text-2xl font-display">{value}</p>
