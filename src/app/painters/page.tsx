@@ -855,44 +855,92 @@ export default function PaintersPage() {
       p.bio?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchState && matchSearch;
   });
-
+const COLORS = {
+  bg: "#F8F5F0",
+  cardBg: "#FFFFFF",
+  primaryText: "#1F1F1F",
+  secondaryText: "#7A7A7A",
+  accent: "#C59A46",
+  accentHover: "#B0873B",
+  border: "rgba(197, 154, 70, 0.2)",
+};
   return (
-    <main className="bg-brand-black min-h-screen text-white">
+   <main className="min-h-screen" style={{ backgroundColor: COLORS.bg }}>
       <Navbar />
 
       {/* Header */}
-      <section className="pt-32 pb-10 px-4 sm:px-6 lg:px-8 border-b border-brand-border/40">
+      <section 
+        className="pt-32 pb-10 px-4 sm:px-6 lg:px-8 border-b"
+        style={{ borderColor: COLORS.border }}
+      >
         <div className="max-w-7xl mx-auto">
-          <p className="text-brand-accent text-xs font-semibold tracking-[0.2em] uppercase mb-2">Expert Services</p>
-          <h1 className="font-display text-4xl font-bold">Find &amp; Book Professional Painters</h1>
-          <p className="text-brand-mid mt-2 text-sm">{painters.length} certified professionals ready to transform your space.</p>
+          <p 
+            className="text-xs font-semibold tracking-[0.2em] uppercase mb-2"
+            style={{ color: COLORS.accent }}
+          >
+            Expert Services
+          </p>
+          <h1 
+            className="font-display text-3xl sm:text-4xl font-bold"
+            style={{ color: COLORS.primaryText }}
+          >
+            Find &amp; Book Professional Painters
+          </h1>
+          <p 
+            className="mt-2 text-sm font-medium"
+            style={{ color: COLORS.secondaryText }}
+          >
+            {painters.length} certified professionals ready to transform your space.
+          </p>
         </div>
       </section>
 
-      {/* Filters */}
-      <div className="sticky top-[60px] z-20 bg-brand-black/96 backdrop-blur-md border-b border-brand-border/30 py-4 px-4 sm:px-6 lg:px-8">
+      {/* Sticky Filters Header */}
+      <div 
+        className="sticky top-[60px] z-20 backdrop-blur-md border-b py-4 px-4 sm:px-6 lg:px-8 shadow-sm"
+        style={{ 
+          backgroundColor: "rgba(248, 245, 240, 0.95)",
+          borderColor: "rgba(197, 154, 70, 0.15)"
+        }}
+      >
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-3 items-start sm:items-center">
 
-          {/* Search */}
-          <div className="flex items-center gap-2 bg-brand-raised border border-brand-border rounded-lg px-3.5 py-2.5 w-full sm:w-64">
-            <Search size={14} className="text-brand-subtle flex-shrink-0" />
-            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+          {/* Search Box */}
+          <div 
+            className="flex items-center gap-2 bg-white border rounded-lg px-3.5 py-2.5 w-full sm:w-64 shadow-sm"
+            style={{ borderColor: COLORS.border }}
+          >
+            <Search size={14} className="flex-shrink-0" style={{ color: COLORS.secondaryText }} />
+            <input 
+              value={searchQuery} 
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search name or skill..."
-              className="bg-transparent text-white text-sm placeholder-brand-subtle outline-none flex-1 min-w-0" />
+              className="bg-transparent text-sm placeholder:text-gray-400 outline-none flex-1 min-w-0"
+              style={{ color: COLORS.primaryText }} 
+            />
           </div>
 
-          {/* Location select dropdown ← replaces the tab buttons */}
-          <div className="relative">
+          {/* Location Select Dropdown */}
+          <div className="relative w-full sm:w-auto">
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="appearance-none bg-brand-raised border border-brand-border text-sm text-white
-                rounded-lg pl-3.5 pr-9 py-2.5 outline-none focus:border-brand-accent/60 transition-colors cursor-pointer"
+              className="w-full sm:w-auto appearance-none bg-white border text-sm rounded-lg pl-3.5 pr-9 py-2.5 outline-none focus:ring-1 transition-all cursor-pointer shadow-sm font-medium"
+              style={{ 
+                color: COLORS.primaryText,
+                borderColor: COLORS.border,
+              }}
             >
               <option value="All">All Locations</option>
-              {statesList.map((s) => <option key={s} value={s}>{s}</option>)}
+              {statesList.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
             </select>
-            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-mid pointer-events-none" />
+            <ChevronDown 
+              size={14} 
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" 
+              style={{ color: COLORS.secondaryText }}
+            />
           </div>
 
         </div>
@@ -903,26 +951,33 @@ export default function PaintersPage() {
         <div className="max-w-7xl mx-auto">
           {isLoading ? (
             <div className="py-20 flex justify-center">
-              <Loader size={32} className="animate-spin text-brand-accent" />
+              <Loader size={32} className="animate-spin" style={{ color: COLORS.accent }} />
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-20 text-center">
-              <User size={44} className="text-brand-border mx-auto mb-3" />
-              <p className="text-brand-mid text-sm">No painters found matching your criteria.</p>
+              <User size={44} className="mx-auto mb-3 opacity-30" style={{ color: COLORS.secondaryText }} />
+              <p className="text-sm font-medium" style={{ color: COLORS.secondaryText }}>
+                No painters found matching your criteria.
+              </p>
             </div>
           ) : (
             <>
-              <p className="text-brand-subtle text-xs mb-6 uppercase tracking-wider">
+              <p className="text-xs mb-6 uppercase tracking-wider font-semibold" style={{ color: COLORS.secondaryText }}>
                 {filtered.length} Painter{filtered.length !== 1 ? "s" : ""} found
               </p>
               <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filtered.map((p) => (
-                  <div key={p._id}
-                    className="bg-brand-card border border-brand-border rounded-2xl overflow-hidden
-                      hover:border-brand-accent/30 transition-all duration-300 flex flex-col group">
+                  <div 
+                    key={p._id}
+                    className="bg-white border rounded-2xl overflow-hidden transition-all duration-300 flex flex-col group shadow-sm hover:shadow-md hover:-translate-y-1"
+                    style={{ borderColor: COLORS.border }}
+                  >
 
-                    {/* Image */}
-                    <div className="relative w-full aspect-square bg-brand-raised overflow-hidden border-b border-brand-border/40">
+                    {/* Image Header */}
+                    <div 
+                      className="relative w-full aspect-square overflow-hidden border-b"
+                      style={{ backgroundColor: "#EFEBE4", borderColor: "rgba(197, 154, 70, 0.15)" }}
+                    >
                       <img
                         src={p.profileImage || "https://res.cloudinary.com/ddqhj3e3a/image/upload/v1784109923/paintmarket/painters/profile/nqdwczuyo1vsf5b0lyun.png"}
                         alt={p.fullName}
@@ -930,40 +985,62 @@ export default function PaintersPage() {
                       />
                     </div>
 
-                    {/* Info */}
+                    {/* Info Body */}
                     <div className="p-5 flex flex-col flex-1 gap-3">
                       <div>
-                        <h3 className="text-white font-semibold text-sm leading-tight">{p.fullName}</h3>
-                        <div className="flex items-center gap-1 mt-1 text-xs text-brand-mid">
-                          <MapPin size={11} className="text-brand-accent" />
+                        <h3 className="font-semibold text-base leading-tight" style={{ color: COLORS.primaryText }}>
+                          {p.fullName}
+                        </h3>
+                        <div className="flex items-center gap-1 mt-1 text-xs font-medium" style={{ color: COLORS.secondaryText }}>
+                          <MapPin size={12} style={{ color: COLORS.accent }} />
                           <span>{p.city}, {p.state}</span>
                         </div>
                       </div>
 
-                      <p className="text-brand-mid text-xs leading-relaxed line-clamp-2 italic">
+                      <p className="text-xs leading-relaxed line-clamp-2 italic" style={{ color: COLORS.secondaryText }}>
                         &ldquo;{p.bio || "Professional painter ready for your project."}&rdquo;
                       </p>
 
-                      <div className="grid grid-cols-2 gap-2 text-[11px] py-2 border-y border-brand-border/20">
+                      {/* Experience & Rating Bar */}
+                      <div 
+                        className="grid grid-cols-2 gap-2 text-[11px] py-2.5 border-y"
+                        style={{ borderColor: "rgba(197, 154, 70, 0.15)" }}
+                      >
                         <div>
-                          <span className="text-brand-subtle block">Experience</span>
-                          <span className="font-semibold text-white">{p.yearsOfExperience} yrs</span>
+                          <span className="block text-[10px] uppercase font-semibold" style={{ color: COLORS.secondaryText }}>
+                            Experience
+                          </span>
+                          <span className="font-bold text-xs" style={{ color: COLORS.primaryText }}>
+                            {p.yearsOfExperience} yrs
+                          </span>
                         </div>
                         <div>
-                          <span className="text-brand-subtle block">Rating</span>
-                          <span className="font-semibold text-white flex items-center gap-1">
-                            <Star size={10} className="fill-brand-accent text-brand-accent" />
+                          <span className="block text-[10px] uppercase font-semibold" style={{ color: COLORS.secondaryText }}>
+                            Rating
+                          </span>
+                          <span className="font-bold text-xs flex items-center gap-1" style={{ color: COLORS.primaryText }}>
+                            <Star size={11} className="fill-[#C59A46]" style={{ color: COLORS.accent }} />
                             {p.averageRating > 0 ? p.averageRating.toFixed(1) : "N/A"}
-                            <span className="text-brand-subtle">({p.totalReviews})</span>
+                            <span className="font-normal" style={{ color: COLORS.secondaryText }}>
+                              ({p.totalReviews})
+                            </span>
                           </span>
                         </div>
                       </div>
 
+                      {/* Skills Chips */}
                       {p.skills?.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          {p.skills.slice(0,3).map((s, i) => (
-                            <span key={i}
-                              className="bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-[10px] px-2 py-0.5 rounded-full">
+                          {p.skills.slice(0, 3).map((s, i) => (
+                            <span 
+                              key={i}
+                              className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
+                              style={{
+                                backgroundColor: "rgba(197, 154, 70, 0.08)",
+                                borderColor: "rgba(197, 154, 70, 0.25)",
+                                color: COLORS.accent,
+                              }}
+                            >
                               {s}
                             </span>
                           ))}
@@ -974,27 +1051,13 @@ export default function PaintersPage() {
                       <div className="mt-auto flex flex-col gap-2 pt-1">
                         <button
                           onClick={() => setBookingPainter(p)}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg
-                            bg-brand-accent text-brand-black hover:bg-brand-accent-lt transition-colors
-                            font-semibold text-xs"
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-white transition-all font-semibold text-xs shadow-sm active:scale-[0.99]"
+                          style={{ backgroundColor: COLORS.accent }}
                         >
-                          <Calendar size={12} /> Book This Painter
+                          <Calendar size={13} /> Book This Painter
                         </button>
-                        {/* <button
-                          onClick={() => setReviewsPainter(p)}
-                          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg
-                            border border-brand-border text-brand-mid hover:text-white hover:border-brand-accent/40
-                            transition-colors text-xs"
-                        >
-                          <MessageSquare size={12} /> View Reviews
-                          {p.totalReviews > 0 && (
-                            <span className="ml-1 bg-brand-raised border border-brand-border rounded-full
-                              text-[10px] px-1.5 py-0.5 text-brand-mid">
-                              {p.totalReviews}
-                            </span>
-                          )}
-                        </button> */}
                       </div>
+
                     </div>
                   </div>
                 ))}
@@ -1004,13 +1067,10 @@ export default function PaintersPage() {
         </div>
       </section>
 
-      {/* Modals */}
+      {/* Booking Modal */}
       {bookingPainter && (
         <BookingModal painter={bookingPainter} onClose={() => setBookingPainter(null)} />
       )}
-      {/* {reviewsPainter && (
-        <ReviewsModal painter={reviewsPainter} onClose={() => setReviewsPainter(null)} />
-      )} */}
 
       <Footer />
     </main>

@@ -498,7 +498,12 @@ export default function BlogPage() {
       return Array.isArray(rawBlogs) ? (rawBlogs as BlogPost[]) : [];
     },
   });
-
+const COLORS = {
+  bg: "#F8F5F0",
+  primaryText: "#1F1F1F",
+  secondaryText: "#7A7A7A",
+  accent: "#C59A46",
+};
   // Guarantee `list` is always an array
   const list: BlogPost[] = Array.isArray(data) ? data : [];
 
@@ -555,19 +560,25 @@ export default function BlogPage() {
   };
 
   return (
-    <main className="bg-brand-black min-h-screen">
+   <main className="min-h-screen" style={{ backgroundColor: COLORS.bg }}>
       <Navbar />
 
       {/* Hero Header */}
-      <section className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 border-b border-brand-mid/20 bg-gradient-to-br from-brand-black via-brand-card/20 to-brand-black">
+      <section 
+        className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 border-b"
+        style={{ 
+          borderColor: "rgba(197, 154, 70, 0.2)",
+          background: "linear-gradient(135deg, #F8F5F0 0%, #EFEBE4 100%)"
+        }}
+      >
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-brand-accent text-xs font-semibold tracking-[0.2em] uppercase mb-3">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase mb-3" style={{ color: COLORS.accent }}>
             Knowledge Base
           </p>
-          <h1 className="font-display text-5xl font-bold text-brand-white mb-4">
+          <h1 className="font-display text-4xl sm:text-5xl font-bold mb-4 leading-tight" style={{ color: COLORS.primaryText }}>
             Paint Tips &amp; Insights
           </h1>
-          <p className="text-brand-mid text-lg max-w-xl mx-auto">
+          <p className="text-lg max-w-xl mx-auto leading-relaxed" style={{ color: COLORS.secondaryText }}>
             Expert advice, how-to guides, and inspiration from Nigeria&apos;s
             paint professionals.
           </p>
@@ -575,34 +586,51 @@ export default function BlogPage() {
       </section>
 
       {/* Search + Tag Filters */}
-      <section className="py-6 px-4 sm:px-6 lg:px-8 border-b border-brand-mid/10 bg-brand-black">
+      <section 
+        className="py-6 px-4 sm:px-6 lg:px-8 border-b"
+        style={{ borderColor: "rgba(197, 154, 70, 0.15)", backgroundColor: COLORS.bg }}
+      >
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="flex items-center gap-2 bg-brand-card border border-brand-mid/30 rounded-lg px-4 py-2.5 w-full sm:w-72 flex-shrink-0">
-            <Search size={14} className="text-brand-mid" />
+          
+          {/* Search Box */}
+          <div 
+            className="flex items-center gap-2 bg-white border rounded-lg px-4 py-2.5 w-full sm:w-72 flex-shrink-0 shadow-sm"
+            style={{ borderColor: "rgba(197, 154, 70, 0.25)" }}
+          >
+            <Search size={14} style={{ color: COLORS.secondaryText }} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search articles..."
-              className="bg-transparent text-brand-white text-sm placeholder-brand-mid outline-none flex-1"
+              className="bg-transparent text-sm placeholder:text-gray-400 outline-none flex-1"
+              style={{ color: COLORS.primaryText }}
             />
           </div>
 
+          {/* Tag Chips */}
           <div className="flex flex-wrap gap-2">
-            {allTags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setActiveTag(tag)}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                  activeTag === tag
-                    ? "bg-brand-accent text-brand-black border-brand-accent"
-                    : "bg-transparent border-brand-mid/30 text-brand-mid hover:text-brand-white hover:border-brand-mid"
-                }`}
-              >
-                {tag !== "All" && <Tag size={10} />}
-                {tag}
-              </button>
-            ))}
+            {allTags.map((tag) => {
+              const isActive = activeTag === tag;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setActiveTag(tag)}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all shadow-sm"
+                  style={{
+                    backgroundColor: isActive ? COLORS.accent : "#FFFFFF",
+                    color: isActive ? "#FFFFFF" : COLORS.secondaryText,
+                    border: isActive 
+                      ? `1px solid ${COLORS.accent}` 
+                      : "1px solid rgba(197, 154, 70, 0.2)",
+                  }}
+                >
+                  {tag !== "All" && <Tag size={10} />}
+                  {tag}
+                </button>
+              );
+            })}
           </div>
+
         </div>
       </section>
 
@@ -611,98 +639,120 @@ export default function BlogPage() {
         <div className="max-w-7xl mx-auto">
           {isLoading ? (
             <div className="py-28 flex flex-col items-center justify-center gap-3">
-              <Loader size={36} className="animate-spin text-brand-accent" />
-              <p className="text-brand-mid text-sm">Loading articles...</p>
+              <Loader size={36} className="animate-spin" style={{ color: COLORS.accent }} />
+              <p className="text-sm font-medium" style={{ color: COLORS.secondaryText }}>Loading articles...</p>
             </div>
           ) : error ? (
-            <div className="py-20 text-center text-red-400">
-              <p>Failed to load articles. Please check back later.</p>
+            <div className="py-20 text-center text-red-500">
+              <p className="font-medium">Failed to load articles. Please check back later.</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-20 text-center">
-              <FileText size={48} className="text-brand-mid mx-auto mb-4" />
-              <p className="text-brand-mid text-lg">No articles found</p>
+              <FileText size={48} className="mx-auto mb-4 opacity-40" style={{ color: COLORS.secondaryText }} />
+              <p className="text-lg font-medium" style={{ color: COLORS.secondaryText }}>No articles found</p>
               <button
                 onClick={() => {
                   setSearch("");
                   setActiveTag("All");
                 }}
-                className="text-brand-accent text-sm mt-2 hover:underline"
+                className="text-sm mt-2 font-semibold hover:underline"
+                style={{ color: COLORS.accent }}
               >
                 Clear filters
               </button>
             </div>
           ) : (
-           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-  {list.map((b) => {
-    const postImages = normalizeImages(b.featuredImage, b.featuredImages);
-    const isFeatured = featured && b._id === featured._id;
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {list.map((b) => {
+                const postImages = normalizeImages(b.featuredImage, b.featuredImages);
+                const isFeatured = featured && b._id === featured._id;
 
-    return (
-      <article
-        key={b._id}
-        onClick={() => handleOpenModal(b)}
-        className={`bg-brand-card border rounded-2xl overflow-hidden transition-all group flex flex-col cursor-pointer ${
-          isFeatured
-            ? "border-brand-accent/50 hover:border-brand-accent"
-            : "border-brand-mid/30 hover:border-brand-accent/40"
-        }`}
-      >
-        <div className="h-44 bg-gradient-to-br from-brand-black to-brand-card/80 flex items-center justify-center overflow-hidden relative">
-          {postImages.length > 0 ? (
-            <Image
-              height={300}
-              width={400}
-              src={postImages[0]}
-              alt={b.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <FileText size={36} className="text-brand-accent/20" />
-          )}
-        </div>
+                return (
+                  <article
+                    key={b._id}
+                    onClick={() => handleOpenModal(b)}
+                    className="bg-white border rounded-2xl overflow-hidden transition-all duration-300 group flex flex-col cursor-pointer hover:-translate-y-1 hover:shadow-md"
+                    style={{
+                      borderColor: isFeatured ? COLORS.accent : "rgba(197, 154, 70, 0.2)",
+                    }}
+                  >
+                    {/* Image Header Block */}
+                    <div 
+                      className="h-44 flex items-center justify-center overflow-hidden relative"
+                      style={{ backgroundColor: "#EFEBE4" }}
+                    >
+                      {postImages.length > 0 ? (
+                        <Image
+                          height={300}
+                          width={400}
+                          src={postImages[0]}
+                          alt={b.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <FileText size={36} style={{ color: COLORS.accent, opacity: 0.3 }} />
+                      )}
+                    </div>
 
-        <div className="p-5 flex flex-col gap-3 flex-1">
-          <div className="flex flex-wrap gap-1.5 items-center">
-            {/* Featured Badge */}
-            {isFeatured && (
-              <span className="bg-brand-accent text-brand-black text-[10px] font-bold px-2 py-0.5 rounded-full">
-                Featured
-              </span>
-            )}
+                    {/* Content Section */}
+                    <div className="p-5 flex flex-col gap-3 flex-1">
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        {/* Featured Badge */}
+                        {isFeatured && (
+                          <span 
+                            className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm"
+                            style={{ backgroundColor: COLORS.accent }}
+                          >
+                            Featured
+                          </span>
+                        )}
 
-            {b.tags?.slice(0, 2).map((t) => (
-              <span
-                key={t}
-                className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${getTagColor(t)}`}
-              >
-                {t}
-              </span>
-            ))}
-          </div>
+                        {b.tags?.slice(0, 2).map((t) => (
+                          <span
+                            key={t}
+                            className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
+                            style={{
+                              backgroundColor: "rgba(197, 154, 70, 0.08)",
+                              borderColor: "rgba(197, 154, 70, 0.25)",
+                              color: COLORS.accent,
+                            }}
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
 
-          <h3 className="font-display text-base font-bold text-brand-white group-hover:text-brand-accent transition-colors leading-snug flex-1 line-clamp-2">
-            {b.title}
-          </h3>
+                      <h3 
+                        className="font-display text-base font-bold transition-colors leading-snug flex-1 line-clamp-2 group-hover:opacity-80"
+                        style={{ color: COLORS.primaryText }}
+                      >
+                        {b.title}
+                      </h3>
 
-          <p className="text-brand-mid text-xs leading-relaxed line-clamp-2">
-            {b.shortDescription}
-          </p>
+                      <p className="text-xs leading-relaxed line-clamp-2" style={{ color: COLORS.secondaryText }}>
+                        {b.shortDescription}
+                      </p>
 
-          <div className="flex items-center justify-between border-t border-brand-mid/20 pt-3 mt-auto">
-            <div className="flex items-center gap-2 text-brand-mid text-xs">
-              <Calendar size={11} className="text-brand-accent" />
-              {formatDate(b.createdAt)}
+                      <div 
+                        className="flex items-center justify-between border-t pt-3 mt-auto"
+                        style={{ borderColor: "rgba(197, 154, 70, 0.15)" }}
+                      >
+                        <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: COLORS.secondaryText }}>
+                          <Calendar size={12} style={{ color: COLORS.accent }} />
+                          {formatDate(b.createdAt)}
+                        </div>
+                        <span 
+                          className="flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all"
+                          style={{ color: COLORS.accent }}
+                        >
+                          Read <ArrowRight size={11} />
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-            <span className="flex items-center gap-1 text-brand-accent text-xs font-medium group-hover:gap-2 transition-all">
-              Read <ArrowRight size={11} />
-            </span>
-          </div>
-        </div>
-      </article>
-    );
-  })}
-</div>
           )}
         </div>
       </section>
@@ -710,57 +760,64 @@ export default function BlogPage() {
       {/* Modal View for Full Blog Details */}
       {selectedBlog && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
           onClick={() => setSelectedBlog(null)}
         >
           <div
-            className="bg-brand-black border border-brand-mid/30 w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl relative my-8 max-h-[90vh] flex flex-col"
+            className="bg-white border w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl relative my-8 max-h-[90vh] flex flex-col"
+            style={{ borderColor: "rgba(197, 154, 70, 0.3)" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={() => setSelectedBlog(null)}
-              className="absolute top-4 right-4 z-20 bg-black/70 text-white p-2 rounded-full hover:bg-brand-accent hover:text-black transition-colors"
+              className="absolute top-4 right-4 z-20 bg-white/90 text-gray-700 p-2 rounded-full border shadow-md hover:bg-amber-50 hover:text-black transition-colors"
+              style={{ borderColor: "rgba(197, 154, 70, 0.3)" }}
             >
               <X size={18} />
             </button>
 
-            <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
+            <div className="p-6 sm:p-8 overflow-y-auto space-y-6 custom-scrollbar">
               {/* Carousel / Image Lightbox */}
               {selectedImages.length > 0 && (
-                <div className="relative w-full h-64 sm:h-80 bg-black/50 rounded-xl overflow-hidden flex items-center justify-center border border-brand-mid/20">
+                <div 
+                  className="relative w-full h-64 sm:h-80 rounded-xl overflow-hidden flex items-center justify-center border"
+                  style={{ backgroundColor: COLORS.bg, borderColor: "rgba(197, 154, 70, 0.2)" }}
+                >
                   <img
                     src={selectedImages[currentImgIndex]}
                     alt={`${selectedBlog.title} - image ${currentImgIndex + 1}`}
                     className="w-full h-full object-contain"
                   />
 
-                  {/* Carousel Controls (only render if there are multiple images) */}
+                  {/* Carousel Controls */}
                   {selectedImages.length > 1 && (
                     <>
                       <button
                         onClick={handlePrevImage}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/70 text-white p-2 rounded-full hover:bg-brand-accent hover:text-black transition-colors"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 border text-gray-800 p-2 rounded-full hover:bg-white shadow-md transition-colors"
+                        style={{ borderColor: "rgba(197, 154, 70, 0.3)" }}
                       >
                         <ChevronLeft size={20} />
                       </button>
                       <button
                         onClick={handleNextImage}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/70 text-white p-2 rounded-full hover:bg-brand-accent hover:text-black transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 border text-gray-800 p-2 rounded-full hover:bg-white shadow-md transition-colors"
+                        style={{ borderColor: "rgba(197, 154, 70, 0.3)" }}
                       >
                         <ChevronRight size={20} />
                       </button>
 
                       {/* Image Position Dots */}
-                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/60 px-3 py-1 rounded-full">
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
                         {selectedImages.map((_, idx) => (
                           <button
                             key={idx}
                             onClick={() => setCurrentImgIndex(idx)}
-                            className={`w-2 h-2 rounded-full transition-all ${
+                            className={`h-2 rounded-full transition-all ${
                               currentImgIndex === idx
-                                ? "bg-brand-accent w-4"
-                                : "bg-white/40"
+                                ? "w-4 bg-white"
+                                : "w-2 bg-white/50"
                             }`}
                           />
                         ))}
@@ -776,39 +833,50 @@ export default function BlogPage() {
                   {selectedBlog.tags?.map((t) => (
                     <span
                       key={t}
-                      className={`text-xs px-2.5 py-0.5 rounded-full border ${getTagColor(t)}`}
+                      className="text-xs px-2.5 py-0.5 rounded-full border font-medium"
+                      style={{
+                        backgroundColor: "rgba(197, 154, 70, 0.08)",
+                        borderColor: "rgba(197, 154, 70, 0.25)",
+                        color: COLORS.accent,
+                      }}
                     >
                       {t}
                     </span>
                   ))}
                 </div>
 
-                <h2 className="font-display text-2xl sm:text-3xl font-bold text-brand-white">
+                <h2 className="font-display text-2xl sm:text-3xl font-bold leading-tight" style={{ color: COLORS.primaryText }}>
                   {selectedBlog.title}
                 </h2>
 
-                <div className="flex flex-wrap items-center gap-4 text-brand-mid text-xs border-b border-brand-mid/20 pb-4">
+                <div 
+                  className="flex flex-wrap items-center gap-4 text-xs font-medium border-b pb-4"
+                  style={{ color: COLORS.secondaryText, borderColor: "rgba(197, 154, 70, 0.2)" }}
+                >
                   {selectedBlog.author && (
                     <span className="flex items-center gap-1.5">
-                      <User size={13} className="text-brand-accent" />
+                      <User size={13} style={{ color: COLORS.accent }} />
                       {selectedBlog.author}
                     </span>
                   )}
                   <span className="flex items-center gap-1.5">
-                    <Calendar size={13} className="text-brand-accent" />
+                    <Calendar size={13} style={{ color: COLORS.accent }} />
                     {formatDate(selectedBlog.createdAt)}
                   </span>
                 </div>
               </div>
 
               {/* Body Content */}
-              <div className="text-brand-mid space-y-4 text-sm sm:text-base leading-relaxed">
+              <div className="space-y-4 text-sm sm:text-base leading-relaxed" style={{ color: COLORS.primaryText }}>
                 {selectedBlog.shortDescription && (
-                  <p className="text-brand-white font-medium italic border-l-2 border-brand-accent pl-4">
+                  <p 
+                    className="font-medium italic border-l-2 pl-4 py-1"
+                    style={{ borderColor: COLORS.accent, color: COLORS.secondaryText }}
+                  >
                     {selectedBlog.shortDescription}
                   </p>
                 )}
-                <div className="whitespace-pre-line">
+                <div className="whitespace-pre-line leading-relaxed" style={{ color: COLORS.primaryText }}>
                   {selectedBlog.content ?? selectedBlog.shortDescription}
                 </div>
               </div>

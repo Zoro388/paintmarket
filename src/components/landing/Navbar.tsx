@@ -142,15 +142,22 @@ console.log(authData)
       </Link>
     );
   };
-
+const isHome = pathname === "/";
+const isSolid = scrolled || !isHome;
   return (
     <header
+      // className={cn(
+      //   "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
+      //   scrolled
+      //     ? `${pathname!=='/'?``:``} bg-brand-black/90 backdrop-blur-md border-b border-brand-border/60 py-3`
+      //     : "bg-brand-black/40 backdrop-blur-md py-5"
+      // )}
       className={cn(
-        "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
-        scrolled
-          ? "bg-brand-black/90 backdrop-blur-md border-b border-brand-border/60 py-3"
-          : "bg-brand-black/40 backdrop-blur-md py-5"
-      )}
+      "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
+      isSolid
+        ? "bg-brand-black/90 backdrop-blur-md border-b border-brand-border/60 py-3"
+        : "bg-brand-black/40 backdrop-blur-md py-5"
+    )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
