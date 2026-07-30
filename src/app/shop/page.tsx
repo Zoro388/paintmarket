@@ -318,7 +318,7 @@ closeColourPicker();
     </div>
   )}
 
-  <div className="mt-auto pt-5">
+  <div className="mt-auto  flex flec-col gap-2 pt-5">
 
     <button
       onClick={() => openColourPicker(p)}
@@ -330,6 +330,17 @@ closeColourPicker();
     >
       🎨 Choose Colour
     </button>
+
+    {((p.questions?.length ?? 0) > 0 || p.coverageInformation) && (
+                          <button type="button"
+                            onClick={() => { setActiveInfoProduct(p); setOpenAccordionIndex(null); }}
+                            className="flex items-center justify-center gap-2 py-2 rounded-lg text-xs
+                              font-semibold bg-white border transition-all hover:bg-amber-50/40"
+                            style={{ borderColor: "rgba(197,154,70,0.3)", color: COLORS.primaryText }}>
+                            <HelpCircle size={13} style={{ color: COLORS.accent }} />
+                            See Info &amp; FAQs
+                          </button>
+                        )}
 
   </div>
 
