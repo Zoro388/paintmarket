@@ -344,7 +344,7 @@ export default function Footer() {
           style={{ borderColor: "rgba(197, 154, 70, 0.2)" }}
         >
           {[
-            { icon: Phone, text: "+234 8105 757 406" },
+            { icon: Phone, text: "0808 4999 530" },
             { icon: Mail, text: "Paintdomain.ng@gmail.com" },
             { icon: MapPin, text: "Shop 81p F01 BUILDING MATERIAL MARKET KUBWA ABUJA Nigeria" },
           ].map(({ icon: Icon, text }) => (
@@ -361,7 +361,7 @@ export default function Footer() {
           style={{ borderColor: "rgba(197, 154, 70, 0.2)" }}
         >
           <p className="text-xs" style={{ color: COLORS.secondaryText }}>
-            © {new Date().getFullYear()} Paint Domain &amp; Primary Interior Builders. All rights reserved.
+            © {new Date().getFullYear()} Paint Domain. All rights reserved.
           </p>
           <p className="text-xs opacity-75" style={{ color: COLORS.secondaryText }}>
             Powered by Smart-choice interior builders
