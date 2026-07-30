@@ -364,7 +364,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Paint Domain &amp; Primary Interior Builders. All rights reserved.
           </p>
           <p className="text-xs opacity-75" style={{ color: COLORS.secondaryText }}>
-            Powered by PaintMarket
+            Powered by Smart-choice interior builders
           </p>
         </div>
       </div>

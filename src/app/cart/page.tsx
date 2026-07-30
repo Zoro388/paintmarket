@@ -29,18 +29,28 @@ const PAYSTACK_PUBLIC_KEY =
   "pk_test_b8b7d8af804f4f40170a151f7ba3173fc325c591";
 
 // ── Types ────────────────────────────────────────────────────────────────────
+interface Variant {
+  _id: string;
+  colourName: string;
+  colourCode: string;
+  image?: {
+    url: string;
+    publicId?: string;
+  };
+}
+
 interface Product {
   _id: string;
   productName: string;
   productCategory: string;
   productDescription: string;
-  colourCode: string;
-  colourName: string;
   price: number;
   stockQuantity: number;
   coverageInformation: string;
   productFeatures: string[];
   status: string;
+  productImages?: string[];
+  variants: Variant[];
 }
 
 interface CartItem {
@@ -63,7 +73,6 @@ const NIGERIA_STATES = [
   "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun",
   "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
 ];
-
 const STEPS = ["Cart", "Delivery", "Payment", "Confirm"];
 
 const inputCls =
@@ -88,6 +97,7 @@ export default function CartPage() {
     queryKey: ["cart-product"],
     queryFn: async () => {
       const res = await apiGetCart();
+      console.log('res', res)
       const rawItems = res?.cart?.items ?? res?.data ?? [];
       return rawItems as CartItem[];
     },
@@ -96,7 +106,11 @@ export default function CartPage() {
   // 2. Local cart state, kept in sync with server data
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartInitialized, setCartInitialized] = useState(false);
-
+const getSelectedVariant = (item: CartItem): Variant | undefined => {
+  return item.product.variants?.find(
+    (variant) => variant._id === item.selectedColour
+  );
+};
   useEffect(() => {
     if (!cartInitialized && fetchedItems && fetchedItems.length > 0) {
       setCart(fetchedItems);
@@ -152,11 +166,7 @@ export default function CartPage() {
     updateCartItemQuantity.mutate({ productId, quantity: parsed });
   };
 
-  const updateColour = (id: string, colour: string) => {
-    setCart((prev) =>
-      prev.map((item) => (item.product._id === id ? { ...item, selectedColour: colour } : item))
-    );
-  };
+ 
 
  
 
@@ -371,102 +381,167 @@ export default function CartPage() {
                   <div className="flex flex-col gap-3">
                     {cart.map((item) => {
                       const isUpdatingThisItem =
-                        updateCartItemQuantity.isPending &&
-                        updateCartItemQuantity.variables?.productId === item.product._id;
+  updateCartItemQuantity.isPending &&
+  updateCartItemQuantity.variables?.productId === item.product._id;
 
-                      return (
-                        <div
-                          key={item.product._id}
-                          className="flex flex-col sm:flex-row gap-4 bg-brand-raised border border-brand-border
-                          rounded-xl p-4"
-                        >
-                          <div
-                            className="w-full sm:w-20 h-20 rounded-lg flex-shrink-0 relative overflow-hidden"
-                            style={{ backgroundColor: item.product.colourCode }}
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                          </div>
+const selectedVariant = getSelectedVariant(item);
 
-                          <div className="flex-1 flex flex-col gap-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <h3 className="text-white font-semibold text-sm">{item.product.productName}</h3>
-                                <p className="text-brand-mid text-xs mt-0.5">{item.product.productCategory}</p>
-                              </div>
-                              <button
-                                onClick={() => 
-                                    removeFromCart.mutate(item.product._id)
+return (
+  <div
+    key={`${item.product._id}-${item.selectedColour}`}
+    className="flex flex-col sm:flex-row gap-4 bg-brand-raised border border-brand-border rounded-xl p-4"
+  >
+    {/* Variant Image */}
+    <div className="w-full sm:w-24 h-24 rounded-xl overflow-hidden bg-brand-card border border-brand-border flex-shrink-0">
 
-                                }
-                                className="text-brand-subtle hover:text-red-400 transition-colors p-1"
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            </div>
+      {selectedVariant?.image?.url ? (
+        <img
+          src={selectedVariant.image.url}
+          alt={selectedVariant.colourName}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-brand-mid text-xs">
+          No Image
+        </div>
+      )}
 
-                            <div className="flex flex-wrap items-center gap-3 mt-1">
-                              <div className="flex items-center gap-1.5">
-                                <label className="text-brand-subtle text-xs">Colour:</label>
-                                <select
-                                  value={item.selectedColour}
-                                  onChange={(e) => updateColour(item.product._id, e.target.value)}
-                                  className="bg-brand-card border border-brand-border text-white text-xs
-                                  rounded-md px-2 py-1.5 focus:outline-none focus:border-brand-accent/60 cursor-pointer"
-                                >
-                                    
-                                    <option className="disabled">{item.selectedColour}</option>
-                                 
-                                </select>
-                              </div>
+    </div>
 
-                              <div className="flex items-center gap-1.5">
-                                <label className="text-brand-subtle text-xs">Qty:</label>
-                                <div className="flex items-center bg-brand-card border border-brand-border rounded-md">
-                                  <button
-                                    onClick={() => handleQtyChange(item.product._id, item.quantity, -1)}
-                                    disabled={isUpdatingThisItem}
-                                    className="p-1.5 text-brand-mid hover:text-white transition-colors disabled:opacity-40"
-                                  >
-                                    <Minus size={12} />
-                                  </button>
+    <div className="flex-1 flex flex-col gap-3">
 
-                                  <input
-                                    type="number"
-                                    min={1}
-                                    value={item.quantity}
-                                    disabled={isUpdatingThisItem}
-                                    onChange={(e) => handleQtyInputChange(item.product._id, e.target.value)}
-                                    className="bg-transparent text-white text-xs font-semibold w-10 text-center
-                                      focus:outline-none [appearance:textfield]
-                                      [&::-webkit-outer-spin-button]:appearance-none
-                                      [&::-webkit-inner-spin-button]:appearance-none"
-                                  />
+      <div className="flex justify-between items-start">
 
-                                  <button
-                                    onClick={() => handleQtyChange(item.product._id, item.quantity, 1)}
-                                    disabled={isUpdatingThisItem}
-                                    className="p-1.5 text-brand-mid hover:text-white transition-colors disabled:opacity-40"
-                                  >
-                                    <Plus size={12} />
-                                  </button>
-                                </div>
-                                {isUpdatingThisItem && (
-                                  <Loader size={12} className="animate-spin text-brand-accent" />
-                                )}
-                              </div>
-                            </div>
+        <div>
 
-                            <div className="flex items-center justify-between mt-1">
-                              <span className="text-brand-mid text-xs">
-                                {formatCurrency(item.product.price)} each
-                              </span>
-                              <span className="text-brand-accent font-bold text-sm font-display">
-                                {formatCurrency(item.product.price * item.quantity)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
+          <h3 className="text-white font-semibold text-base">
+            {item.product.productName}
+          </h3>
+
+          <p className="text-brand-mid text-xs mt-1">
+            {item.product.productCategory}
+          </p>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+
+            <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-accent">
+              {selectedVariant?.colourName ?? "Unknown Colour"}
+            </span>
+
+            <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-mid">
+              {selectedVariant?.colourCode ?? ""}
+            </span>
+
+          </div>
+
+        </div>
+
+        <button
+          onClick={() => removeFromCart.mutate(item.product._id)}
+          className="text-brand-subtle hover:text-red-400 transition-colors"
+        >
+          <Trash2 size={16} />
+        </button>
+
+      </div>
+
+      {/* Quantity */}
+
+      <div className="flex items-center gap-3">
+
+        <span className="text-xs text-brand-mid">
+          Quantity
+        </span>
+
+        <div className="flex items-center bg-brand-card border border-brand-border rounded-md">
+
+          <button
+            onClick={() =>
+              handleQtyChange(
+                item.product._id,
+                item.quantity,
+                -1
+              )
+            }
+            disabled={isUpdatingThisItem}
+            className="p-2"
+          >
+            <Minus size={12} />
+          </button>
+
+          <input
+            type="number"
+            min={1}
+            value={item.quantity}
+            disabled={isUpdatingThisItem}
+            onChange={(e) =>
+              handleQtyInputChange(
+                item.product._id,
+                e.target.value
+              )
+            }
+            className="bg-transparent text-white text-center w-12 outline-none"
+          />
+
+          <button
+            onClick={() =>
+              handleQtyChange(
+                item.product._id,
+                item.quantity,
+                1
+              )
+            }
+            disabled={isUpdatingThisItem}
+            className="p-2"
+          >
+            <Plus size={12} />
+          </button>
+
+        </div>
+
+        {isUpdatingThisItem && (
+          <Loader
+            size={12}
+            className="animate-spin text-brand-accent"
+          />
+        )}
+
+      </div>
+
+      <div className="flex items-center justify-between pt-2 border-t border-brand-border">
+
+        <div>
+
+          <p className="text-brand-mid text-xs">
+            Unit Price
+          </p>
+
+          <p className="text-white font-medium">
+            {formatCurrency(item.product.price)}
+          </p>
+
+        </div>
+
+        <div className="text-right">
+
+          <p className="text-brand-mid text-xs">
+            Total
+          </p>
+
+          <p className="text-brand-accent font-bold text-lg">
+            {formatCurrency(
+              item.product.price * item.quantity
+            )}
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+);
                     })}
                   </div>
                 )}
@@ -627,29 +702,54 @@ export default function CartPage() {
                 <div>
                   <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">Items</p>
                   <div className="flex flex-col gap-2">
-                    {cart.map((item) => (
-                      <div
-                        key={item.product._id}
-                        className="flex items-center justify-between bg-brand-raised
-                        border border-brand-border rounded-lg px-4 py-3 text-sm"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-4 h-4 rounded-full border border-white/20"
-                            style={{ backgroundColor: item.product.colourCode }}
-                          />
-                          <div>
-                            <p className="text-white">{item.product.productName}</p>
-                            <p className="text-brand-mid text-xs">
-                              {item.selectedColour} · ×{item.quantity}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-brand-accent font-semibold">
-                          {formatCurrency(item.product.price * item.quantity)}
-                        </span>
-                      </div>
-                    ))}
+                   {cart.map((item) => {
+  const selectedVariant = getSelectedVariant(item);
+
+  return (
+    <div
+      key={`${item.product._id}-${item.selectedColour}`}
+      className="flex items-center justify-between bg-brand-raised border border-brand-border rounded-lg px-4 py-3 text-sm"
+    >
+      <div className="flex items-center gap-3">
+
+        <div className="w-12 h-12 rounded-lg overflow-hidden border border-brand-border bg-brand-card">
+
+          {selectedVariant?.image?.url ? (
+            <img
+              src={selectedVariant.image.url}
+              alt={selectedVariant.colourName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-brand-border" />
+          )}
+
+        </div>
+
+        <div>
+          <p className="text-white font-medium">
+            {item.product.productName}
+          </p>
+
+          <p className="text-brand-mid text-xs">
+            {selectedVariant?.colourName ?? "Unknown Colour"}
+          </p>
+
+          <p className="text-brand-subtle text-[11px]">
+            {selectedVariant?.colourCode}
+            {" · "}
+            Qty: {item.quantity}
+          </p>
+        </div>
+
+      </div>
+
+      <span className="text-brand-accent font-semibold">
+        {formatCurrency(item.product.price * item.quantity)}
+      </span>
+    </div>
+  );
+})}
                   </div>
                 </div>
 

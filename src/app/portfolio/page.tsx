@@ -25,7 +25,6 @@ export default function PortfolioPage() {
         return [];
       }
     },
-    placeholderData: [],
   });
 
   const list = (data ?? []) as any[];

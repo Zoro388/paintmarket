@@ -13,7 +13,10 @@ const navLinks = [
   { label: "Home",      href: "/" },
   { label: "Shop",      href: "/shop" },
   { label: "Portfolio", href: "/portfolio" },
+          { label: "Tools", href: "/tools" },
+
     { label: "Blog", href: "/blog" },
+
 
   {
     label: "Services",
@@ -240,7 +243,10 @@ const isSolid = scrolled || !isHome;
               Get a Quote
             </Link>
           </div>
-
+ <div className="flex items-center gap-3 px-3 py-2 lg:hidden">
+              <CartIcon onClick={() => setMobileOpen(false)} />
+              {/* <span className="text-brand-mid text-xs">Cart{cartCount > 0 ? ` (${cartCount})` : ""}</span> */}
+            </div>
           {/* Mobile toggle */}
           <button
             className="lg:hidden text-white p-2 rounded-md hover:bg-brand-raised transition-colors"
@@ -293,10 +299,7 @@ const isSolid = scrolled || !isHome;
 
           {/* Mobile bottom CTAs */}
           <div className="border-t border-brand-border/60 mt-2 pt-3 flex flex-col gap-2">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <CartIcon onClick={() => setMobileOpen(false)} />
-              <span className="text-brand-mid text-xs">Cart{cartCount > 0 ? ` (${cartCount})` : ""}</span>
-            </div>
+           
             <AuthButton mobile onClick={() => setMobileOpen(false)} />
             <Link
               href="/painter-request"

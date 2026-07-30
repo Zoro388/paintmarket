@@ -122,8 +122,8 @@ export const apiGetPaymentHistory = () =>
 
 // cart
 // ── PORTFOLIO ─────────────────────────────────────────────────────────────────
-export const apiAddToCart = (body: { productId: string; quantity: number; selectedColour: string }) =>
-  endpointRoute.post("/cart", body).then((r) => r.data);
+// export const apiAddToCart = (body: { productId: string; quantity: number; selectedColour: string }) =>
+//   endpointRoute.post("/cart", body).then((r) => r.data);
 
 export const apiGetCart = () =>
   endpointRoute.get("/cart").then((r) => r.data);
@@ -238,3 +238,23 @@ export const apiSignUpAsAPainter = (formData: FormData) =>
 
 export const userGetAllHeroBanners = () =>
   endpointRoute.get("/hero").then((r) => r.data);
+
+
+
+// Response shape:
+// { products: [{ _id, productName, productCategory, productDescription, price,
+//                coverageInformation, productFeatures, questions, status,
+//                productImages: ["bucket-url"],
+//                variants: [{ _id, colourName, colourCode, image: { url, publicId } }] }] }
+ 
+export const apiGetSingleProduct = (id: string) =>
+  endpointRoute.get(`/products/${id}`).then((r) => r.data);
+ 
+// ── CART (updated — selectedColour should now be the variant _id) ─────────────
+ 
+export const apiAddToCart = (body: {
+  productId: string;
+  quantity: number;
+  selectedColour: string; // pass variant._id (not colourName) per new spec
+}) => endpointRoute.post("/cart", body).then((r) => r.data);
+ 

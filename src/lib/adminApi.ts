@@ -1,22 +1,28 @@
 import endpointRoute from "@/lib/endpointRoute";
 
 // ── PRODUCTS ──────────────────────────────────────────────────────────────────
-export const adminCreateProduct = (body: {
-  productName: string; productCategory: string; productDescription: string;
-  productImages: string[]; colourCode: string; colourName: string;
-  price: number; stockQuantity: number; coverageInformation: string;
-  productFeatures: string[]; status: "active" | "inactive";
-}) => endpointRoute.post("/products", body).then((r) => r.data);
+// BEFORE:
+// export const adminUpdateProduct = (id: string, body: Partial<{ productName: string; ... }>) => ...
 
+// AFTER:
+export const adminUpdateProduct = (id: string, body: FormData) => 
+  endpointRoute.put(`/products/${id}`, body, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }).then((r) => r.data);
+
+export const adminCreateProduct = (body: FormData) => 
+  endpointRoute.post(`/products`, body, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }).then((r) => r.data);
+  
 export const adminGetProducts = (params?: { page?: number; limit?: number; search?: string }) =>
   endpointRoute.get("/products", { params }).then((r) => r.data);
 
-export const adminUpdateProduct = (id: string, body: Partial<{
-  productName: string; productCategory: string; productDescription: string;
-  productImages: string[]; colourCode: string; colourName: string;
-  price: number; stockQuantity: number; coverageInformation: string;
-  productFeatures: string[]; status: string;
-}>) => endpointRoute.put(`/products/${id}`, body).then((r) => r.data);
+
 
 export const adminDeleteProduct = (id: string) =>
   endpointRoute.delete(`/products/${id}`).then((r) => r.data);
@@ -328,3 +334,30 @@ export const adminApprovePainter = (id: string, body?: { deleteVerificationVideo
 // Reject Painter
 export const adminRejectPainter = (id: string, body: { reason: string }) =>
   endpointRoute.patch(`/painters/${id}/reject`, body).then((r) => r.data);
+
+
+// 
+export const adminAddVariant = (productId: string, fd: FormData) =>
+  endpointRoute.post(`/products/${productId}/variants`, fd).then((r) => r.data);
+// FormData fields: colourName, colourCode, variantImage (single File)
+ 
+export const adminUpdateVariant = (productId: string, variantId: string, fd: FormData) =>
+  endpointRoute.put(`/products/${productId}/variants/${variantId}`, fd).then((r) => r.data);
+// FormData fields: colourName, colourCode, variantImage (optional — omit to keep existing image)
+ 
+export const adminDeleteVariant = (productId: string, variantId: string) =>
+  endpointRoute.delete(`/products/${productId}/variants/${variantId}`).then((r) => r.data);
+
+
+
+// const adminUpdateProduct = (id: string, fd: FormData) =>
+//   endpointRoute.put(`/products/${id}`, fd).then((r) => r.data);
+
+// const adminAddVariant = (productId: string, fd: FormData) =>
+//   endpointRoute.post(`/products/${productId}/variants`, fd).then((r) => r.data);
+
+// const adminUpdateVariant = (productId: string, variantId: string, fd: FormData) =>
+//   endpointRoute.put(`/products/${productId}/variants/${variantId}`, fd).then((r) => r.data);
+
+// const adminDeleteVariant = (productId: string, variantId: string) =>
+//   endpointRoute.delete(`/products/${productId}/variants/${variantId}`).then((r) => r.data);
