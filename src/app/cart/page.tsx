@@ -450,7 +450,7 @@ return (
       <div className="flex items-center gap-3">
 
         <span className="text-xs text-brand-mid">
-          Quantity
+          Buckets
         </span>
 
         <div className="flex items-center bg-brand-card border border-brand-border rounded-md">

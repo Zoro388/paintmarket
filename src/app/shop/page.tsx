@@ -137,6 +137,7 @@ closeColourPicker();
   //   if (addedItems[p._id] === variantId) { toast.error("Already in cart!"); return; }
   //   mutation.mutate({ productId: p._id, quantity: 1, selectedColour: variantId });
   // };
+  const [quantity, setQuantity] = useState<number>(1);
   const handleAddToCart = () => {
   if (!colourPickerProduct) return;
 
@@ -145,9 +146,7 @@ closeColourPicker();
     return;
   }
 
-  if (
-    addedItems[colourPickerProduct._id] === pickerSelectedVariant
-  ) {
+  if (addedItems[colourPickerProduct._id] === pickerSelectedVariant) {
     toast.error("Already in cart!");
     return;
   }
@@ -159,12 +158,40 @@ closeColourPicker();
 
   mutation.mutate({
     productId: colourPickerProduct._id,
-    quantity: 1,
+    quantity: quantity, // <-- Passes the user selected quantity
     selectedColour: pickerSelectedVariant,
   });
 
   closeColourPicker();
 };
+//   const handleAddToCart = () => {
+//   if (!colourPickerProduct) return;
+
+//   if (!pickerSelectedVariant) {
+//     toast.error("Please select a colour");
+//     return;
+//   }
+
+//   if (
+//     addedItems[colourPickerProduct._id] === pickerSelectedVariant
+//   ) {
+//     toast.error("Already in cart!");
+//     return;
+//   }
+
+//   setSelectedVariants((prev) => ({
+//     ...prev,
+//     [colourPickerProduct._id]: pickerSelectedVariant,
+//   }));
+
+//   mutation.mutate({
+//     productId: colourPickerProduct._id,
+//     quantity: 1,
+//     selectedColour: pickerSelectedVariant,
+//   });
+
+//   closeColourPicker();
+// };
 
   if (isLoading) return <LoadingSkeleton />;
 
@@ -497,181 +524,558 @@ closeColourPicker();
 {/* ================= COLOUR PICKER MODAL ================= */}
 
 {colourPickerProduct && (
+  // <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+
+  //   <div
+  //     className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-y-scroll"
+  //   >
+
+  //     {/* Header */}
+
+  //     <div
+  //       className="flex items-center justify-between p-6 border-b"
+  //       style={{
+  //         borderColor: "rgba(197,154,70,.2)",
+  //       }}
+  //     >
+  //       <div>
+
+  //         <p
+  //           className="uppercase text-xs tracking-[.3em]"
+  //           style={{
+  //             color: COLORS.accent,
+  //           }}
+  //         >
+  //           Choose Colour
+  //         </p>
+
+  //         <h2
+  //           className="font-bold text-2xl mt-2"
+  //           style={{
+  //             color: COLORS.primaryText,
+  //           }}
+  //         >
+  //           {colourPickerProduct.productName}
+  //         </h2>
+  //         <p>features</p>
+  //         {colourPickerProduct.productFeatures?.length > 0 && (
+  //   <div className="flex flex-wrap gap-2 mt-4">
+  //     {colourPickerProduct.productFeatures.map((feature) => (
+  //       <span
+  //         key={feature}
+  //         className="px-3 py-1 rounded-full text-xs font-medium"
+  //         style={{
+  //           background: "rgba(197,154,70,.08)",
+  //           color: COLORS.accent,
+  //           border: "1px solid rgba(197,154,70,.25)",
+  //         }}
+  //       >
+  //         {feature}
+  //       </span>
+  //     ))}
+  //   </div>
+  // )}
+
+  //       </div>
+
+  //       <button
+  //         onClick={closeColourPicker}
+  //         className="p-3 rounded-xl hover:bg-gray-100"
+  //       >
+  //         <X size={22} />
+  //       </button>
+  //     </div>
+
+  //     {/* Body */}
+
+  //     <div className="p-8">
+
+  //       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+  //         {colourPickerProduct.variants.map((variant) => {
+
+  //           const selected =
+  //             pickerSelectedVariant === variant._id;
+
+  //           return (
+
+  //             <button
+  //               key={variant._id}
+  //               type="button"
+  //               onClick={() =>
+  //                 setPickerSelectedVariant(variant._id)
+  //               }
+  //               className={`rounded-2xl border transition-all duration-200 p-3 ${
+  //                 selected
+  //                   ? "scale-105 shadow-xl"
+  //                   : "hover:shadow-lg"
+  //               }`}
+  //               style={{
+  //                 borderColor: selected
+  //                   ? COLORS.accent
+  //                   : "#ddd",
+  //                 borderWidth: selected ? 3 : 1,
+  //               }}
+  //             >
+
+  //               <div className="relative">
+
+  //                 {variant.image?.url ? (
+
+  //                   <img
+  //                     src={variant.image.url}
+  //                     alt={variant.colourName}
+  //                     className="w-full h-32 object-cover rounded-xl"
+  //                   />
+
+  //                 ) : (
+
+  //                   <div className="w-full h-32 rounded-xl bg-gray-200" />
+
+  //                 )}
+
+  //                 {selected && (
+
+  //                   <div className="absolute top-2 right-2">
+
+  //                     <div
+  //                       className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+  //                       style={{
+  //                         background: COLORS.accent,
+  //                       }}
+  //                     >
+  //                       ✓
+  //                     </div>
+
+  //                   </div>
+
+  //                 )}
+
+  //               </div>
+
+  //               <h3
+  //                 className="mt-4 font-semibold"
+  //                 style={{
+  //                   color: COLORS.primaryText,
+  //                 }}
+  //               >
+  //                 {variant.colourName}
+  //               </h3>
+
+  //               <p
+  //                 className="text-xs mt-1"
+  //                 style={{
+  //                   color: COLORS.secondaryText,
+  //                 }}
+  //               >
+  //                 {variant.colourCode}
+  //               </p>
+
+  //             </button>
+
+  //           );
+
+  //         })}
+
+  //       </div>
+
+  //     </div>
+
+  //     {/* Footer */}
+
+  //     <div
+  //       className="border-t  p-6 flex gap-4"
+  //       style={{
+  //         borderColor: "rgba(197,154,70,.2)",
+  //       }}
+  //     >
+
+  //       <button
+  //         onClick={closeColourPicker}
+  //         className="flex-1 py-4 bg-red-500 text-white rounded-xl border font-semibold"
+  //       >
+  //         Cancel
+  //       </button>
+
+  //       <button
+  //         onClick={handleAddToCart}
+  //         disabled={!pickerSelectedVariant}
+  //         className="flex-1 py-4 rounded-xl font-bold text-white disabled:opacity-50"
+  //         style={{
+  //           background: COLORS.accent,
+  //         }}
+  //       >
+  //         <ShoppingCart
+  //           size={18}
+  //           className="inline mr-2"
+  //         />
+  //         Add To Cart
+  //       </button>
+
+  //     </div>
+
+  //   </div>
+
+  // </div>
+  // <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  //   <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+      
+  //     {/* Header (Fixed at top) */}
+  //     <div
+  //       className="flex items-center justify-between p-6 border-b shrink-0"
+  //       style={{ borderColor: "rgba(197,154,70,.2)" }}
+  //     >
+  //       <div>
+  //         <p
+  //           className="uppercase text-xs tracking-[.3em]"
+  //           style={{ color: COLORS.accent }}
+  //         >
+  //           Choose Colour
+  //         </p>
+
+  //         <h2
+  //           className="font-bold text-2xl mt-2"
+  //           style={{ color: COLORS.primaryText }}
+  //         >
+  //           {colourPickerProduct.productName}
+  //         </h2>
+          
+  //         {colourPickerProduct.productFeatures?.length > 0 && (
+  //           <div className="flex flex-wrap gap-2 mt-4">
+  //             {colourPickerProduct.productFeatures.map((feature) => (
+  //               <span
+  //                 key={feature}
+  //                 className="px-3 py-1 rounded-full text-xs font-medium"
+  //                 style={{
+  //                   background: "rgba(197,154,70,.08)",
+  //                   color: COLORS.accent,
+  //                   border: "1px solid rgba(197,154,70,.25)",
+  //                 }}
+  //               >
+  //                 {feature}
+  //               </span>
+  //             ))}
+  //           </div>
+  //         )}
+  //       </div>
+
+  //       <button
+  //         onClick={closeColourPicker}
+  //         className="p-3 rounded-xl hover:bg-gray-100"
+  //       >
+  //         <X size={22} />
+  //       </button>
+  //     </div>
+
+  //     {/* Body (Scrolls internally when content overflows max height) */}
+  //     <div className="p-8 overflow-y-auto flex-1">
+        
+  //       {/* Quantity Controls Section */}
+  //       <div className="mb-6 p-4 rounded-2xl border bg-gray-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style={{ borderColor: "rgba(197,154,70,.2)" }}>
+  //         <div>
+  //           <label className="text-sm font-semibold block" style={{ color: COLORS.primaryText }}>
+  //             Amount of Bucket(s)
+  //           </label>
+  //           <p className="text-xs" style={{ color: COLORS.secondaryText }}>
+  //             Select quantity of buckets required
+  //           </p>
+  //         </div>
+
+  //         <div className="flex items-center gap-3">
+  //           <button
+  //             type="button"
+  //             onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+  //             className="w-10 h-10 rounded-xl border flex items-center justify-center font-bold bg-white text-lg hover:bg-gray-100 transition-colors shadow-sm"
+  //             style={{ borderColor: "rgba(197,154,70,.3)", color: COLORS.primaryText }}
+  //           >
+  //             -
+  //           </button>
+  //           <input
+  //             type="number"
+  //             min="1"
+  //             value={quantity}
+  //             onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+  //             className="w-16 h-10 text-center font-bold text-lg rounded-xl border bg-white focus:outline-none focus:ring-2 shadow-sm"
+  //             style={{ borderColor: "rgba(197,154,70,.3)", color: COLORS.primaryText }}
+  //           />
+  //           <button
+  //             type="button"
+  //             onClick={() => setQuantity((prev) => prev + 1)}
+  //             className="w-10 h-10 rounded-xl border flex items-center justify-center font-bold bg-white text-lg hover:bg-gray-100 transition-colors shadow-sm"
+  //             style={{ borderColor: "rgba(197,154,70,.3)", color: COLORS.primaryText }}
+  //           >
+  //             +
+  //           </button>
+  //         </div>
+  //       </div>
+
+  //       {/* Colour Selection Grid */}
+  //       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+  //         {colourPickerProduct.variants.map((variant) => {
+  //           const selected = pickerSelectedVariant === variant._id;
+
+  //           return (
+  //             <button
+  //               key={variant._id}
+  //               type="button"
+  //               onClick={() => setPickerSelectedVariant(variant._id)}
+  //               className={`rounded-2xl border transition-all duration-200 p-3 text-left ${
+  //                 selected ? "scale-105 shadow-xl" : "hover:shadow-lg"
+  //               }`}
+  //               style={{
+  //                 borderColor: selected ? COLORS.accent : "#ddd",
+  //                 borderWidth: selected ? 3 : 1,
+  //               }}
+  //             >
+  //               <div className="relative">
+  //                 {variant.image?.url ? (
+  //                   <img
+  //                     src={variant.image.url}
+  //                     alt={variant.colourName}
+  //                     className="w-full h-32 object-cover rounded-xl"
+  //                   />
+  //                 ) : (
+  //                   <div className="w-full h-32 rounded-xl bg-gray-200" />
+  //                 )}
+
+  //                 {selected && (
+  //                   <div className="absolute top-2 right-2">
+  //                     <div
+  //                       className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+  //                       style={{ background: COLORS.accent }}
+  //                     >
+  //                       ✓
+  //                     </div>
+  //                   </div>
+  //                 )}
+  //               </div>
+
+  //               <h3
+  //                 className="mt-4 font-semibold"
+  //                 style={{ color: COLORS.primaryText }}
+  //               >
+  //                 {variant.colourName}
+  //               </h3>
+
+  //               <p
+  //                 className="text-xs mt-1"
+  //                 style={{ color: COLORS.secondaryText }}
+  //               >
+  //                 {variant.colourCode}
+  //               </p>
+  //             </button>
+  //           );
+  //         })}
+  //       </div>
+  //     </div>
+
+  //     {/* Footer (Fixed at bottom) */}
+  //     <div
+  //       className="border-t p-6 flex gap-4 shrink-0"
+  //       style={{ borderColor: "rgba(197,154,70,.2)" }}
+  //     >
+  //       <button
+  //         onClick={closeColourPicker}
+  //         className="flex-1 py-4 bg-red-500 text-white rounded-xl border font-semibold hover:bg-red-600 transition-colors"
+  //       >
+  //         Cancel
+  //       </button>
+
+  //       <button
+  //         onClick={handleAddToCart}
+  //         disabled={!pickerSelectedVariant}
+  //         className="flex-1 py-4 rounded-xl font-bold text-white disabled:opacity-50 hover:opacity-90 transition-opacity"
+  //         style={{ background: COLORS.accent }}
+  //       >
+  //         <ShoppingCart size={18} className="inline mr-2" />
+  //         Add {quantity} Bucket{quantity > 1 ? "s" : ""} To Cart
+  //       </button>
+  //     </div>
+
+  //   </div>
+  // </div>
+
   <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-
+  {/* The whole modal is constrained to 90vh max height and scrolls as a single unit */}
+  <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+    
+    {/* Header */}
     <div
-      className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden"
+      className="flex items-center justify-between p-6 border-b"
+      style={{ borderColor: "rgba(197,154,70,.2)" }}
     >
-
-      {/* Header */}
-
-      <div
-        className="flex items-center justify-between p-6 border-b"
-        style={{
-          borderColor: "rgba(197,154,70,.2)",
-        }}
-      >
-        <div>
-
-          <p
-            className="uppercase text-xs tracking-[.3em]"
-            style={{
-              color: COLORS.accent,
-            }}
-          >
-            Choose Colour
-          </p>
-
-          <h2
-            className="font-bold text-2xl mt-2"
-            style={{
-              color: COLORS.primaryText,
-            }}
-          >
-            {colourPickerProduct.productName}
-          </h2>
-
-        </div>
-
-        <button
-          onClick={closeColourPicker}
-          className="p-3 rounded-xl hover:bg-gray-100"
+      <div>
+        <p
+          className="uppercase text-xs tracking-[.3em]"
+          style={{ color: COLORS.accent }}
         >
-          <X size={22} />
-        </button>
-      </div>
+          Choose Colour
+        </p>
 
-      {/* Body */}
-
-      <div className="p-8">
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-
-          {colourPickerProduct.variants.map((variant) => {
-
-            const selected =
-              pickerSelectedVariant === variant._id;
-
-            return (
-
-              <button
-                key={variant._id}
-                type="button"
-                onClick={() =>
-                  setPickerSelectedVariant(variant._id)
-                }
-                className={`rounded-2xl border transition-all duration-200 p-3 ${
-                  selected
-                    ? "scale-105 shadow-xl"
-                    : "hover:shadow-lg"
-                }`}
+        <h2
+          className="font-bold text-2xl mt-2"
+          style={{ color: COLORS.primaryText }}
+        >
+          {colourPickerProduct.productName}
+        </h2>
+        
+        {colourPickerProduct.productFeatures?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {colourPickerProduct.productFeatures.map((feature) => (
+              <span
+                key={feature}
+                className="px-3 py-1 rounded-full text-xs font-medium"
                 style={{
-                  borderColor: selected
-                    ? COLORS.accent
-                    : "#ddd",
-                  borderWidth: selected ? 3 : 1,
+                  background: "rgba(197,154,70,.08)",
+                  color: COLORS.accent,
+                  border: "1px solid rgba(197,154,70,.25)",
                 }}
               >
+                {feature}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
-                <div className="relative">
+      <button
+        onClick={closeColourPicker}
+        className="p-3 rounded-xl hover:bg-gray-100"
+      >
+        <X size={22} />
+      </button>
+    </div>
 
-                  {variant.image?.url ? (
-
-                    <img
-                      src={variant.image.url}
-                      alt={variant.colourName}
-                      className="w-full h-32 object-cover rounded-xl"
-                    />
-
-                  ) : (
-
-                    <div className="w-full h-32 rounded-xl bg-gray-200" />
-
-                  )}
-
-                  {selected && (
-
-                    <div className="absolute top-2 right-2">
-
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white"
-                        style={{
-                          background: COLORS.accent,
-                        }}
-                      >
-                        ✓
-                      </div>
-
-                    </div>
-
-                  )}
-
-                </div>
-
-                <h3
-                  className="mt-4 font-semibold"
-                  style={{
-                    color: COLORS.primaryText,
-                  }}
-                >
-                  {variant.colourName}
-                </h3>
-
-                <p
-                  className="text-xs mt-1"
-                  style={{
-                    color: COLORS.secondaryText,
-                  }}
-                >
-                  {variant.colourCode}
-                </p>
-
-              </button>
-
-            );
-
-          })}
-
+    {/* Body */}
+    <div className="p-8">
+      
+      {/* Amount of Bucket(s) Section */}
+      <div 
+        className="mb-6 p-4 rounded-2xl border bg-gray-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" 
+        style={{ borderColor: "rgba(197,154,70,.2)" }}
+      >
+        <div>
+          <label className="text-sm font-semibold block" style={{ color: COLORS.primaryText }}>
+            Amount of Bucket(s)
+          </label>
+          <p className="text-xs" style={{ color: COLORS.secondaryText }}>
+            Select quantity of buckets required
+          </p>
         </div>
 
-      </div>
-
-      {/* Footer */}
-
-      <div
-        className="border-t  p-6 flex gap-4"
-        style={{
-          borderColor: "rgba(197,154,70,.2)",
-        }}
-      >
-
-        <button
-          onClick={closeColourPicker}
-          className="flex-1 py-4 bg-red-500 text-white rounded-xl border font-semibold"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={handleAddToCart}
-          disabled={!pickerSelectedVariant}
-          className="flex-1 py-4 rounded-xl font-bold text-white disabled:opacity-50"
-          style={{
-            background: COLORS.accent,
-          }}
-        >
-          <ShoppingCart
-            size={18}
-            className="inline mr-2"
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+            className="w-10 h-10 rounded-xl border flex items-center justify-center font-bold bg-white text-lg hover:bg-gray-100 transition-colors shadow-sm"
+            style={{ borderColor: "rgba(197,154,70,.3)", color: COLORS.primaryText }}
+          >
+            -
+          </button>
+          <input
+            type="number"
+            min="1"
+            value={quantity}
+            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+            className="w-16 h-10 text-center font-bold text-lg rounded-xl border bg-white focus:outline-none focus:ring-2 shadow-sm"
+            style={{ borderColor: "rgba(197,154,70,.3)", color: COLORS.primaryText }}
           />
-          Add To Cart
-        </button>
-
+          <button
+            type="button"
+            onClick={() => setQuantity((prev) => prev + 1)}
+            className="w-10 h-10 rounded-xl border flex items-center justify-center font-bold bg-white text-lg hover:bg-gray-100 transition-colors shadow-sm"
+            style={{ borderColor: "rgba(197,154,70,.3)", color: COLORS.primaryText }}
+          >
+            +
+          </button>
+        </div>
       </div>
 
+      {/* Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {colourPickerProduct.variants.map((variant) => {
+          const selected = pickerSelectedVariant === variant._id;
+
+          return (
+            <button
+              key={variant._id}
+              type="button"
+              onClick={() => setPickerSelectedVariant(variant._id)}
+              className={`rounded-2xl border transition-all duration-200 p-3 text-left ${
+                selected ? "scale-105 shadow-xl" : "hover:shadow-lg"
+              }`}
+              style={{
+                borderColor: selected ? COLORS.accent : "#ddd",
+                borderWidth: selected ? 3 : 1,
+              }}
+            >
+              <div className="relative">
+                {variant.image?.url ? (
+                  <img
+                    src={variant.image.url}
+                    alt={variant.colourName}
+                    className="w-full h-32 object-cover rounded-xl"
+                  />
+                ) : (
+                  <div className="w-full h-32 rounded-xl bg-gray-200" />
+                )}
+
+                {selected && (
+                  <div className="absolute top-2 right-2">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+                      style={{ background: COLORS.accent }}
+                    >
+                      ✓
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <h3
+                className="mt-4 font-semibold"
+                style={{ color: COLORS.primaryText }}
+              >
+                {variant.colourName}
+              </h3>
+
+              <p
+                className="text-xs mt-1"
+                style={{ color: COLORS.secondaryText }}
+              >
+                {variant.colourCode}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* Footer */}
+    <div
+      className="border-t p-6 flex flex-col  gap-4 md:flex-row"
+      style={{ borderColor: "rgba(197,154,70,.2)" }}
+    >
+      <button
+        onClick={closeColourPicker}
+        className="flex-1 py-4 bg-red-500 text-white rounded-xl border font-semibold hover:bg-red-600 transition-colors"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={handleAddToCart}
+        disabled={!pickerSelectedVariant}
+        className="flex-1 py-4 rounded-xl font-bold text-white disabled:opacity-50 hover:opacity-90 transition-opacity"
+        style={{ background: COLORS.accent }}
+      >
+        <ShoppingCart size={18} className="inline mr-2" />
+        Add {quantity} Bucket{quantity > 1 ? "s" : ""} To Cart
+      </button>
     </div>
 
   </div>
+</div>
 )}
       <Footer />
     </main>

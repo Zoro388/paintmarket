@@ -692,43 +692,161 @@ function ProductFormModal({ product, onClose }: { product?: Product; onClose: ()
   };
 
   // Mutation
+  // const mutation = useMutation({
+  //   mutationFn: async () => {
+  //     const fd = new FormData();
+  //     fd.append("productName",        productName);
+  //     fd.append("productCategory",    productCategory);
+  //     fd.append("productDescription", productDescription);
+  //     fd.append("price",              price);
+  //     fd.append("coverageInformation",coverageInformation);
+  //     fd.append("status",             status);
+  //     fd.append("productFeatures", JSON.stringify(
+  //       productFeatures.split(",").map((f) => f.trim()).filter(Boolean)
+  //     ));
+  //     if (questions.length > 0) {
+  //       fd.append("questions", JSON.stringify(questions));
+  //     }
+  //     // Variants JSON — order must match image order below
+  //     fd.append("variants", JSON.stringify(
+  //       variants.map((v) => ({ colourName: v.colourName, colourCode: v.colourCode }))
+  //     ));
+
+  //     // Images — ORDER MATTERS: bucket first, then one per variant
+  //     if (bucketFile) fd.append("productImages", bucketFile);
+  //     variants.forEach((v) => {
+  //       if (v._file) fd.append("productImages", v._file);
+  //     });
+  //     console.log('succ', fd)
+
+  //     return isEdit ? adminUpdateProduct(product!._id, fd) : adminCreateProduct(fd);
+  //   },
+  //   onSuccess: () => {
+  //     qc.invalidateQueries({ queryKey: ["products"] });
+  //     toast.success(isEdit ? "Product updated" : "Product created");
+  //     onClose();
+  //   },
+  //   onError: (err: Error) => toast.error(err.message || "Operation failed"),
+  // });
+
   const mutation = useMutation({
-    mutationFn: async () => {
-      const fd = new FormData();
-      fd.append("productName",        productName);
-      fd.append("productCategory",    productCategory);
-      fd.append("productDescription", productDescription);
-      fd.append("price",              price);
-      fd.append("coverageInformation",coverageInformation);
-      fd.append("status",             status);
-      fd.append("productFeatures", JSON.stringify(
-        productFeatures.split(",").map((f) => f.trim()).filter(Boolean)
-      ));
-      if (questions.length > 0) {
-        fd.append("questions", JSON.stringify(questions));
+  mutationFn: async () => {
+    const fd = new FormData();
+
+    fd.append("productName", productName);
+    fd.append("productCategory", productCategory);
+    fd.append("productDescription", productDescription);
+    fd.append("price", price);
+    fd.append("coverageInformation", coverageInformation);
+    fd.append("status", status);
+
+    fd.append(
+      "productFeatures",
+      JSON.stringify(
+        productFeatures
+          .split(",")
+          .map((f) => f.trim())
+          .filter(Boolean)
+      )
+    );
+
+    if (questions.length > 0) {
+      fd.append("questions", JSON.stringify(questions));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Variants
+    |--------------------------------------------------------------------------
+    */
+
+    fd.append(
+      "variants",
+      JSON.stringify(
+        variants.map((v) => ({
+          _id: v._id || null,
+          colourName: v.colourName,
+          colourCode: v.colourCode,
+        }))
+      )
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bucket Image
+    |--------------------------------------------------------------------------
+    */
+
+    if (bucketFile) {
+      fd.append("productImages", bucketFile);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Variant Images
+    |--------------------------------------------------------------------------
+    | Existing variants use their MongoDB _id
+    | Newly added variants use new_{index}
+    |--------------------------------------------------------------------------
+    */
+
+    variants.forEach((v, index) => {
+
+      if (!v._file) return;
+
+      if (v._id) {
+
+        fd.append(
+          `variantImage_${v._id}`,
+          v._file
+        );
+
+      } else {
+
+        fd.append(
+          `variantImage_new_${index}`,
+          v._file
+        );
+
       }
-      // Variants JSON — order must match image order below
-      fd.append("variants", JSON.stringify(
-        variants.map((v) => ({ colourName: v.colourName, colourCode: v.colourCode }))
-      ));
 
-      // Images — ORDER MATTERS: bucket first, then one per variant
-      if (bucketFile) fd.append("productImages", bucketFile);
-      variants.forEach((v) => {
-        if (v._file) fd.append("productImages", v._file);
-      });
-      console.log('succ', fd)
+    });
 
-      return isEdit ? adminUpdateProduct(product!._id, fd) : adminCreateProduct(fd);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
-      toast.success(isEdit ? "Product updated" : "Product created");
-      onClose();
-    },
-    onError: (err: Error) => toast.error(err.message || "Operation failed"),
-  });
+    console.log("Update FormData");
 
+    for (const pair of fd.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
+    return isEdit
+      ? adminUpdateProduct(product!._id, fd)
+      : adminCreateProduct(fd);
+  },
+
+  onSuccess: () => {
+
+    qc.invalidateQueries({
+      queryKey: ["products"],
+    });
+
+    toast.success(
+      isEdit
+        ? "Product updated"
+        : "Product created"
+    );
+
+    onClose();
+
+  },
+
+  onError: (err: Error) => {
+
+    toast.error(
+      err.message || "Operation failed"
+    );
+
+  },
+});
   const handleSubmit = () => {
     if (!productName.trim())                { toast.error("Product name is required"); return; }
     if (!productCategory)                   { toast.error("Please select a category"); return; }
