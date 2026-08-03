@@ -321,6 +321,11 @@ export const adminGetPendingPainters = (params?: { page?: number }) =>
 export const adminGetApprovedPainters = (params?: { page?: number }) =>
   endpointRoute.get("/painters/approved", { params }).then((r) => r.data);
 
+// toggle painter
+export const adminTogglePinater = (id: string) =>
+  endpointRoute.patch(`/painters/${id}/status`).then((r) => r.data);
+
+
 // Get Painter Details
 export const adminGetPainterDetails = (id: string) =>
   endpointRoute.get(`/painters/admin/${id}`).then((r) => r.data);
