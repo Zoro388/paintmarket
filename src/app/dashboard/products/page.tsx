@@ -814,9 +814,10 @@ function ProductFormModal({ product, onClose }: { product?: Product; onClose: ()
 
     console.log("Update FormData");
 
-    for (const pair of fd.entries()) {
-      console.log(pair[0], pair[1]);
-    }
+    // for (const pair of fd.entries()) {
+    //   console.log(pair[0], pair[1]);
+    // }
+    
 
     return isEdit
       ? adminUpdateProduct(product!._id, fd)

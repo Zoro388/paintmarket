@@ -1014,7 +1014,7 @@ closeColourPicker();
                   <img
                     src={variant.image.url}
                     alt={variant.colourName}
-                    className="w-full h-32 object-cover rounded-xl"
+                    className="w-full h-14 object-cover rounded-xl"
                   />
                 ) : (
                   <div className="w-full h-32 rounded-xl bg-gray-200" />
