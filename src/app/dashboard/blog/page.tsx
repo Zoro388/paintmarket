@@ -1,303 +1,583 @@
 
 
-"use client";
-import { useState, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import { adminGetBlogs, adminCreateBlog, adminUpdateBlog, adminDeleteBlog } from "@/lib/adminApi";
-import { formatDate } from "@/lib/utils";
-import { Plus, Pencil, Trash2, X, Loader, FileText, Upload } from "lucide-react";
+// 'use client';
 
-interface Blog {
-  _id: string; 
-  title: string; 
-  shortDescription: string; 
-  content: string;
-  author: string; 
-  status: "draft" | "published"; 
-  tags: string[];
-  featuredImage?: string; 
-  createdAt: string;
-}
+// import { useState } from 'react';
+// import BlogEditor from './components/blogComponent';
+// import endpointRoute from '@/lib/endpointRoute';
+// import DeleteEdit from './components/editDelete'
+// import toast from 'react-hot-toast';
 
-const MOCK: Blog[] = [
-  { _id: "b1", title: "5 Tips for Choosing the Perfect Interior Paint Colour", shortDescription: "Picking the right colour can transform any room. Here's how to get it right.", content: "", author: "Paint Domain Team", status: "published", tags: ["Interior","Colour","Tips"], createdAt: "2025-06-01" },
-  { _id: "b2", title: "Why Exterior Paint Quality Matters More Than You Think", shortDescription: "Your exterior paint is your home's first line of defence against the elements.", content: "", author: "Paint Domain Team", status: "published", tags: ["Exterior","Quality"], createdAt: "2025-05-20" },
-  { _id: "b3", title: "The Complete Guide to Surface Preparation", shortDescription: "Great paint starts with great prep. Learn the steps pros never skip.", content: "", author: "Paint Domain Team", status: "draft", tags: ["Guide","Preparation"], createdAt: "2025-05-10" },
-];
+// const Page = () => {
+//   const [title, setTitle] = useState('');
+//   const [shortDescription, setShortDescription] = useState('');
+//   // Store the raw File object for featuredImage
+//   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+//   const [imagePreview, setImagePreview] = useState<string>('');
+//   const [content, setContent] = useState('');
 
-const EMPTY = { title: "", shortDescription: "", content: "", author: "Paint Domain Team", status: "draft" as const };
+//   // SEO fields
+//   const [metaTitle, setMetaTitle] = useState('');
+//   const [metaDescription, setMetaDescription] = useState('');
+//   const [canonicalUrl, setCanonicalUrl] = useState('');
 
-function BlogFormModal({ blog, onClose }: { blog?: Blog; onClose: () => void }) {
-  const qc = useQueryClient();
-  const isEdit = !!blog;
-  const fileInputRef = useRef<HTMLInputElement>(null);
+//   const [loading, setLoading] = useState(false);
 
-  // Form State text variables
-  const [form, setForm] = useState(
-    blog
-      ? { 
-          title: blog.title, 
-          shortDescription: blog.shortDescription, 
-          content: blog.content, 
-          author: blog.author, 
-          status: blog.status, 
-          tags: blog.tags.join(", ")
-        }
-      : { ...EMPTY, tags: "" }
-  );
+//   // Featured Image Change Handler
+//   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const file = e.target.files?.[0];
+//     if (file) {
+//       setFeaturedImage(file);
+//       setImagePreview(URL.createObjectURL(file));
+//     }
+//   };
 
-  // Track the actual binary File object for Multipart upload
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  // Preview URL for UI display rendering
-  const [previewUrl, setPreviewUrl] = useState<string | null>(blog?.featuredImage || null);
+//   const handleRemoveImage = () => {
+//     setFeaturedImage(null);
+//     setImagePreview('');
+//   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
 
-    const file = files[0];
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
+//     if (!featuredImage) {
+//       toast.error('Featured image is required');
+//       return;
+//     }
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+//     setLoading(true);
+
+//     try {
+//       // Build multipart/form-data payload as expected by backend
+//       const formData = new FormData();
+//       formData.append('title', title);
+//       formData.append('shortDescription', shortDescription || metaDescription);
+//       formData.append('content', content);
+//       formData.append('featuredImage', featuredImage); // Sends the raw File object
+//       formData.append('metaTitle', metaTitle || title);
+//       formData.append('metaDescription', metaDescription);
+//       formData.append('canonicalUrl', canonicalUrl);
+//       formData.append('status', 'published');
+//       formData.append('isFeatured', 'true');
+
+//       await endpointRoute.post('/blogs', formData, {
+//         headers: {
+//           'Content-Type': 'multipart/form-data',
+//         },
+//       });
+
+//       toast.success('Blog post saved successfully!');
+
+//       // Reset Form
+//       setTitle('');
+//       setShortDescription('');
+//       setFeaturedImage(null);
+//       setImagePreview('');
+//       setContent('');
+//       setMetaTitle('');
+//       setMetaDescription('');
+//       setCanonicalUrl('');
+//     } catch (error) {
+//       toast.error('Something went wrong');
+//       console.error(error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-[#F8F5F0] py-10 px-4">
+//       <form
+//         onSubmit={handleSubmit}
+//         className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-[#7A7A7A]/20 space-y-6 text-[#1F1F1F]"
+//       >
+//         <div className="border-b border-[#7A7A7A]/20 pb-4">
+//           <h1 className="text-2xl font-bold text-[#1F1F1F]">Create Blog Post</h1>
+//           <p className="text-sm text-[#7A7A7A] mt-1">
+//             Write your story, upload images, and manage SEO options.
+//           </p>
+//         </div>
+
+//         {/* Main Section */}
+//         <div className="space-y-5">
+//           <div>
+//             <label className="block text-sm font-semibold mb-1 text-[#1F1F1F]">
+//               Blog Title *
+//             </label>
+//             <input
+//               type="text"
+//               value={title}
+//               onChange={(e) => setTitle(e.target.value)}
+//               className="w-full border border-[#7A7A7A]/30 p-3 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] transition"
+//               placeholder="Enter post title..."
+//               required
+//             />
+//           </div>
+
+//           <div>
+//             <label className="block text-sm font-semibold mb-1 text-[#1F1F1F]">
+//               Short Description *
+//             </label>
+//             <input
+//               type="text"
+//               value={shortDescription}
+//               onChange={(e) => setShortDescription(e.target.value)}
+//               className="w-full border border-[#7A7A7A]/30 p-3 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] transition"
+//               placeholder="Short description..."
+//               required
+//             />
+//           </div>
+
+//           {/* Featured Image Upload Field */}
+//           <div>
+//             <label className="block text-sm font-semibold mb-1 text-[#1F1F1F]">
+//               Featured Image *
+//             </label>
+
+//             {!imagePreview ? (
+//               <label className="cursor-pointer inline-block bg-[#C59A46] text-white text-sm font-semibold px-4 py-2.5 rounded-md hover:bg-[#b0873b] transition">
+//                 📁 Choose Featured Image
+//                 <input
+//                   type="file"
+//                   accept="image/*"
+//                   className="hidden"
+//                   onChange={handleImageChange}
+//                   required
+//                 />
+//               </label>
+//             ) : (
+//               <div className="relative w-full h-56 border border-[#7A7A7A]/20 rounded-lg overflow-hidden bg-[#F8F5F0] group">
+//                 <img
+//                   src={imagePreview}
+//                   alt="Featured Preview"
+//                   className="w-full h-full object-cover"
+//                 />
+
+//                 <button
+//                   type="button"
+//                   onClick={handleRemoveImage}
+//                   className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow-md hover:bg-red-700 transition flex items-center justify-center group-hover:scale-105"
+//                   title="Remove featured image"
+//                 >
+//                   <svg
+//                     xmlns="http://www.w3.org/2000/svg"
+//                     fill="none"
+//                     viewBox="0 0 24 24"
+//                     strokeWidth={2}
+//                     stroke="currentColor"
+//                     className="w-4 h-4"
+//                   >
+//                     <path
+//                       strokeLinecap="round"
+//                       strokeLinejoin="round"
+//                       d="M6 18L18 6M6 6l12 12"
+//                     />
+//                   </svg>
+//                 </button>
+
+//                 <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+//                   Featured Image Selected
+//                 </div>
+//               </div>
+//             )}
+//           </div>
+
+//           {/* TipTap Rich Text Editor */}
+//           <div>
+//             <label className="block text-sm font-semibold mb-1 text-[#1F1F1F]">
+//               Blog Content *
+//             </label>
+//             <BlogEditor content={content} onChange={setContent} />
+//           </div>
+//         </div>
+
+//         {/* SEO Configuration Section */}
+//         <div className="border-t border-[#7A7A7A]/20 pt-6 space-y-4">
+//           <div>
+//             <h2 className="text-lg font-bold text-[#1F1F1F]">SEO Settings</h2>
+//             <p className="text-xs text-[#7A7A7A]">
+//               Optional fields to optimize for search engines.
+//             </p>
+//           </div>
+
+//           <div>
+//             <label className="block text-sm font-medium mb-1 text-[#1F1F1F]">
+//               Meta Title
+//             </label>
+//             <input
+//               type="text"
+//               value={metaTitle}
+//               onChange={(e) => setMetaTitle(e.target.value)}
+//               className="w-full border border-[#7A7A7A]/30 p-2.5 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] text-sm"
+//               placeholder="Custom title tag for search engines"
+//             />
+//           </div>
+
+//           <div>
+//             <label className="block text-sm font-medium mb-1 text-[#1F1F1F]">
+//               Meta Description
+//             </label>
+//             <textarea
+//               rows={3}
+//               value={metaDescription}
+//               onChange={(e) => setMetaDescription(e.target.value)}
+//               className="w-full border border-[#7A7A7A]/30 p-2.5 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] text-sm"
+//               placeholder="Short summary for Google search results..."
+//             />
+//           </div>
+
+//           <div>
+//             <label className="block text-sm font-medium mb-1 text-[#1F1F1F]">
+//               Canonical URL
+//             </label>
+//             <input
+//               type="text"
+//               value={canonicalUrl}
+//               onChange={(e) => setCanonicalUrl(e.target.value)}
+//               className="w-full border border-[#7A7A7A]/30 p-2.5 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] text-sm"
+//               placeholder="https://yourdomain.com/blog/original-post"
+//             />
+//           </div>
+//         </div>
+
+//         {/* Submit Button */}
+//         <button
+//           type="submit"
+//           disabled={loading}
+//           className="w-full py-3 bg-[#1F1F1F] text-white font-bold rounded-md hover:bg-[#C59A46] transition duration-200 disabled:opacity-50"
+//         >
+//           {loading ? 'Publishing...' : 'Publish Blog Post'}
+//         </button>
+//       </form>
+
+
+//       <DeleteEdit />
+//     </div>
+//   );
+// };
+
+// export default Page;
+
+'use client';
+
+import { useState } from 'react';
+import BlogEditor from './components/blogComponent';
+import BlogList, { BlogItem } from './components/editDelete';
+import endpointRoute from '@/lib/endpointRoute';
+import toast from 'react-hot-toast';
+
+const Page = () => {
+  // Editing state tracking
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const [title, setTitle] = useState('');
+  const [shortDescription, setShortDescription] = useState('');
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [content, setContent] = useState('');
+
+  // SEO fields
+  const [metaTitle, setMetaTitle] = useState('');
+  const [metaDescription, setMetaDescription] = useState('');
+  const [canonicalUrl, setCanonicalUrl] = useState('');
+
+  const [loading, setLoading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Featured Image Change Handler
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFeaturedImage(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
   const handleRemoveImage = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    setFeaturedImage(null);
+    setImagePreview('');
   };
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (!isEdit && !selectedFile) {
-        throw new Error("Please upload a featured image before submitting.");
-      }
-      
+  // Populate form for Editing
+  const handleEditSelect = (blog: BlogItem) => {
+    setEditingId(blog._id);
+    setTitle(blog.title || '');
+    setShortDescription(blog.shortDescription || '');
+    setContent(blog.content || '');
+    setImagePreview(blog.featuredImage || '');
+    setFeaturedImage(null); // Leave null unless admin uploads a new file
+    setMetaTitle(blog.metaTitle || '');
+    setMetaDescription(blog.metaDescription || '');
+    setCanonicalUrl(blog.canonicalUrl || '');
+
+    // Smooth scroll back to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast.success(`Editing: "${blog.title}"`);
+  };
+
+  // Reset form back to Creation mode
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setTitle('');
+    setShortDescription('');
+    setFeaturedImage(null);
+    setImagePreview('');
+    setContent('');
+    setMetaTitle('');
+    setMetaDescription('');
+    setCanonicalUrl('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingId && !featuredImage) {
+      toast.error('Featured image is required for new posts');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
       const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("author", form.author);
-      formData.append("status", form.status);
-      formData.append("shortDescription", form.shortDescription);
-      formData.append("content", form.content);
-      
-      // ✅ FIX: Process raw tags string into a proper stringified JSON Array to resolve the parsing error
-      const tagsArray = form.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-      
-      formData.append("tags", JSON.stringify(tagsArray));
+      formData.append('title', title);
+      formData.append('shortDescription', shortDescription || metaDescription);
+      formData.append('content', content);
 
-      // Append standard native file binary directly under singular configuration requested by backend
-      if (selectedFile) {
-        formData.append("featuredImage", selectedFile);
+      // Send raw file if chosen, or keep imagePreview URL string when editing
+      if (featuredImage) {
+        formData.append('featuredImage', featuredImage);
+      } else if (imagePreview) {
+        formData.append('featuredImage', imagePreview);
       }
 
-      return isEdit 
-        ? adminUpdateBlog(blog!._id, formData as any) 
-        : adminCreateBlog(formData as any);
-    },
-    onSuccess: () => { 
-      qc.invalidateQueries({ queryKey: ["blogs"] }); 
-      toast.success(isEdit ? "Post updated" : "Post created"); 
-      onClose(); 
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || err.message || "Failed execution action");
-      console.log('err', err);
-    },
-  });
+      formData.append('metaTitle', metaTitle || title);
+      formData.append('metaDescription', metaDescription);
+      formData.append('canonicalUrl', canonicalUrl);
+      formData.append('status', 'published');
+      formData.append('isFeatured', 'true');
+
+      if (editingId) {
+        // EDIT MODE: PUT to /blogs/:id
+        await endpointRoute.put(`/blogs/${editingId}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        toast.success('Blog post updated successfully!');
+      } else {
+        // CREATE MODE: POST to /blogs
+        await endpointRoute.post('/blogs', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        toast.success('Blog post published successfully!');
+      }
+
+      // Reset form and refresh list
+      handleCancelEdit();
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      toast.error(editingId ? 'Failed to update blog' : 'Failed to publish blog');
+      console.error('Submit error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 bg-brand-card border border-brand-mid rounded-xl shadow-2xl w-full max-w-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-brand-mid/30 sticky top-0 bg-brand-card z-10">
-          <h3 className="font-display text-lg font-bold text-brand-white">{isEdit ? "Edit Blog Post" : "New Blog Post"}</h3>
-          <button onClick={onClose} className="text-brand-mid hover:text-brand-white p-1 rounded transition-colors"><X size={18} /></button>
-        </div>
-        <div className="p-5 flex flex-col gap-4">
-          {[["title","Title","text","Post title..."],["author","Author","text","Author name..."],["tags","Tags (comma-separated)","text","Interior, Tips, Colour..."]].map(([name,label,type,ph]) => (
-            <div key={name} className="flex flex-col gap-1.5">
-              <label className="text-brand-lt-gray text-xs font-medium">{label}</label>
-              <input type={type} value={(form as Record<string,any>)[name]} placeholder={ph}
-                onChange={(e) => setForm((p) => ({ ...p, [name]: e.target.value }))}
-                className="bg-brand-black border border-brand-mid text-brand-white placeholder-brand-mid px-3 py-2 rounded-md text-sm focus:outline-none focus:border-brand-accent" />
-            </div>
-          ))}
+    <div className="min-h-screen bg-[#F8F5F0] py-10 px-4 space-y-10">
+      {/* Blog Upload / Edit Form */}
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-[#7A7A7A]/20 space-y-6 text-[#1F1F1F]"
+      >
+        <div className="border-b border-[#7A7A7A]/20 pb-4 flex justify-between items-center flex-wrap gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-[#1F1F1F]">
+              {editingId ? 'Edit Blog Post' : 'Create Blog Post'}
+            </h1>
+            <p className="text-sm text-[#7A7A7A] mt-1">
+              {editingId
+                ? 'Update your blog details below.'
+                : 'Write your story, upload images, and manage SEO options.'}
+            </p>
+          </div>
 
-          {/* Corrected Binary File Upload Handler Wrapper */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-brand-lt-gray text-xs font-medium">Featured Image</label>
-            
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-brand-mid hover:border-brand-accent transition-colors rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer bg-brand-black/40"
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="text-xs font-bold px-3 py-1.5 bg-[#7A7A7A]/20 text-[#1F1F1F] rounded hover:bg-[#7A7A7A]/30 transition"
             >
-              <Upload size={24} className="text-brand-mid" />
-              <span className="text-xs text-brand-lt-gray font-medium">Click to upload an image from your device</span>
-              <input 
-                type="file" 
-                ref={fileInputRef}
-                onChange={handleFileChange} 
-                accept="image/*" 
-                className="hidden" 
-              />
-            </div>
+              ✕ Cancel Edit
+            </button>
+          )}
+        </div>
 
-            {/* Single Image Preview Layout */}
-            {previewUrl && (
-              <div className="grid grid-cols-4 gap-2 mt-2">
-                <div className="group relative aspect-video w-full rounded-md overflow-hidden bg-brand-black border border-brand-mid/50">
-                  <img 
-                    src={previewUrl} 
-                    alt="Featured Image preview" 
-                    className="w-full h-full object-cover" 
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveImage();
-                    }}
-                    className="absolute top-1 right-1 bg-black/80 hover:bg-red-600 text-white p-1 rounded-full opacity-100"
+        {/* Form Fields */}
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-[#1F1F1F]">
+              Blog Title *
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full border border-[#7A7A7A]/30 p-3 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] transition"
+              placeholder="Enter post title..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-[#1F1F1F]">
+              Short Description *
+            </label>
+            <input
+              type="text"
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
+              className="w-full border border-[#7A7A7A]/30 p-3 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] transition"
+              placeholder="Short description..."
+              required
+            />
+          </div>
+
+          {/* Featured Image */}
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-[#1F1F1F]">
+              Featured Image *
+            </label>
+
+            {!imagePreview ? (
+              <label className="cursor-pointer inline-block bg-[#C59A46] text-white text-sm font-semibold px-4 py-2.5 rounded-md hover:bg-[#b0873b] transition">
+                📁 Choose Featured Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                  required={!editingId}
+                />
+              </label>
+            ) : (
+              <div className="relative w-full h-56 border border-[#7A7A7A]/20 rounded-lg overflow-hidden bg-[#F8F5F0] group">
+                <img
+                  src={imagePreview}
+                  alt="Featured Preview"
+                  className="w-full h-full object-cover"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow-md hover:bg-red-700 transition flex items-center justify-center group-hover:scale-105"
+                  title="Remove featured image"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-4 h-4"
                   >
-                    <X size={12} />
-                  </button>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+
+                <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                  Featured Image Set
                 </div>
               </div>
             )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-brand-lt-gray text-xs font-medium">Status</label>
-            <select value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as "draft"|"published" }))}
-              className="bg-brand-black border border-brand-mid text-brand-white px-3 py-2 rounded-md text-sm focus:outline-none focus:border-brand-accent">
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-brand-lt-gray text-xs font-medium">Short Description</label>
-            <textarea value={form.shortDescription} rows={2} onChange={(e) => setForm((p) => ({ ...p, shortDescription: e.target.value }))} placeholder="Brief summary..."
-              className="bg-brand-black border border-brand-mid text-brand-white placeholder-brand-mid px-3 py-2 rounded-md text-sm focus:outline-none focus:border-brand-accent resize-none" />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-brand-lt-gray text-xs font-medium">Content</label>
-            <textarea value={form.content} rows={8} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} placeholder="Full blog post content..."
-              className="bg-brand-black border border-brand-mid text-brand-white placeholder-brand-mid px-3 py-2 rounded-md text-sm focus:outline-none focus:border-brand-accent resize-none" />
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 border border-brand-mid text-brand-mid py-2.5 rounded-md text-sm hover:border-brand-white hover:text-brand-white transition-colors">Cancel</button>
-            <button onClick={() => mutation.mutate()} disabled={mutation.isPending}
-              className="flex-1 flex items-center justify-center gap-2 bg-brand-accent text-brand-black font-semibold py-2.5 rounded-md text-sm hover:bg-brand-accent-lt transition-colors disabled:opacity-50">
-              {mutation.isPending ? <Loader size={15} className="animate-spin" /> : <Plus size={15} />}
-              {mutation.isPending ? "Saving..." : isEdit ? "Update Post" : "Publish Post"}
-            </button>
+          {/* TipTap Rich Text Editor */}
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-[#1F1F1F]">
+              Blog Content *
+            </label>
+            <BlogEditor content={content} onChange={setContent} />
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-export default function BlogPage() {
-  const qc = useQueryClient();
-  const [showForm, setShowForm] = useState(false);
-  const [editBlog, setEditBlog] = useState<Blog | undefined>();
-  const [statusFilter, setStatusFilter] = useState("all");
+        {/* SEO Settings */}
+        <div className="border-t border-[#7A7A7A]/20 pt-6 space-y-4">
+          <div>
+            <h2 className="text-lg font-bold text-[#1F1F1F]">SEO Settings</h2>
+            <p className="text-xs text-[#7A7A7A]">
+              Optional fields to optimize for search engines.
+            </p>
+          </div>
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["blogs"],
-    queryFn: async () => {
-      try { const res = await adminGetBlogs(); return (res?.blogs ?? res?.data ?? []) as Blog[]; }
-      catch { return MOCK; }
-    },
-    placeholderData: MOCK,
-  });
+          <div>
+            <label className="block text-sm font-medium mb-1 text-[#1F1F1F]">
+              Meta Title
+            </label>
+            <input
+              type="text"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              className="w-full border border-[#7A7A7A]/30 p-2.5 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] text-sm"
+              placeholder="Custom title tag for search engines"
+            />
+          </div>
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => adminDeleteBlog(id),
-    onSuccess: (_, id) => { qc.setQueryData(["blogs"], (old: Blog[] = []) => old.filter((b) => b._id !== id)); toast.success("Post deleted"); },
-    onError: (err: Error) => toast.error(err.message || "Delete failed"),
-  });
+          <div>
+            <label className="block text-sm font-medium mb-1 text-[#1F1F1F]">
+              Meta Description
+            </label>
+            <textarea
+              rows={3}
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              className="w-full border border-[#7A7A7A]/30 p-2.5 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] text-sm"
+              placeholder="Short summary for Google search results..."
+            />
+          </div>
 
-  const list = data ?? MOCK;
-  const filtered = statusFilter === "all" ? list : list.filter((b) => b.status === statusFilter);
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-brand-white">Blog Posts</h1>
-          <p className="text-brand-mid text-sm mt-1">Manage content and articles</p>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-[#1F1F1F]">
+              Canonical URL
+            </label>
+            <input
+              type="text"
+              value={canonicalUrl}
+              onChange={(e) => setCanonicalUrl(e.target.value)}
+              className="w-full border border-[#7A7A7A]/30 p-2.5 rounded-md text-[#1F1F1F] bg-white focus:outline-none focus:border-[#C59A46] text-sm"
+              placeholder="https://yourdomain.com/blog/original-post"
+            />
+          </div>
         </div>
-        <button onClick={() => { setEditBlog(undefined); setShowForm(true); }}
-          className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold px-5 py-2.5 rounded-md hover:bg-brand-accent-lt transition-colors text-sm">
-          <Plus size={16} /> New Post
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 bg-[#1F1F1F] text-white font-bold rounded-md hover:bg-[#C59A46] transition duration-200 disabled:opacity-50"
+        >
+          {loading
+            ? editingId
+              ? 'Updating...'
+              : 'Publishing...'
+            : editingId
+            ? 'Update Blog Post'
+            : 'Publish Blog Post'}
         </button>
-      </div>
+      </form>
 
-      <div className="flex gap-2">
-        {["all","published","draft"].map((s) => {
-          const count = s === "all" ? list.length : list.filter((b) => b.status === s).length;
-          return (
-            <button key={s} onClick={() => setStatusFilter(s)}
-              className={`px-4 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${statusFilter === s ? "bg-brand-accent text-brand-black" : "bg-brand-card border border-brand-mid/30 text-brand-mid hover:text-brand-white"}`}>
-              {s} ({count})
-            </button>
-          );
-        })}
-      </div>
-
-      {isLoading ? (
-        <div className="py-16 flex justify-center"><Loader size={28} className="animate-spin text-brand-accent" /></div>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((b) => (
-            <div key={b._id} className="bg-brand-card border border-brand-mid/30 rounded-xl overflow-hidden hover:border-brand-accent/30 transition-all flex flex-col">
-              <div className="h-32 bg-gradient-to-br from-brand-black via-brand-card to-brand-black flex items-center justify-center overflow-hidden relative">
-                {b.featuredImage ? (
-                  <img src={b.featuredImage} alt={b.title} className="w-full h-full object-cover" />
-                ) : (
-                  <FileText size={36} className="text-brand-accent/30" />
-                )}
-              </div>
-              <div className="p-4 flex flex-col gap-3 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-brand-white font-semibold text-sm leading-snug flex-1">{b.title}</h3>
-                  <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold ${b.status === "published" ? "bg-green-700/40 text-green-400" : "bg-gray-700/40 text-gray-400"}`}>{b.status}</span>
-                </div>
-                <p className="text-brand-mid text-xs leading-relaxed flex-1">{b.shortDescription}</p>
-                <div className="flex flex-wrap gap-1">
-                  {b.tags.map((t) => <span key={t} className="bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-[10px] px-2 py-0.5 rounded-full">{t}</span>)}
-                </div>
-                <div className="flex items-center justify-between text-brand-mid text-xs border-t border-brand-mid/20 pt-3">
-                  <span>{b.author}</span>
-                  <span>{formatDate(b.createdAt)}</span>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => { setEditBlog(b); setShowForm(true); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-brand-mid hover:text-brand-white hover:bg-brand-black/50 py-1.5 rounded-md text-xs transition-colors">
-                    <Pencil size={12} /> Edit
-                  </button>
-                  <button onClick={() => { if (confirm("Delete this post?")) deleteMutation.mutate(b._id); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-red-500 hover:text-red-400 hover:bg-red-900/10 py-1.5 rounded-md text-xs transition-colors">
-                    <Trash2 size={12} /> Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {(showForm || editBlog) && (
-        <BlogFormModal blog={editBlog} onClose={() => { setShowForm(false); setEditBlog(undefined); }} />
-      )}
+      {/* Embedded Blog List Rendered Directly Below Form */}
+      <BlogList onEdit={handleEditSelect} refreshTrigger={refreshTrigger} />
     </div>
   );
-}
+};
+
+export default Page;
