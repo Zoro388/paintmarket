@@ -1,9 +1,3 @@
-
-
-
-
-
-
 "use client";
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,10 +18,9 @@ const PaystackButton = dynamic(
   { ssr: false }
 );
 
-const PAYSTACK_PUBLIC_KEY =
-  process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ||
-  "pk_test_b8b7d8af804f4f40170a151f7ba3173fc325c591";
-
+const PAYSTACK_PUBLIC_KEY=process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY||''
+console.log('ENV CHECK:', process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY);
+  console.log('key', process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY)
 // ── Types ────────────────────────────────────────────────────────────────────
 interface Variant {
   _id: string;
@@ -87,7 +80,7 @@ export default function CartPage() {
   // Delivery info
   const [delivery, setDelivery] = useState({ deliveryAddress: "", state: "", city: "", emailAddress: "" });
   // Payment info
-  const [paymentMethod, setPaymentMethod] = useState<"paystack" | "bank-transfer">("paystack");
+  const [paymentMethod, setPaymentMethod] = useState<"paystack"|'bank-transfer'>("paystack");
   const [notes, setNotes] = useState("");
 
   const qc = useQueryClient();
@@ -635,7 +628,7 @@ return (
                 <div className="grid sm:grid-cols-2 gap-3">
                   {(
                     [
-                      { value: "paystack", label: "Pay with Paystack", desc: "Card, USSD, or Bank App via Paystack", icon: CreditCard },
+                      // { value: "paystack", label: "Pay with Paystack", desc: "Card, USSD, or Bank App via Paystack", icon: CreditCard },
                       { value: "bank-transfer", label: "Bank Transfer", desc: "Transfer directly to our account", icon: Banknote },
                     ] as const
                   ).map((opt) => {
@@ -669,11 +662,15 @@ return (
                     <p className="text-brand-accent font-semibold text-xs uppercase tracking-wider mb-2">Bank Details</p>
                     <div className="grid grid-cols-2 gap-y-1.5 text-xs">
                       <span className="text-brand-mid">Bank Name:</span>
-                      <span className="text-white">Paint Domain Bank Plc</span>
+                      <span className="text-white">Moniepoint MFB</span>
                       <span className="text-brand-mid">Account Number:</span>
-                      <span className="text-white">0123456789</span>
+                      <span className="text-white">5180236145 </span>
                       <span className="text-brand-mid">Account Name:</span>
+                      <span className="text-white">Smart-choice Interior Building Concept LTD</span>
+{/* <<<<<<< HEAD
                       <span className="text-white">Paint Domain</span>
+                      <span className="text-white">Smart-choice Interior Building Concept LTD</span>
+>>>>>>> 439ea61 (paystack update) */}
                     </div>
                     <p className="text-brand-subtle text-[11px] mt-2">
                       Please use your reference details as the transfer narration.
@@ -766,11 +763,11 @@ return (
                 <div>
                   <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">Payment</p>
                   <div className="bg-brand-raised border border-brand-border rounded-lg p-4 text-sm flex items-center gap-2">
-                    {paymentMethod === "paystack" ? (
+                    {/* {paymentMethod === "paystack" ? (
                       <CreditCard size={15} className="text-brand-accent" />
                     ) : (
                       <Banknote size={15} className="text-brand-accent" />
-                    )}
+                    )} */}
                     <span className="text-white capitalize">
                       {paymentMethod === "paystack" ? "Paystack" : "Bank Transfer"}
                     </span>
@@ -814,21 +811,9 @@ return (
                 >
                   Continue <ArrowRight size={14} />
                 </button>
-              ) : paymentMethod === "bank-transfer" ? (
-                <button
-                  onClick={handleBankTransferSubmit}
-                  disabled={submitting || !canSubmit}
-                  className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold
-                    px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm disabled:opacity-50"
-                >
-                  {submitting ? (
-                    <span className="w-4 h-4 border-2 border-brand-black border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <CheckCircle size={14} />
-                  )}
-                  {submitting ? "Placing Order..." : "Place Order"}
-                </button>
-              ) : !canSubmit || submitting ? (
+              ) 
+              
+             : !canSubmit || submitting ? (
                 <button
                   disabled
                   className="flex items-center justify-center gap-2 bg-brand-accent text-brand-black
