@@ -1,5 +1,3 @@
-
-
 "use client";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +12,7 @@ export default function PortfolioPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [modalImages, setModalImages] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [activeCat, setActiveCat] = useState("All");
 
   const { data, isLoading } = useQuery({
     queryKey: ["portfolio-public"],
@@ -29,12 +28,12 @@ export default function PortfolioPage() {
 
   const list = (data ?? []) as any[];
 
-  // Normalize API shape to expected fields
   const normalized = list.map((p: any) => ({
     _id: p._id ?? p.id ?? p.createdAt,
-    projectTitle: p.projectTitle ?? p.projectTitle ?? p.clientName ?? "Untitled",
-    projectDescription: p.projectDescription ?? p.projectDescription ?? p.description ?? "",
-    projectLocation: p.projectLocation ?? p.projectLocation ?? p.projectLocation ?? "",
+    projectTitle: p.projectTitle ?? p.clientName ?? "Untitled",
+    projectDescription: p.projectDescription ?? p.description ?? "",
+    projectLocation: p.projectLocation ?? "",
+    projectCategory: p.projectCategory ?? "",
     completionDate: p.completionDate ?? p.completedDate ?? null,
     featured: p.featured ?? p.featuredProject ?? false,
     images: p.images ?? p.completedImages ?? p.beforeImages ?? [],
@@ -42,8 +41,20 @@ export default function PortfolioPage() {
     customerTestimonial: p.customerTestimonial ?? p.testimonial ?? null,
   }));
 
-  const featured = normalized.filter((p) => p.featured);
-  const rest = normalized.filter((p) => !p.featured);
+  // Unique categories from data
+  const categories = [
+    "All",
+    ...Array.from(new Set(normalized.map((p) => p.projectCategory).filter(Boolean))),
+  ];
+
+  // Apply category filter before featured/rest split
+  const categoryFiltered =
+    activeCat === "All"
+      ? normalized
+      : normalized.filter((p) => p.projectCategory === activeCat);
+
+  const featured = categoryFiltered.filter((p) => p.featured);
+  const rest = categoryFiltered.filter((p) => !p.featured);
 
   function openModal(images: string[], start = 0) {
     setModalImages(images);
@@ -64,6 +75,7 @@ export default function PortfolioPage() {
   function next() {
     setCurrentIndex((i) => (modalImages.length ? (i + 1) % modalImages.length : 0));
   }
+  
 
   return (
     <main className="bg-brand-black min-h-screen">
@@ -78,8 +90,29 @@ export default function PortfolioPage() {
         </div>
       </section>
 
+      {/* Category filter buttons */}
+      {categories.length > 1 && (
+        <section className="px-4 sm:px-6 lg:px-8 pt-10">
+          <div className="max-w-7xl mx-auto flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCat(cat)}
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all capitalize ${
+                  activeCat === cat
+                    ? "bg-brand-accent text-brand-black"
+                    : "bg-brand-card border border-brand-mid/30 text-brand-mid hover:text-brand-white hover:border-brand-mid/60"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Featured */}
-       {featured.length > 0 && (
+      {featured.length > 0 && (
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <h2 className="font-display text-2xl font-bold text-brand-white mb-8 flex items-center gap-2">
@@ -90,15 +123,15 @@ export default function PortfolioPage() {
                 <div key={p._id} className="bg-brand-card border border-brand-accent/20 rounded-2xl overflow-hidden hover:border-brand-accent/50 transition-all group">
                   {p.images && p.images.length ? (
                     <div className="h-56 relative overflow-hidden">
-                      <img
-                        src={p.images[0]}
-                        alt={p.projectTitle}
-                        onClick={() => openModal(p.images, 0)}
-                        className="w-full h-56 object-cover cursor-pointer"
-                      />
+                      <img src={p.images[0]} alt={p.projectTitle} onClick={() => openModal(p.images, 0)} className="w-full h-56 object-cover cursor-pointer" />
                       <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-brand-accent text-brand-black text-xs font-bold px-3 py-1.5 rounded-full">
                         <Star size={11} fill="currentColor" /> Featured
                       </div>
+                      {p.projectCategory && (
+                        <div className="absolute top-4 right-4 bg-black/60 text-white text-[10px] font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
+                          {p.projectCategory}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="h-56 bg-gradient-to-br from-brand-accent/10 via-brand-card to-brand-black flex items-center justify-center relative">
@@ -133,7 +166,7 @@ export default function PortfolioPage() {
             </div>
           </div>
         </section>
-      )}  
+      )}
 
       {/* All projects */}
       {rest.length > 0 && (
@@ -147,17 +180,22 @@ export default function PortfolioPage() {
                 {rest.map((p: any) => (
                   <div key={p._id} className="bg-brand-card border border-brand-mid/30 rounded-xl overflow-hidden hover:border-brand-accent/30 transition-all group">
                     {p.images && p.images.length ? (
-                      <div className="h-36 overflow-hidden">
-                        <img
-                          src={p.images[0]}
-                          alt={p.projectTitle}
-                          onClick={() => openModal(p.images, 0)}
-                          className="w-full h-36 object-cover cursor-pointer"
-                        />
+                      <div className="h-36 overflow-hidden relative">
+                        <img src={p.images[0]} alt={p.projectTitle} onClick={() => openModal(p.images, 0)} className="w-full h-36 object-cover cursor-pointer" />
+                        {p.projectCategory && (
+                          <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-medium px-2 py-0.5 rounded-full backdrop-blur-sm">
+                            {p.projectCategory}
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <div className="h-36 bg-gradient-to-br from-brand-black to-brand-card flex items-center justify-center">
+                      <div className="h-36 bg-gradient-to-br from-brand-black to-brand-card flex items-center justify-center relative">
                         <ImageIcon size={32} className="text-brand-accent/20" />
+                        {p.projectCategory && (
+                          <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+                            {p.projectCategory}
+                          </div>
+                        )}
                       </div>
                     )}
                     <div className="p-4 flex flex-col gap-3">
@@ -167,7 +205,7 @@ export default function PortfolioPage() {
                       </div>
                       <p className="text-brand-mid text-xs leading-relaxed line-clamp-2">{p.projectDescription}</p>
                       <div className="flex flex-wrap gap-1">
-                        {p.materialsUsed.slice(0,2).map((m: string) => <span key={m} className="bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-[10px] px-2 py-0.5 rounded-full">{m}</span>)}
+                        {p.materialsUsed.slice(0, 2).map((m: string) => <span key={m} className="bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-[10px] px-2 py-0.5 rounded-full">{m}</span>)}
                       </div>
                       <p className="text-brand-mid text-xs border-t border-brand-mid/20 pt-2">Completed {p.completionDate ? formatDate(p.completionDate) : "—"}</p>
                     </div>
@@ -177,15 +215,37 @@ export default function PortfolioPage() {
             )}
           </div>
         </section>
-      )} 
+      )}
 
+      {/* Empty state when filter returns nothing */}
+      {!isLoading && categoryFiltered.length === 0 && (
+        <section className="py-20 px-4 text-center">
+          <div className="max-w-md mx-auto flex flex-col items-center gap-3">
+            <ImageIcon size={40} className="text-brand-mid" />
+            <p className="text-brand-mid text-sm">
+              No projects found for <span className="text-brand-accent font-medium">{activeCat}</span>
+            </p>
+            <button onClick={() => setActiveCat("All")} className="text-brand-accent text-sm font-medium hover:underline underline-offset-4">
+              View all projects
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* Lightbox */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70" onClick={closeModal} />
+          
           <div className="relative z-10 w-full max-w-4xl">
-            <button onClick={closeModal} className="absolute top-2 right-2 p-2 bg-black/30 rounded-full text-white">
-              <X size={18} />
-            </button>
+             <button
+        type="button"
+        onClick={closeModal}
+        aria-label="Close image viewer"
+        className="absolute top-3 right-3 z-20 p-2.5 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors"
+      >
+        <X size={22} />
+      </button>
             <div className="relative">
               <img src={modalImages[currentIndex]} alt={`Image ${currentIndex + 1}`} className="w-full h-[60vh] object-contain bg-black rounded" />
               <button onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/30 rounded-full text-white">
