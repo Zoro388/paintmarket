@@ -3,41 +3,44 @@ import "./globals.css";
 import Providers from "@/components/ui/Providers";
 import Script from "next/script";
 
-
 export const metadata: Metadata = {
   title: "Paint Domain",
   description:
     "Nigeria's premier paint and interior solutions company. Quality paints, professional painters, and expert site estimators.",
-  keywords: "paint, interior design, Nigeria, Paint Domain, painters, estimators",
+  keywords:
+    "paint, interior design, Nigeria, Paint Domain, painters, estimators",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>
         <Providers>{children}</Providers>
-        <Script id="smartsupp-chat" strategy="afterInteractive">
-          {`
-            var _smartsupp = _smartsupp || {};
-            _smartsupp.key = "ed685fc6c0d4f79129054c25313b0c5680577965"
 
-            window.smartsupp || (function(d) {
-              var s, c, o = smartsupp = function() {
-                o._.push(arguments);
-              };
-              
-              o._ = [];
-              
-              s = d.getElementsByTagName('script')[0];
-              c = d.createElement('script');
-              
-              c.type = 'text/javascript';
-              c.charset = 'utf-8';
-              c.async = true;
-              c.src = 'https://www.smartsuppchat.com/loader.js?';
-              
-              s.parentNode.insertBefore(c, s);
-            })(document);
+        {/* Tawk.to Live Chat */}
+        <Script
+          id="tawk-to-chat"
+          strategy="afterInteractive"
+        >
+          {`
+            var Tawk_API = Tawk_API || {};
+            var Tawk_LoadStart = new Date();
+
+            (function () {
+              var s1 = document.createElement("script");
+              var s0 = document.getElementsByTagName("script")[0];
+
+              s1.async = true;
+              s1.src = "https://embed.tawk.to/6a9933b1a18d6a34454587cf/default";
+              s1.charset = "UTF-8";
+              s1.setAttribute("crossorigin", "*");
+
+              s0.parentNode.insertBefore(s1, s0);
+            })();
           `}
         </Script>
       </body>
