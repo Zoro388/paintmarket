@@ -21,6 +21,16 @@ export default function RootLayout({
       <body>
         <Providers>{children}</Providers>
 
+        <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4GTK76FSYW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4GTK76FSYW');
+</script>
+
         {/* Tawk.to Live Chat */}
         <Script
           id="tawk-to-chat"
