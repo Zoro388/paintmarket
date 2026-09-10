@@ -1,33 +1,128 @@
+
 "use client";
+
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiGetPainters, apiRequestAPainter, apiCreateReview, apiGetPainterReviews } from "@/lib/userApi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  apiGetPainters,
+  apiRequestAPainter,
+} from "@/lib/userApi";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
-import { Search, Loader, User, MapPin, Calendar, Star, X, Check, MessageSquare, ChevronDown } from "lucide-react";
+import {
+  Search,
+  Loader,
+  User,
+  MapPin,
+  Calendar,
+  Star,
+  X,
+  Check,
+  ChevronDown,
+} from "lucide-react";
 import toast from "react-hot-toast";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface Skill {
   _id?: string;
   name: string;
 }
 
+interface LocationValue {
+  _id?: string;
+  type?: string;
+  name: string;
+}
+
+type LocationField = string | LocationValue | null | undefined;
+
 interface Painter {
-  _id: string; fullName: string; bio: string; city: string; state: string;
-  profileImage: string; yearsOfExperience: number; averageRating: number;
-  totalReviews: number; preferredBrands: string[]; services: string[]; skills: Skill[];
+  _id: string;
+  fullName: string;
+  bio: string;
+  city: LocationField;
+  state: LocationField;
+  profileImage: string;
+  yearsOfExperience: number;
+  averageRating: number;
+  totalReviews: number;
+  preferredBrands: string[];
+  services: string[];
+  skills: Skill[];
 }
 
-interface Review {
-  _id: string; requestId: string; rating: number; review: string;
-  createdAt: string; hidden?: boolean;
+const inputCls =
+  "w-full bg-brand-raised border border-brand-border rounded-lg p-2.5 text-white placeholder-brand-subtle/50 outline-none focus:border-brand-accent/50 text-xs";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The backend may return city/state as either:
+ *
+ * "Enugu"
+ *
+ * OR:
+ *
+ * {
+ *   _id: "...",
+ *   type: "...",
+ *   name: "Enugu"
+ * }
+ *
+ * This helper always gives us a safe string for display/filtering.
+ */
+function getLocationName(value: LocationField): string {
+  if (!value) return "";
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (typeof value === "object" && typeof value.name === "string") {
+    return value.name;
+  }
+
+  return "";
 }
 
-const inputCls = "w-full bg-brand-raised border border-brand-border rounded-lg p-2.5 text-white placeholder-brand-subtle/50 outline-none focus:border-brand-accent/50 text-xs";
+/**
+ * Safely handles values coming from the API before rendering.
+ */
+function getSafeString(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
 
-// ── Star Rating Input ─────────────────────────────────────────────────────────
-function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  if (
+    value &&
+    typeof value === "object" &&
+    "name" in value &&
+    typeof (value as { name?: unknown }).name === "string"
+  ) {
+    return (value as { name: string }).name;
+  }
+
+  return "";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Star Rating Input
+// ─────────────────────────────────────────────────────────────────────────────
+
+function StarPicker({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+}) {
   const [hovered, setHovered] = useState(0);
+
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((n) => (
@@ -42,7 +137,9 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
           <Star
             size={22}
             className={`transition-colors ${
-              n <= (hovered || value) ? "fill-brand-accent text-brand-accent" : "text-brand-border"
+              n <= (hovered || value)
+                ? "fill-brand-accent text-brand-accent"
+                : "text-brand-border"
             }`}
           />
         </button>
@@ -51,125 +148,290 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
   );
 }
 
-// ── Booking Modal ─────────────────────────────────────────────────────────────
-function BookingModal({ painter, onClose }: { painter: Painter; onClose: () => void }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Booking Modal
+// ─────────────────────────────────────────────────────────────────────────────
+
+function BookingModal({
+  painter,
+  onClose,
+}: {
+  painter: Painter;
+  onClose: () => void;
+}) {
   const [formData, setFormData] = useState({
-    fullName: "", phoneNumber: "", email: "", propertyLocation: "",
-    projectType: "Residential", propertyType: "Interior Paint",
-    projectDescription: "", preferredStartDate: "", additionalNotes: "",
+    fullName: "",
+    phoneNumber: "",
+    email: "",
+    propertyLocation: "",
+    projectType: "Residential",
+    propertyType: "Interior Paint",
+    projectDescription: "",
+    preferredStartDate: "",
+    additionalNotes: "",
   });
 
   const mutation = useMutation({
-    mutationFn: () => apiRequestAPainter({ ...formData, selectedPainter: painter._id }),
+    mutationFn: () =>
+      apiRequestAPainter({
+        ...formData,
+        selectedPainter: painter._id,
+      }),
+
     onSuccess: () => {
       toast.success("Booking request sent!");
       onClose();
     },
-    onError: (err: Error) => toast.error(err?.message || "Failed to submit"),
+
+    onError: (err: Error) => {
+      toast.error(err?.message || "Failed to submit");
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const { fullName, phoneNumber, email, propertyLocation, projectDescription, preferredStartDate } = formData;
-    if (!fullName || !phoneNumber || !email || !propertyLocation || !projectDescription || !preferredStartDate) {
-      toast.error("Please fill in all required fields"); return;
+
+    const {
+      fullName,
+      phoneNumber,
+      email,
+      propertyLocation,
+      projectDescription,
+      preferredStartDate,
+    } = formData;
+
+    if (
+      !fullName ||
+      !phoneNumber ||
+      !email ||
+      !propertyLocation ||
+      !projectDescription ||
+      !preferredStartDate
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
     }
+
     mutation.mutate();
   };
 
-  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setFormData((p) => ({ ...p, [field]: e.target.value }));
+  const set =
+    (field: string) =>
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) =>
+      setFormData((p) => ({
+        ...p,
+        [field]: e.target.value,
+      }));
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-brand-card border border-brand-border rounded-2xl w-full max-w-xl
-        overflow-hidden flex flex-col shadow-2xl max-h-[90vh]">
+      <div
+        className="bg-brand-card border border-brand-border rounded-2xl w-full max-w-xl
+        overflow-hidden flex flex-col shadow-2xl max-h-[90vh]"
+      >
         <div className="p-5 border-b border-brand-border/60 flex justify-between items-center bg-brand-raised/50">
           <div>
             <span className="text-brand-accent text-[10px] font-bold tracking-widest uppercase block mb-0.5">
               Booking Request
             </span>
-            <h2 className="text-white font-bold text-base leading-tight">Request {painter.fullName}</h2>
+
+            <h2 className="text-white font-bold text-base leading-tight">
+              Request {painter.fullName}
+            </h2>
           </div>
-          <button onClick={onClose} className="text-brand-subtle hover:text-white transition-colors p-1">
+
+          <button
+            onClick={onClose}
+            className="text-brand-subtle hover:text-white transition-colors p-1"
+          >
             <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
-          <p className="text-brand-accent text-[10px] font-bold uppercase tracking-wider">Contact Details</p>
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 space-y-4 text-xs"
+        >
+          <p className="text-brand-accent text-[10px] font-bold uppercase tracking-wider">
+            Contact Details
+          </p>
+
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-brand-subtle mb-1">Full Name *</label>
-              <input type="text" required value={formData.fullName} onChange={set("fullName")} placeholder="First & last name" className={inputCls} />
+              <label className="block text-brand-subtle mb-1">
+                Full Name *
+              </label>
+
+              <input
+                type="text"
+                required
+                value={formData.fullName}
+                onChange={set("fullName")}
+                placeholder="First & last name"
+                className={inputCls}
+              />
             </div>
+
             <div>
-              <label className="block text-brand-subtle mb-1">Phone Number *</label>
-              <input type="tel" required value={formData.phoneNumber} onChange={set("phoneNumber")} placeholder="+234 8xx..." className={inputCls} />
+              <label className="block text-brand-subtle mb-1">
+                Phone Number *
+              </label>
+
+              <input
+                type="tel"
+                required
+                value={formData.phoneNumber}
+                onChange={set("phoneNumber")}
+                placeholder="+234 8xx..."
+                className={inputCls}
+              />
             </div>
           </div>
+
           <div>
-            <label className="block text-brand-subtle mb-1">Email Address *</label>
-            <input type="email" required value={formData.email} onChange={set("email")} placeholder="you@email.com" className={inputCls} />
+            <label className="block text-brand-subtle mb-1">
+              Email Address *
+            </label>
+
+            <input
+              type="email"
+              required
+              value={formData.email}
+              onChange={set("email")}
+              placeholder="you@email.com"
+              className={inputCls}
+            />
           </div>
 
           <hr className="border-brand-border/30" />
-          <p className="text-brand-accent text-[10px] font-bold uppercase tracking-wider">Project Details</p>
+
+          <p className="text-brand-accent text-[10px] font-bold uppercase tracking-wider">
+            Project Details
+          </p>
 
           <div>
-            <label className="block text-brand-subtle mb-1">Property Location *</label>
-            <input type="text" required value={formData.propertyLocation} onChange={set("propertyLocation")} placeholder="Street, City, State" className={inputCls} />
+            <label className="block text-brand-subtle mb-1">
+              Property Location *
+            </label>
+
+            <input
+              type="text"
+              required
+              value={formData.propertyLocation}
+              onChange={set("propertyLocation")}
+              placeholder="Street, City, State"
+              className={inputCls}
+            />
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-brand-subtle mb-1">Project Type</label>
-              <select value={formData.projectType} onChange={set("projectType")} className={inputCls}>
+              <label className="block text-brand-subtle mb-1">
+                Project Type
+              </label>
+
+              <select
+                value={formData.projectType}
+                onChange={set("projectType")}
+                className={inputCls}
+              >
                 <option value="Residential">Residential</option>
                 <option value="Commercial">Commercial</option>
                 <option value="Industrial">Industrial</option>
               </select>
             </div>
+
             <div>
-              <label className="block text-brand-subtle mb-1">Property Type</label>
-              <select value={formData.propertyType} onChange={set("propertyType")} className={inputCls}>
+              <label className="block text-brand-subtle mb-1">
+                Property Type
+              </label>
+
+              <select
+                value={formData.propertyType}
+                onChange={set("propertyType")}
+                className={inputCls}
+              >
                 <option value="Interior Paint">Interior Only</option>
                 <option value="Exterior Paint">Exterior Only</option>
                 <option value="Complete Overhaul">Both</option>
-                <option value="Spackling/Screeding">Spackling & Screeding</option>
-                <option value="Wallpapering">Wallpaper / Special Finish</option>
+                <option value="Spackling/Screeding">
+                  Spackling & Screeding
+                </option>
+                <option value="Wallpapering">
+                  Wallpaper / Special Finish
+                </option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-brand-subtle mb-1">Preferred Start Date *</label>
-            <input type="date" required value={formData.preferredStartDate} onChange={set("preferredStartDate")} className={inputCls} />
+            <label className="block text-brand-subtle mb-1">
+              Preferred Start Date *
+            </label>
+
+            <input
+              type="date"
+              required
+              value={formData.preferredStartDate}
+              onChange={set("preferredStartDate")}
+              className={inputCls}
+            />
           </div>
 
           <div>
-            <label className="block text-brand-subtle mb-1">Project Description *</label>
-            <textarea required rows={3} value={formData.projectDescription} onChange={set("projectDescription")}
+            <label className="block text-brand-subtle mb-1">
+              Project Description *
+            </label>
+
+            <textarea
+              required
+              rows={3}
+              value={formData.projectDescription}
+              onChange={set("projectDescription")}
               placeholder="Number of rooms, current condition, colours, etc."
-              className={`${inputCls} resize-none`} />
+              className={`${inputCls} resize-none`}
+            />
           </div>
 
           <div>
-            <label className="block text-brand-subtle mb-1">Additional Notes</label>
-            <textarea rows={2} value={formData.additionalNotes} onChange={set("additionalNotes")}
+            <label className="block text-brand-subtle mb-1">
+              Additional Notes
+            </label>
+
+            <textarea
+              rows={2}
+              value={formData.additionalNotes}
+              onChange={set("additionalNotes")}
               placeholder="Anything else for the painter?"
-              className={`${inputCls} resize-none`} />
+              className={`${inputCls} resize-none`}
+            />
           </div>
 
           <div className="pt-3 border-t border-brand-border/40 flex justify-end gap-3">
-            <button type="button" onClick={onClose}
-              className="px-4 py-2 border border-brand-border text-brand-mid rounded-lg text-xs hover:text-white transition-colors">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-brand-border text-brand-mid rounded-lg text-xs hover:text-white transition-colors"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={mutation.isPending}
+
+            <button
+              type="submit"
+              disabled={mutation.isPending}
               className="px-5 py-2 bg-brand-accent text-brand-black font-semibold rounded-lg text-xs
-                hover:bg-brand-accent-lt transition-colors flex items-center gap-2 disabled:opacity-50">
-              {mutation.isPending ? <Loader size={13} className="animate-spin" /> : <Check size={13} />}
+                hover:bg-brand-accent-lt transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              {mutation.isPending ? (
+                <Loader size={13} className="animate-spin" />
+              ) : (
+                <Check size={13} />
+              )}
+
               {mutation.isPending ? "Submitting..." : "Submit Request"}
             </button>
           </div>
@@ -179,32 +441,78 @@ function BookingModal({ painter, onClose }: { painter: Painter; onClose: () => v
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Page
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function PaintersPage() {
   const [selectedState, setSelectedState] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [bookingPainter, setBookingPainter]   = useState<Painter | null>(null);
-  const [reviewsPainter, setReviewsPainter]   = useState<Painter | null>(null);
+  const [bookingPainter, setBookingPainter] =
+    useState<Painter | null>(null);
 
   const { data: painters = [], isLoading } = useQuery<Painter[]>({
     queryKey: ["painters"],
+
     queryFn: async () => {
       try {
         const res = await apiGetPainters();
+
         return res?.painters ?? res?.data ?? [];
-      } catch { return []; }
+      } catch (error) {
+        console.error("Failed to fetch painters:", error);
+        return [];
+      }
     },
   });
 
-  // Unique states from painters list for the select dropdown
-  const statesList = Array.from(new Set(painters.map((p) => p.state).filter(Boolean)));
+  // ───────────────────────────────────────────────────────────────────────────
+  // Unique states
+  //
+  // IMPORTANT:
+  // The backend may return state as an object:
+  // { _id, type, name }
+  //
+  // We convert it to the actual state name before putting it in the dropdown.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  const statesList = Array.from(
+    new Set(
+      painters
+        .map((p) => getLocationName(p.state))
+        .filter(Boolean)
+    )
+  );
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Filter painters
+  // ───────────────────────────────────────────────────────────────────────────
 
   const filtered = painters.filter((p) => {
-    const matchState  = selectedState === "All" || p.state === selectedState;
-    const matchSearch = !searchQuery ||
-      p.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.skills?.some((s) => s.name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      p.bio?.toLowerCase().includes(searchQuery.toLowerCase());
+    const painterState = getLocationName(p.state);
+    const painterCity = getLocationName(p.city);
+
+    const matchState =
+      selectedState === "All" || painterState === selectedState;
+
+    const normalizedSearch = searchQuery.toLowerCase().trim();
+
+    const matchSearch =
+      !normalizedSearch ||
+      getSafeString(p.fullName)
+        .toLowerCase()
+        .includes(normalizedSearch) ||
+      p.skills?.some((s) =>
+        getSafeString(s?.name)
+          .toLowerCase()
+          .includes(normalizedSearch)
+      ) ||
+      getSafeString(p.bio)
+        .toLowerCase()
+        .includes(normalizedSearch) ||
+      painterCity.toLowerCase().includes(normalizedSearch) ||
+      painterState.toLowerCase().includes(normalizedSearch);
+
     return matchState && matchSearch;
   });
 
@@ -219,7 +527,10 @@ export default function PaintersPage() {
   };
 
   return (
-   <main className="min-h-screen" style={{ backgroundColor: COLORS.bg }}>
+    <main
+      className="min-h-screen"
+      style={{ backgroundColor: COLORS.bg }}
+    >
       <Navbar />
 
       {/* Header */}
@@ -234,17 +545,20 @@ export default function PaintersPage() {
           >
             Expert Services
           </p>
+
           <h1
             className="font-display text-3xl sm:text-4xl font-bold"
             style={{ color: COLORS.primaryText }}
           >
             Find &amp; Book Professional Painters
           </h1>
+
           <p
             className="mt-2 text-sm font-medium"
             style={{ color: COLORS.secondaryText }}
           >
-            {painters.length} certified professionals ready to transform your space.
+            {painters.length} certified professionals ready to transform your
+            space.
           </p>
         </div>
       </section>
@@ -254,17 +568,21 @@ export default function PaintersPage() {
         className="sticky top-[60px] z-20 backdrop-blur-md border-b py-4 px-4 sm:px-6 lg:px-8 shadow-sm"
         style={{
           backgroundColor: "rgba(248, 245, 240, 0.95)",
-          borderColor: "rgba(197, 154, 70, 0.15)"
+          borderColor: "rgba(197, 154, 70, 0.15)",
         }}
       >
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-
           {/* Search Box */}
           <div
             className="flex items-center gap-2 bg-white border rounded-lg px-3.5 py-2.5 w-full sm:w-64 shadow-sm"
             style={{ borderColor: COLORS.border }}
           >
-            <Search size={14} className="flex-shrink-0" style={{ color: COLORS.secondaryText }} />
+            <Search
+              size={14}
+              className="flex-shrink-0"
+              style={{ color: COLORS.secondaryText }}
+            />
+
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -286,17 +604,20 @@ export default function PaintersPage() {
               }}
             >
               <option value="All">All Locations</option>
-              {statesList.map((s) => (
-                <option key={s} value={s}>{s}</option>
+
+              {statesList.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
               ))}
             </select>
+
             <ChevronDown
               size={14}
               className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
               style={{ color: COLORS.secondaryText }}
             />
           </div>
-
         </div>
       </div>
 
@@ -305,116 +626,220 @@ export default function PaintersPage() {
         <div className="max-w-7xl mx-auto">
           {isLoading ? (
             <div className="py-20 flex justify-center">
-              <Loader size={32} className="animate-spin" style={{ color: COLORS.accent }} />
+              <Loader
+                size={32}
+                className="animate-spin"
+                style={{ color: COLORS.accent }}
+              />
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-20 text-center">
-              <User size={44} className="mx-auto mb-3 opacity-30" style={{ color: COLORS.secondaryText }} />
-              <p className="text-sm font-medium" style={{ color: COLORS.secondaryText }}>
+              <User
+                size={44}
+                className="mx-auto mb-3 opacity-30"
+                style={{ color: COLORS.secondaryText }}
+              />
+
+              <p
+                className="text-sm font-medium"
+                style={{ color: COLORS.secondaryText }}
+              >
                 No painters found matching your criteria.
               </p>
             </div>
           ) : (
             <>
-              <p className="text-xs mb-6 uppercase tracking-wider font-semibold" style={{ color: COLORS.secondaryText }}>
-                {filtered.length} Painter{filtered.length !== 1 ? "s" : ""} found
+              <p
+                className="text-xs mb-6 uppercase tracking-wider font-semibold"
+                style={{ color: COLORS.secondaryText }}
+              >
+                {filtered.length} Painter
+                {filtered.length !== 1 ? "s" : ""} found
               </p>
+
               <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filtered.map((p) => (
-                  <div
-                    key={p._id}
-                    className="bg-white border rounded-2xl overflow-hidden transition-all duration-300 flex flex-col group shadow-sm hover:shadow-md hover:-translate-y-1"
-                    style={{ borderColor: COLORS.border }}
-                  >
+                {filtered.map((painter) => {
+                  const cityName = getLocationName(painter.city);
+                  const stateName = getLocationName(painter.state);
 
-                    {/* Image Header */}
+                  return (
                     <div
-                      className="relative w-full aspect-square overflow-hidden border-b"
-                      style={{ backgroundColor: "#EFEBE4", borderColor: "rgba(197, 154, 70, 0.15)" }}
+                      key={painter._id}
+                      className="bg-white border rounded-2xl overflow-hidden transition-all duration-300 flex flex-col group shadow-sm hover:shadow-md hover:-translate-y-1"
+                      style={{ borderColor: COLORS.border }}
                     >
-                      <img
-                        src={p.profileImage || "https://res.cloudinary.com/ddqhj3e3a/image/upload/v1784109923/paintmarket/painters/profile/nqdwczuyo1vsf5b0lyun.png"}
-                        alt={p.fullName}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-
-                    {/* Info Body */}
-                    <div className="p-5 flex flex-col flex-1 gap-3">
-                      <div>
-                        <h3 className="font-semibold text-base leading-tight" style={{ color: COLORS.primaryText }}>
-                          {p.fullName}
-                        </h3>
-                        <div className="flex items-center gap-1 mt-1 text-xs font-medium" style={{ color: COLORS.secondaryText }}>
-                          <MapPin size={12} style={{ color: COLORS.accent }} />
-                          <span>{p.city}, {p.state}</span>
-                        </div>
-                      </div>
-
-                      <p className="text-xs leading-relaxed line-clamp-2 italic" style={{ color: COLORS.secondaryText }}>
-                        &ldquo;{p.bio || "Professional painter ready for your project."}&rdquo;
-                      </p>
-
-                      {/* Experience & Rating Bar */}
+                      {/* Image Header */}
                       <div
-                        className="grid grid-cols-2 gap-2 text-[11px] py-2.5 border-y"
-                        style={{ borderColor: "rgba(197, 154, 70, 0.15)" }}
+                        className="relative w-full aspect-square overflow-hidden border-b"
+                        style={{
+                          backgroundColor: "#EFEBE4",
+                          borderColor:
+                            "rgba(197, 154, 70, 0.15)",
+                        }}
                       >
-                        <div>
-                          <span className="block text-[10px] uppercase font-semibold" style={{ color: COLORS.secondaryText }}>
-                            Experience
-                          </span>
-                          <span className="font-bold text-xs" style={{ color: COLORS.primaryText }}>
-                            {p.yearsOfExperience} yrs
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] uppercase font-semibold" style={{ color: COLORS.secondaryText }}>
-                            Rating
-                          </span>
-                          <span className="font-bold text-xs flex items-center gap-1" style={{ color: COLORS.primaryText }}>
-                            <Star size={11} className="fill-[#C59A46]" style={{ color: COLORS.accent }} />
-                            {p.averageRating > 0 ? p.averageRating.toFixed(1) : "N/A"}
-                            <span className="font-normal" style={{ color: COLORS.secondaryText }}>
-                              ({p.totalReviews})
-                            </span>
-                          </span>
-                        </div>
+                        <img
+                          src={
+                            painter.profileImage ||
+                            "https://res.cloudinary.com/ddqhj3e3a/image/upload/v1784109923/paintmarket/painters/profile/nqdwczuyo1vsf5b0lyun.png"
+                          }
+                          alt={painter.fullName}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
                       </div>
 
-                      {/* Skills Chips */}
-                      {p.skills?.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {p.skills.slice(0, 3).map((s, i) => (
-                            <span
-                              key={s._id || i}
-                              className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
+                      {/* Info Body */}
+                      <div className="p-5 flex flex-col flex-1 gap-3">
+                        <div>
+                          <h3
+                            className="font-semibold text-base leading-tight"
+                            style={{ color: COLORS.primaryText }}
+                          >
+                            {painter.fullName}
+                          </h3>
+
+                          <div
+                            className="flex items-center gap-1 mt-1 text-xs font-medium"
+                            style={{
+                              color: COLORS.secondaryText,
+                            }}
+                          >
+                            <MapPin
+                              size={12}
                               style={{
-                                backgroundColor: "rgba(197, 154, 70, 0.08)",
-                                borderColor: "rgba(197, 154, 70, 0.25)",
                                 color: COLORS.accent,
                               }}
-                            >
-                              {s.name}
+                            />
+
+                            <span>
+                              {cityName}
+                              {cityName && stateName ? ", " : ""}
+                              {stateName}
                             </span>
-                          ))}
+                          </div>
                         </div>
-                      )}
 
-                      {/* Actions */}
-                      <div className="mt-auto flex flex-col gap-2 pt-1">
-                        <button
-                          onClick={() => setBookingPainter(p)}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-white transition-all font-semibold text-xs shadow-sm active:scale-[0.99]"
-                          style={{ backgroundColor: COLORS.accent }}
+                        <p
+                          className="text-xs leading-relaxed line-clamp-2 italic"
+                          style={{
+                            color: COLORS.secondaryText,
+                          }}
                         >
-                          <Calendar size={13} /> Book This Painter
-                        </button>
-                      </div>
+                          &ldquo;
+                          {painter.bio ||
+                            "Professional painter ready for your project."}
+                          &rdquo;
+                        </p>
 
+                        {/* Experience & Rating Bar */}
+                        <div
+                          className="grid grid-cols-2 gap-2 text-[11px] py-2.5 border-y"
+                          style={{
+                            borderColor:
+                              "rgba(197, 154, 70, 0.15)",
+                          }}
+                        >
+                          <div>
+                            <span
+                              className="block text-[10px] uppercase font-semibold"
+                              style={{
+                                color: COLORS.secondaryText,
+                              }}
+                            >
+                              Experience
+                            </span>
+
+                            <span
+                              className="font-bold text-xs"
+                              style={{
+                                color: COLORS.primaryText,
+                              }}
+                            >
+                              {painter.yearsOfExperience} yrs
+                            </span>
+                          </div>
+
+                          <div>
+                            <span
+                              className="block text-[10px] uppercase font-semibold"
+                              style={{
+                                color: COLORS.secondaryText,
+                              }}
+                            >
+                              Rating
+                            </span>
+
+                            <span
+                              className="font-bold text-xs flex items-center gap-1"
+                              style={{
+                                color: COLORS.primaryText,
+                              }}
+                            >
+                              <Star
+                                size={11}
+                                className="fill-[#C59A46]"
+                                style={{
+                                  color: COLORS.accent,
+                                }}
+                              />
+
+                              {painter.averageRating > 0
+                                ? painter.averageRating.toFixed(1)
+                                : "N/A"}
+
+                              <span
+                                className="font-normal"
+                                style={{
+                                  color: COLORS.secondaryText,
+                                }}
+                              >
+                                ({painter.totalReviews})
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Skills Chips */}
+                        {painter.skills?.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {painter.skills
+                              .slice(0, 3)
+                              .map((skill, index) => (
+                                <span
+                                  key={skill._id || index}
+                                  className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
+                                  style={{
+                                    backgroundColor:
+                                      "rgba(197, 154, 70, 0.08)",
+                                    borderColor:
+                                      "rgba(197, 154, 70, 0.25)",
+                                    color: COLORS.accent,
+                                  }}
+                                >
+                                  {getSafeString(skill?.name)}
+                                </span>
+                              ))}
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="mt-auto flex flex-col gap-2 pt-1">
+                          <button
+                            onClick={() =>
+                              setBookingPainter(painter)
+                            }
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-white transition-all font-semibold text-xs shadow-sm active:scale-[0.99]"
+                            style={{
+                              backgroundColor: COLORS.accent,
+                            }}
+                          >
+                            <Calendar size={13} />
+                            Book This Painter
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
@@ -423,7 +848,10 @@ export default function PaintersPage() {
 
       {/* Booking Modal */}
       {bookingPainter && (
-        <BookingModal painter={bookingPainter} onClose={() => setBookingPainter(null)} />
+        <BookingModal
+          painter={bookingPainter}
+          onClose={() => setBookingPainter(null)}
+        />
       )}
 
       <Footer />
