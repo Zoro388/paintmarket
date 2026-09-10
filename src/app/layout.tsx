@@ -21,21 +21,25 @@ export default function RootLayout({
       <body>
         <Providers>{children}</Providers>
 
-        <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-4GTK76FSYW"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+        {/* Google Analytics */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-4GTK76FSYW"
+          strategy="afterInteractive"
+        />
 
-  gtag('config', 'G-4GTK76FSYW');
-</script>
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){window.dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-4GTK76FSYW');
+          `}
+        </Script>
 
         {/* Tawk.to Live Chat */}
-        <Script
-          id="tawk-to-chat"
-          strategy="afterInteractive"
-        >
+        <Script id="tawk-to-chat" strategy="afterInteractive">
           {`
             var Tawk_API = Tawk_API || {};
             var Tawk_LoadStart = new Date();
