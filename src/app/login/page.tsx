@@ -667,7 +667,21 @@ export default function LoginPage() {
               className="font-semibold underline underline-offset-4 transition-colors hover:opacity-80"
               style={{ color: COLORS.accent }}
             >
-              Create one
+              Create a customer account
+            </Link>
+          </p>
+
+            <p
+            className="text-center flex items-center gap-2 flex-wrap justify-center text-sm mt-6 font-medium"
+            style={{ color: COLORS.secondaryText }}
+          >
+            Or   
+               <Link
+              href="/painter-account"
+              className="font-semibold underline underline-offset-4 transition-colors hover:opacity-80"
+              style={{ color: COLORS.accent }}
+            >
+               Create a painter account
             </Link>
           </p>
         </div>

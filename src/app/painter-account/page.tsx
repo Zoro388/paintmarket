@@ -23,7 +23,7 @@ interface MasterDataItem {
 }
 
 export default function RegisterPage() {
-  const [activeTab, setActiveTab] = useState<"customer" | "painter">("customer");
+  const [activeTab, setActiveTab] = useState<"customer" | "painter">("painter");
 
   // MasterData State Managers
   const [dbSkills, setDbSkills] = useState<MasterDataItem[]>([]);
@@ -121,18 +121,9 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      if (activeTab === "customer") {
-        const customerBody = {
-          firstName: form.firstName,
-          lastName: form.lastName,
-          email: form.email,
-          phoneNumber: form.phoneNumber,
-          password: form.password,
-        };
-        const data = await apiSignup(customerBody);
-        if (data?.token) saveToken(data.token);
-        window.location.href = "/login";
-      } else {
+      
+      
+      
         const formData = new FormData();
         formData.append("firstName", form.firstName);
         formData.append("lastName", form.lastName);
@@ -159,7 +150,7 @@ export default function RegisterPage() {
         const data = await apiRegisterPainter(formData);
         if (data?.token) saveToken(data.token);
         window.location.href = "/login";
-      }
+      
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -220,21 +211,21 @@ export default function RegisterPage() {
             className="flex border-b mb-6"
             style={{ borderColor: COLORS.border }}
           >
+            
             <button
               type="button"
               onClick={() => {
-                setActiveTab("customer");
+                setActiveTab("painter");
                 setError("");
               }}
               className={`flex-1 pb-3 text-sm font-semibold transition-colors border-b-2 ${
-                activeTab === "customer"
+                activeTab === "painter"
                   ? "border-[#C59A46] text-[#C59A46]"
                   : "border-transparent text-[#7A7A7A] hover:text-[#1F1F1F]"
               }`}
             >
-              Sign up as Customer
+              Sign up as Painter
             </button>
-          
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
