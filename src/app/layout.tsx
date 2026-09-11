@@ -38,7 +38,7 @@ export default function RootLayout({
           `}
         </Script>
 
-        {/* Tawk.to Live Chat */}
+        {/* Tawk.to Live Chat
         <Script id="tawk-to-chat" strategy="afterInteractive">
           {`
             var Tawk_API = Tawk_API || {};
@@ -56,7 +56,7 @@ export default function RootLayout({
               s0.parentNode.insertBefore(s1, s0);
             })();
           `}
-        </Script>
+        </Script> */}
       </body>
     </html>
   );
