@@ -50,7 +50,7 @@ export const apiGetProduct = (id: string) =>
 export const apiCreateOrder = (body: {
   deliveryAddress: string; state: string; city: string;
   orderedProducts: { productId: string; selectedColour: string; quantity: number }[];
-  paymentMethod: "paystack" | "bank-transfer";
+  paymentMethod: "flutterwave" | "paystack" | "bank-transfer";
   notes?: string;
   paymentReference?: string;
 }) => endpointRoute.post("/orders", body).then((r) => r.data);
@@ -257,4 +257,7 @@ export const apiAddToCart = (body: {
   quantity: number;
   selectedColour: string; // pass variant._id (not colourName) per new spec
 }) => endpointRoute.post("/cart", body).then((r) => r.data);
- 
+
+
+export const apiClearCart  = () =>
+  endpointRoute.delete("/cart").then((r) => r.data);

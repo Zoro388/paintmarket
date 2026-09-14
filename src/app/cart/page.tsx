@@ -2,34 +2,22 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import dynamic from "next/dynamic";
-import { apiCreateOrder, apiUpdateCartItem, apiGetCart, apiRemoveFromCart } from "@/lib/userApi";
+import { apiUpdateCartItem, apiGetCart, apiRemoveFromCart } from "@/lib/userApi";
 import { formatCurrency } from "@/lib/utils";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import {
   ShoppingCart, Trash2, Minus, Plus, Loader, ArrowRight, ArrowLeft,
-  MapPin, CreditCard, CheckCircle, Package, Banknote, Mail,
+  MapPin, CheckCircle, Package, Mail,
 } from "lucide-react";
+import Modal from "../test/component/modal";
 
-// Paystack button — client-only
-const PaystackButton = dynamic(
-  () => import("react-paystack").then((mod) => mod.PaystackButton),
-  { ssr: false }
-);
-
-const PAYSTACK_PUBLIC_KEY=process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY||''
-console.log('ENV CHECK:', process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY);
-  console.log('key', process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY)
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 interface Variant {
   _id: string;
   colourName: string;
   colourCode: string;
-  image?: {
-    url: string;
-    publicId?: string;
-  };
+  image?: { url: string; publicId?: string };
 }
 
 interface Product {
@@ -52,58 +40,48 @@ interface CartItem {
   selectedColour: string;
 }
 
-interface PaystackSuccessResponse {
-  reference?: string;
-  trxref?: string;
-  [key: string]: unknown;
-}
-
-
-
 const NIGERIA_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River",
   "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", "Imo", "Jigawa", "Kaduna",
   "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun",
   "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
 ];
-const STEPS = ["Cart", "Delivery", "Payment", "Confirm"];
+
+// 3 steps now — Payment step removed
+const STEPS = ["Cart", "Delivery", "Confirm"];
 
 const inputCls =
   "w-full bg-brand-raised border border-brand-border text-white placeholder-brand-subtle px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-brand-accent/60 transition-all";
 
 export default function CartPage() {
-  const [step, setStep] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [step, setStep]               = useState(0);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [notes, setNotes]             = useState("");
 
-  // Delivery info
-  const [delivery, setDelivery] = useState({ deliveryAddress: "", state: "", city: "", emailAddress: "" });
-  // Payment info
-  const [paymentMethod, setPaymentMethod] = useState<"paystack"|'bank-transfer'>("paystack");
-  const [notes, setNotes] = useState("");
+  // Delivery info — now includes fullName and phoneNumber
+  const [delivery, setDelivery] = useState({
+    fullName: "",
+    phoneNumber: "",
+    deliveryAddress: "",
+    state: "",
+    city: "",
+    emailAddress: "",
+  });
 
   const qc = useQueryClient();
 
-  // 1. Fetch cart items from the API
   const { data: fetchedItems, isLoading } = useQuery<CartItem[]>({
     queryKey: ["cart-product"],
     queryFn: async () => {
       const res = await apiGetCart();
-      console.log('res', res)
       const rawItems = res?.cart?.items ?? res?.data ?? [];
       return rawItems as CartItem[];
     },
   });
 
-  // 2. Local cart state, kept in sync with server data
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart]                   = useState<CartItem[]>([]);
   const [cartInitialized, setCartInitialized] = useState(false);
-const getSelectedVariant = (item: CartItem): Variant | undefined => {
-  return item.product.variants?.find(
-    (variant) => variant._id === item.selectedColour
-  );
-};
+
   useEffect(() => {
     if (!cartInitialized && fetchedItems && fetchedItems.length > 0) {
       setCart(fetchedItems);
@@ -111,12 +89,13 @@ const getSelectedVariant = (item: CartItem): Variant | undefined => {
     }
   }, [fetchedItems, cartInitialized]);
 
-  // 3. Quantity update mutation — hits the real API, then reflects the new
-  //    quantity immediately in local state (optimistic-on-success update)
-  const updateCartItemQuantity = useMutation({
-    mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
-      return apiUpdateCartItem(productId, { quantity });
-    },
+  const getSelectedVariant = (item: CartItem): Variant | undefined =>
+    item.product.variants?.find((v) => v._id === item.selectedColour);
+
+  // Quantity update
+  const updateQtyMutation = useMutation({
+    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) =>
+      apiUpdateCartItem(productId, { quantity }),
     onSuccess: (_data, variables) => {
       setCart((prev) =>
         prev.map((item) =>
@@ -126,175 +105,54 @@ const getSelectedVariant = (item: CartItem): Variant | undefined => {
         )
       );
       qc.invalidateQueries({ queryKey: ["cart-product"] });
-      toast.success("Cart quantity updated!");
+      toast.success("Cart updated!");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to update product in cart");
-    },
+    onError: (err: Error) => toast.error(err.message || "Failed to update"),
   });
-// remove from cart mutation        
-    const removeFromCart = useMutation({
-        mutationFn: async (productId: string) => {
-            return apiRemoveFromCart(productId);
-        },
-        onSuccess: (_data, variables) => {
-            setCart((prev) => prev.filter((item) => item.product._id !== variables));
-            qc.invalidateQueries({ queryKey: ["cart-product"] });
-            toast.success("Item removed from cart!");
-        },
-        onError: (err: Error) => {
-            toast.error(err.message || "Failed to remove item from cart");
-        },
-    });
 
-    const handleQtyChange = (productId: string, currentQty: number, delta: number) => {
-        const nextQty = Math.max(1, currentQty + delta);
-        if (nextQty === currentQty) return;
-        updateCartItemQuantity.mutate({ productId, quantity: nextQty });
-    };
+  // Remove from cart
+  const removeMutation = useMutation({
+    mutationFn: (productId: string) => apiRemoveFromCart(productId),
+    onSuccess: (_, productId) => {
+      setCart((prev) => prev.filter((item) => item.product._id !== productId));
+      qc.invalidateQueries({ queryKey: ["cart-product"] });
+      toast.success("Item removed!");
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to remove"),
+  });
 
-  const handleQtyInputChange = (productId: string, rawValue: string) => {
+  const handleQtyChange = (productId: string, currentQty: number, delta: number) => {
+    const nextQty = Math.max(1, currentQty + delta);
+    if (nextQty === currentQty) return;
+    updateQtyMutation.mutate({ productId, quantity: nextQty });
+  };
+
+  const handleQtyInput = (productId: string, rawValue: string) => {
     const parsed = parseInt(rawValue, 10);
     if (Number.isNaN(parsed) || parsed < 1) return;
-    updateCartItemQuantity.mutate({ productId, quantity: parsed });
+    updateQtyMutation.mutate({ productId, quantity: parsed });
   };
-
- 
-
- 
 
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  // const deliveryFee = subtotal > 50000 || subtotal === 0 ? 0 : 3500;
-  const total = subtotal;
+  const total    = subtotal;
 
   const canGoToDelivery = cart.length > 0;
-  const canGoToPayment = Boolean(
+  const canGoToConfirm  = Boolean(
+    delivery.fullName.trim() &&
+    delivery.phoneNumber.trim() &&
     delivery.deliveryAddress.trim() &&
-      delivery.state &&
-      delivery.city.trim() &&
-      delivery.emailAddress.trim() &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(delivery.emailAddress)
+    delivery.state &&
+    delivery.city.trim() &&
+    delivery.emailAddress.trim() &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(delivery.emailAddress)
   );
-  const canSubmit = canGoToDelivery && canGoToPayment;
-
-  // ── Bank transfer: create order directly with paymentMethod "bank-transfer" ──
-  const handleBankTransferSubmit = async () => {
-    if (!canSubmit) {
-      toast.error("Please complete all required fields");
-      return;
-    }
-    setSubmitting(true);
-    setErrorMsg("");
-    try {
-      await apiCreateOrder({
-        deliveryAddress: delivery.deliveryAddress,
-        state: delivery.state,
-        city: delivery.city,
-        orderedProducts: cart.map((item) => ({
-          productId: item.product._id,
-          selectedColour: item.selectedColour,
-          quantity: item.quantity,
-        })),
-        paymentMethod: "bank-transfer",
-        notes: notes || undefined,
-      });
-      setOrderSuccess(true);
-      toast.success("Order placed successfully!");
-      setCart([]);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to place order. Please try again.";
-      setErrorMsg(msg);
-      toast.error(msg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // ── Paystack: Create order after payment succeeds ───────────────────────────
-  const handlePaystackSuccess = async (referenceObj: PaystackSuccessResponse) => {
-    setSubmitting(true);
-    setErrorMsg("");
-
-    const currentReference =
-      referenceObj?.reference ?? referenceObj?.trxref ?? String(referenceObj ?? "");
-
-    try {
-      await apiCreateOrder({
-        deliveryAddress: delivery.deliveryAddress,
-        state: delivery.state,
-        city: delivery.city,
-        orderedProducts: cart.map((item) => ({
-          productId: item.product._id,
-          selectedColour: item.selectedColour,
-          quantity: item.quantity,
-        })),
-        paymentMethod: "paystack",
-        paymentReference: currentReference,
-        notes: notes || undefined,
-      });
-
-      setOrderSuccess(true);
-      toast.success("Payment successful — order verified and placed!");
-      setCart([]);
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Payment processed but failed to update order database. Please contact support.";
-      setErrorMsg(msg);
-      toast.error(msg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handlePaystackClose = () => {
-    toast.error("Payment window closed. You can try again.");
-  };
 
   const goNext = () => {
-    if (step === 0 && !canGoToDelivery) {
-      toast.error("Your cart is empty");
-      return;
-    }
-    if (step === 1 && !canGoToPayment) {
-      toast.error("Please fill in all delivery fields");
-      return;
-    }
+    if (step === 0 && !canGoToDelivery) { toast.error("Your cart is empty"); return; }
+    if (step === 1 && !canGoToConfirm)  { toast.error("Please fill in all delivery fields"); return; }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   };
   const goBack = () => setStep((s) => Math.max(s - 1, 0));
-
-  // Success view
-  if (orderSuccess) {
-    return (
-      <main className="bg-brand-black min-h-screen">
-        <Navbar />
-        <section className="pt-32 pb-24 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-md mx-auto bg-brand-card border border-brand-border rounded-2xl p-10 text-center flex flex-col items-center gap-5">
-            <div className="w-16 h-16 rounded-full bg-emerald-950/50 border border-emerald-800/50 flex items-center justify-center">
-              <CheckCircle size={32} className="text-emerald-400" />
-            </div>
-            <div>
-              <h2 className="font-display text-2xl font-bold text-white">Order Placed!</h2>
-              <p className="text-brand-mid text-sm mt-2 leading-relaxed">
-                Thank you for your order. We&apos;ll send you a confirmation email shortly with
-                tracking details.
-              </p>
-            </div>
-            <a
-              href="/shop"
-              className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold
-                px-6 py-3 rounded-lg hover:bg-brand-accent-lt transition-all text-sm"
-            >
-              Continue Shopping <ArrowRight size={15} />
-            </a>
-          </div>
-        </section>
-        <Footer />
-      </main>
-    );
-  }
 
   return (
     <main className="bg-brand-black min-h-screen">
@@ -315,32 +173,20 @@ const getSelectedVariant = (item: CartItem): Variant | undefined => {
             {STEPS.map((label, i) => (
               <div key={label} className="flex items-center flex-1 last:flex-none">
                 <div className="flex items-center gap-2.5">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                    ${
-                      i < step
-                        ? "bg-brand-accent text-brand-black"
-                        : i === step
-                        ? "bg-brand-accent text-brand-black ring-4 ring-brand-accent-muted"
-                        : "bg-brand-raised border border-brand-border text-brand-mid"
-                    }`}
-                  >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
+                    ${i < step
+                      ? "bg-brand-accent text-brand-black"
+                      : i === step
+                      ? "bg-brand-accent text-brand-black ring-4 ring-brand-accent-muted"
+                      : "bg-brand-raised border border-brand-border text-brand-mid"}`}>
                     {i < step ? <CheckCircle size={15} /> : i + 1}
                   </div>
-                  <span
-                    className={`text-sm font-medium hidden sm:inline ${
-                      i <= step ? "text-white" : "text-brand-mid"
-                    }`}
-                  >
+                  <span className={`text-sm font-medium hidden sm:inline ${i <= step ? "text-white" : "text-brand-mid"}`}>
                     {label}
                   </span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div
-                    className={`flex-1 h-px mx-3 transition-colors ${
-                      i < step ? "bg-brand-accent" : "bg-brand-border"
-                    }`}
-                  />
+                  <div className={`flex-1 h-px mx-3 transition-colors ${i < step ? "bg-brand-accent" : "bg-brand-border"}`} />
                 )}
               </div>
             ))}
@@ -348,16 +194,17 @@ const getSelectedVariant = (item: CartItem): Variant | undefined => {
         </div>
       </section>
 
-      {/* Content Layout Grid */}
+      {/* Content */}
       <section className="py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto grid lg:grid-cols-3 gap-8">
-          {/* Main step content form panel */}
+
+          {/* Main panel */}
           <div className="lg:col-span-2 bg-brand-card border border-brand-border rounded-2xl p-6 lg:p-8">
-            {/* STEP 0 — Cart Review */}
+
+            {/* STEP 0 — Cart */}
             {step === 0 && (
               <div className="flex flex-col gap-5">
                 <h2 className="font-display text-xl font-bold text-white">Review Your Items</h2>
-
                 {isLoading ? (
                   <div className="py-16 flex justify-center">
                     <Loader size={26} className="animate-spin text-brand-accent" />
@@ -366,189 +213,84 @@ const getSelectedVariant = (item: CartItem): Variant | undefined => {
                   <div className="py-16 text-center flex flex-col items-center gap-3">
                     <Package size={40} className="text-brand-border" />
                     <p className="text-brand-mid text-sm">Your cart is empty</p>
-                    <a href="/shop" className="text-brand-accent text-sm underline underline-offset-4">
-                      Browse the shop
-                    </a>
+                    <a href="/shop" className="text-brand-accent text-sm underline underline-offset-4">Browse the shop</a>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
                     {cart.map((item) => {
-                      const isUpdatingThisItem =
-  updateCartItemQuantity.isPending &&
-  updateCartItemQuantity.variables?.productId === item.product._id;
+                      const isUpdating = updateQtyMutation.isPending && updateQtyMutation.variables?.productId === item.product._id;
+                      const selectedVariant = getSelectedVariant(item);
+                      return (
+                        <div key={`${item.product._id}-${item.selectedColour}`}
+                          className="flex flex-col sm:flex-row gap-4 bg-brand-raised border border-brand-border rounded-xl p-4">
+                          <div className="w-full sm:w-24 h-24 rounded-xl overflow-hidden bg-brand-card border border-brand-border flex-shrink-0">
+                            {selectedVariant?.image?.url ? (
+                              <img src={selectedVariant.image.url} alt={selectedVariant.colourName} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-brand-mid text-xs">No Image</div>
+                            )}
+                          </div>
 
-const selectedVariant = getSelectedVariant(item);
+                          <div className="flex-1 flex flex-col gap-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="text-white font-semibold text-base">{item.product.productName}</h3>
+                                <p className="text-brand-mid text-xs mt-1">{item.product.productCategory}</p>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-accent">
+                                    {selectedVariant?.colourName ?? "Unknown Colour"}
+                                  </span>
+                                  <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-mid">
+                                    {selectedVariant?.colourCode ?? ""}
+                                  </span>
+                                </div>
+                              </div>
+                              <button onClick={() => removeMutation.mutate(item.product._id)}
+                                className="text-brand-subtle hover:text-red-400 transition-colors">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
 
-return (
-  <div
-    key={`${item.product._id}-${item.selectedColour}`}
-    className="flex flex-col sm:flex-row gap-4 bg-brand-raised border border-brand-border rounded-xl p-4"
-  >
-    {/* Variant Image */}
-    <div className="w-full sm:w-24 h-24 rounded-xl overflow-hidden bg-brand-card border border-brand-border flex-shrink-0">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-brand-mid">Buckets</span>
+                              <div className="flex items-center bg-brand-card border border-brand-border rounded-md">
+                                <button onClick={() => handleQtyChange(item.product._id, item.quantity, -1)} disabled={isUpdating} className="p-2">
+                                  <Minus size={12} />
+                                </button>
+                                <input type="number" min={1} value={item.quantity} disabled={isUpdating}
+                                  onChange={(e) => handleQtyInput(item.product._id, e.target.value)}
+                                  className="bg-transparent text-white text-center w-12 outline-none" />
+                                <button onClick={() => handleQtyChange(item.product._id, item.quantity, 1)} disabled={isUpdating} className="p-2">
+                                  <Plus size={12} />
+                                </button>
+                              </div>
+                              {isUpdating && <Loader size={12} className="animate-spin text-brand-accent" />}
+                            </div>
 
-      {selectedVariant?.image?.url ? (
-        <img
-          src={selectedVariant.image.url}
-          alt={selectedVariant.colourName}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-brand-mid text-xs">
-          No Image
-        </div>
-      )}
-
-    </div>
-
-    <div className="flex-1 flex flex-col gap-3">
-
-      <div className="flex justify-between items-start">
-
-        <div>
-
-          <h3 className="text-white font-semibold text-base">
-            {item.product.productName}
-          </h3>
-
-          <p className="text-brand-mid text-xs mt-1">
-            {item.product.productCategory}
-          </p>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-
-            <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-accent">
-              {selectedVariant?.colourName ?? "Unknown Colour"}
-            </span>
-
-            <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-mid">
-              {selectedVariant?.colourCode ?? ""}
-            </span>
-
-          </div>
-
-        </div>
-
-        <button
-          onClick={() => removeFromCart.mutate(item.product._id)}
-          className="text-brand-subtle hover:text-red-400 transition-colors"
-        >
-          <Trash2 size={16} />
-        </button>
-
-      </div>
-
-      {/* Quantity */}
-
-      <div className="flex items-center gap-3">
-
-        <span className="text-xs text-brand-mid">
-          Buckets
-        </span>
-
-        <div className="flex items-center bg-brand-card border border-brand-border rounded-md">
-
-          <button
-            onClick={() =>
-              handleQtyChange(
-                item.product._id,
-                item.quantity,
-                -1
-              )
-            }
-            disabled={isUpdatingThisItem}
-            className="p-2"
-          >
-            <Minus size={12} />
-          </button>
-
-          <input
-            type="number"
-            min={1}
-            value={item.quantity}
-            disabled={isUpdatingThisItem}
-            onChange={(e) =>
-              handleQtyInputChange(
-                item.product._id,
-                e.target.value
-              )
-            }
-            className="bg-transparent text-white text-center w-12 outline-none"
-          />
-
-          <button
-            onClick={() =>
-              handleQtyChange(
-                item.product._id,
-                item.quantity,
-                1
-              )
-            }
-            disabled={isUpdatingThisItem}
-            className="p-2"
-          >
-            <Plus size={12} />
-          </button>
-
-        </div>
-
-        {isUpdatingThisItem && (
-          <Loader
-            size={12}
-            className="animate-spin text-brand-accent"
-          />
-        )}
-
-      </div>
-
-      <div className="flex items-center justify-between pt-2 border-t border-brand-border">
-
-        <div>
-
-          <p className="text-brand-mid text-xs">
-            Unit Price
-          </p>
-
-          <p className="text-white font-medium">
-            {formatCurrency(item.product.price)}
-          </p>
-
-        </div>
-
-        <div className="text-right">
-
-          <p className="text-brand-mid text-xs">
-            Total
-          </p>
-
-          <p className="text-brand-accent font-bold text-lg">
-            {formatCurrency(
-              item.product.price * item.quantity
-            )}
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-);
+                            <div className="flex items-center justify-between pt-2 border-t border-brand-border">
+                              <div>
+                                <p className="text-brand-mid text-xs">Unit Price</p>
+                                <p className="text-white font-medium">{formatCurrency(item.product.price)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-brand-mid text-xs">Total</p>
+                                <p className="text-brand-accent font-bold text-lg">{formatCurrency(item.product.price * item.quantity)}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
                     })}
                   </div>
                 )}
               </div>
             )}
 
-            {/* STEP 1 — Delivery Details */}
+            {/* STEP 1 — Delivery */}
             {step === 1 && (
               <div className="flex flex-col gap-5">
                 <div className="flex items-center gap-2.5">
-                  <div
-                    className="w-9 h-9 rounded-lg bg-brand-accent-muted border border-brand-accent/20
-                    flex items-center justify-center"
-                  >
+                  <div className="w-9 h-9 rounded-lg bg-brand-accent-muted border border-brand-accent/20 flex items-center justify-center">
                     <MapPin size={16} className="text-brand-accent" />
                   </div>
                   <div>
@@ -557,38 +299,44 @@ return (
                   </div>
                 </div>
 
+                {/* Full Name + Phone — added here, used by Flutterwave */}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-brand-lt-gray text-xs font-medium">Full Name *</label>
+                    <input value={delivery.fullName}
+                      onChange={(e) => setDelivery((p) => ({ ...p, fullName: e.target.value }))}
+                      placeholder="John Doe" className={inputCls} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-brand-lt-gray text-xs font-medium">Phone Number *</label>
+                    <input type="tel" value={delivery.phoneNumber}
+                      onChange={(e) => setDelivery((p) => ({ ...p, phoneNumber: e.target.value }))}
+                      placeholder="08012345678" className={inputCls} />
+                  </div>
+                </div>
+
                 <div className="flex flex-col gap-1.5">
                   <label className="text-brand-lt-gray text-xs font-medium">Delivery Address *</label>
-                  <input
-                    value={delivery.deliveryAddress}
+                  <input value={delivery.deliveryAddress}
                     onChange={(e) => setDelivery((p) => ({ ...p, deliveryAddress: e.target.value }))}
-                    placeholder="House number, street name, area"
-                    className={inputCls}
-                  />
+                    placeholder="House number, street name, area" className={inputCls} />
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-brand-lt-gray text-xs font-medium">State *</label>
-                    <select
-                      value={delivery.state}
+                    <select value={delivery.state}
                       onChange={(e) => setDelivery((p) => ({ ...p, state: e.target.value }))}
-                      className={`${inputCls} cursor-pointer`}
-                    >
+                      className={`${inputCls} cursor-pointer`}>
                       <option value="">Select state</option>
-                      {NIGERIA_STATES.map((s) => (
-                        <option key={s}>{s}</option>
-                      ))}
+                      {NIGERIA_STATES.map((s) => <option key={s}>{s}</option>)}
                     </select>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-brand-lt-gray text-xs font-medium">City *</label>
-                    <input
-                      value={delivery.city}
+                    <input value={delivery.city}
                       onChange={(e) => setDelivery((p) => ({ ...p, city: e.target.value }))}
-                      placeholder="e.g. Lekki, Wuse II..."
-                      className={inputCls}
-                    />
+                      placeholder="e.g. Lekki, Wuse II..." className={inputCls} />
                   </div>
                 </div>
 
@@ -596,268 +344,118 @@ return (
                   <label className="text-brand-lt-gray text-xs font-medium">Email Address *</label>
                   <div className="relative">
                     <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-subtle" />
-                    <input
-                      type="email"
-                      value={delivery.emailAddress}
+                    <input type="email" value={delivery.emailAddress}
                       onChange={(e) => setDelivery((p) => ({ ...p, emailAddress: e.target.value }))}
-                      placeholder="you@example.com"
-                      className={`${inputCls} pl-9`}
-                    />
-                  </div>
-                  <p className="text-brand-subtle text-[11px]">Used for your order receipt and Paystack validation.</p>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 2 — Payment Method */}
-            {step === 2 && (
-              <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="w-9 h-9 rounded-lg bg-brand-accent-muted border border-brand-accent/20
-                    flex items-center justify-center"
-                  >
-                    <CreditCard size={16} className="text-brand-accent" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-xl font-bold text-white">Payment Method</h2>
-                    <p className="text-brand-mid text-xs mt-0.5">Choose how you&apos;d like to pay</p>
+                      placeholder="you@example.com" className={`${inputCls} pl-9`} />
                   </div>
                 </div>
-
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {(
-                    [
-                      // { value: "paystack", label: "Pay with Paystack", desc: "Card, USSD, or Bank App via Paystack", icon: CreditCard },
-                      { value: "bank-transfer", label: "Bank Transfer", desc: "Transfer directly to our account", icon: Banknote },
-                    ] as const
-                  ).map((opt) => {
-                    const Icon = opt.icon;
-                    const active = paymentMethod === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => setPaymentMethod(opt.value)}
-                        className={`text-left p-4 rounded-xl border transition-all ${
-                          active
-                            ? "border-brand-accent bg-brand-accent-muted"
-                            : "border-brand-border bg-brand-raised hover:border-brand-border-lt"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <Icon size={18} className={active ? "text-brand-accent" : "text-brand-mid"} />
-                          {active && <CheckCircle size={15} className="text-brand-accent" />}
-                        </div>
-                        <p className={`text-sm font-semibold ${active ? "text-white" : "text-brand-lt-gray"}`}>
-                          {opt.label}
-                        </p>
-                        <p className="text-brand-mid text-xs mt-1">{opt.desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {paymentMethod === "bank-transfer" && (
-                  <div className="bg-brand-raised border border-brand-border rounded-xl p-4 text-sm">
-                    <p className="text-brand-accent font-semibold text-xs uppercase tracking-wider mb-2">Bank Details</p>
-                    <div className="grid grid-cols-2 gap-y-1.5 text-xs">
-                      <span className="text-brand-mid">Bank Name:</span>
-                      <span className="text-white">Moniepoint MFB</span>
-                      <span className="text-brand-mid">Account Number:</span>
-                      <span className="text-white">5180236145 </span>
-                      <span className="text-brand-mid">Account Name:</span>
-                      <span className="text-white">Smart-choice Interior Building Concept LTD</span>
-{/* <<<<<<< HEAD
-                      <span className="text-white">Paint Domain</span>
-                      <span className="text-white">Smart-choice Interior Building Concept LTD</span>
->>>>>>> 439ea61 (paystack update) */}
-                    </div>
-                    <p className="text-brand-subtle text-[11px] mt-2">
-                      Please use your reference details as the transfer narration.
-                    </p>
-                  </div>
-                )}
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-brand-lt-gray text-xs font-medium">Order Notes (optional)</label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={3}
-                    placeholder="Delivery instructions, special handling, etc."
-                    className={`${inputCls} resize-none`}
-                  />
+                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+                    rows={3} placeholder="Delivery instructions, special handling, etc."
+                    className={`${inputCls} resize-none`} />
                 </div>
               </div>
             )}
 
-            {/* STEP 3 — Confirm */}
-            {step === 3 && (
+            {/* STEP 2 — Confirm */}
+            {step === 2 && (
               <div className="flex flex-col gap-5">
                 <h2 className="font-display text-xl font-bold text-white">Confirm Your Order</h2>
 
+                {/* Items */}
                 <div>
                   <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">Items</p>
                   <div className="flex flex-col gap-2">
-                   {cart.map((item) => {
-  const selectedVariant = getSelectedVariant(item);
-
-  return (
-    <div
-      key={`${item.product._id}-${item.selectedColour}`}
-      className="flex items-center justify-between bg-brand-raised border border-brand-border rounded-lg px-4 py-3 text-sm"
-    >
-      <div className="flex items-center gap-3">
-
-        <div className="w-12 h-12 rounded-lg overflow-hidden border border-brand-border bg-brand-card">
-
-          {selectedVariant?.image?.url ? (
-            <img
-              src={selectedVariant.image.url}
-              alt={selectedVariant.colourName}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-brand-border" />
-          )}
-
-        </div>
-
-        <div>
-          <p className="text-white font-medium">
-            {item.product.productName}
-          </p>
-
-          <p className="text-brand-mid text-xs">
-            {selectedVariant?.colourName ?? "Unknown Colour"}
-          </p>
-
-          <p className="text-brand-subtle text-[11px]">
-            {selectedVariant?.colourCode}
-            {" · "}
-            Qty: {item.quantity}
-          </p>
-        </div>
-
-      </div>
-
-      <span className="text-brand-accent font-semibold">
-        {formatCurrency(item.product.price * item.quantity)}
-      </span>
-    </div>
-  );
-})}
+                    {cart.map((item) => {
+                      const selectedVariant = getSelectedVariant(item);
+                      return (
+                        <div key={`${item.product._id}-${item.selectedColour}`}
+                          className="flex items-center justify-between bg-brand-raised border border-brand-border rounded-lg px-4 py-3 text-sm">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-brand-border bg-brand-card">
+                              {selectedVariant?.image?.url ? (
+                                <img src={selectedVariant.image.url} alt={selectedVariant.colourName} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-brand-border" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">{item.product.productName}</p>
+                              <p className="text-brand-mid text-xs">{selectedVariant?.colourName ?? "Unknown Colour"}</p>
+                              <p className="text-brand-subtle text-[11px]">{selectedVariant?.colourCode} · Qty: {item.quantity}</p>
+                            </div>
+                          </div>
+                          <span className="text-brand-accent font-semibold">
+                            {formatCurrency(item.product.price * item.quantity)}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
+                {/* Delivery summary */}
                 <div>
                   <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">Delivery To</p>
-                  <div className="bg-brand-raised border border-brand-border rounded-lg p-4 text-sm">
-                    <p className="text-white">{delivery.deliveryAddress}</p>
-                    <p className="text-brand-mid text-xs mt-1">
-                      {delivery.city}, {delivery.state}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">Payment</p>
-                  <div className="bg-brand-raised border border-brand-border rounded-lg p-4 text-sm flex items-center gap-2">
-                    {/* {paymentMethod === "paystack" ? (
-                      <CreditCard size={15} className="text-brand-accent" />
-                    ) : (
-                      <Banknote size={15} className="text-brand-accent" />
-                    )} */}
-                    <span className="text-white capitalize">
-                      {paymentMethod === "paystack" ? "Paystack" : "Bank Transfer"}
-                    </span>
+                  <div className="bg-brand-raised border border-brand-border rounded-lg p-4 text-sm flex flex-col gap-1">
+                    <p className="text-white font-medium">{delivery.fullName}</p>
+                    <p className="text-brand-mid text-xs">{delivery.phoneNumber} · {delivery.emailAddress}</p>
+                    <p className="text-brand-mid text-xs">{delivery.deliveryAddress}</p>
+                    <p className="text-brand-mid text-xs">{delivery.city}, {delivery.state}</p>
                   </div>
                 </div>
 
                 {notes && (
                   <div>
                     <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">Notes</p>
-                    <div className="bg-brand-raised border border-brand-border rounded-lg p-4 text-sm text-brand-lt-gray">
-                      {notes}
-                    </div>
-                  </div>
-                )}
-
-                {errorMsg && (
-                  <div className="bg-red-950/50 border border-red-800/50 rounded-lg px-4 py-3">
-                    <p className="text-red-400 text-sm">{errorMsg}</p>
+                    <div className="bg-brand-raised border border-brand-border rounded-lg p-4 text-sm text-brand-lt-gray">{notes}</div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Navigation buttons */}
+            {/* Navigation */}
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-brand-border/50">
-              <button
-                onClick={goBack}
-                disabled={step === 0 || submitting}
+              <button onClick={goBack} disabled={step === 0}
                 className="flex items-center gap-2 text-brand-mid hover:text-white text-sm
-                  disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-4 py-2.5 rounded-lg
-                  border border-brand-border hover:border-brand-border-lt"
-              >
+                  disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-4 py-2.5
+                  rounded-lg border border-brand-border hover:border-brand-border-lt">
                 <ArrowLeft size={14} /> Back
               </button>
 
               {step < STEPS.length - 1 ? (
-                <button
-                  onClick={goNext}
+                <button onClick={goNext}
                   className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold
-                    px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm"
-                >
+                    px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm">
                   Continue <ArrowRight size={14} />
                 </button>
-              ) 
-              
-             : !canSubmit || submitting ? (
-                <button
-                  disabled
-                  className="flex items-center justify-center gap-2 bg-brand-accent text-brand-black
-                    font-semibold px-6 py-2.5 rounded-lg text-sm opacity-50 cursor-not-allowed border-none"
-                >
-                  {submitting ? (
-                    <span className="w-4 h-4 border-2 border-brand-black border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <CreditCard size={14} />
-                  )}
-                  {submitting ? "Processing..." : "Pay & Place Order"}
-                </button>
               ) : (
-                <PaystackButton
-                  email={delivery.emailAddress}
-                  amount={total * 100}
-                  publicKey={PAYSTACK_PUBLIC_KEY}
-                  text="Pay & Place Order"
-                  onSuccess={handlePaystackSuccess}
-                  onClose={handlePaystackClose}
-                  className="flex items-center justify-center gap-2 bg-brand-accent text-brand-black
-                    font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all
-                    text-sm border-none cursor-pointer"
-                />
+                /* On confirm step — open Flutterwave modal */
+                <button
+                  onClick={() => setShowPayModal(true)}
+                  disabled={!canGoToConfirm}
+                  className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold
+                    px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm
+                    disabled:opacity-50 disabled:cursor-not-allowed">
+                  Pay Now <ArrowRight size={14} />
+                </button>
               )}
             </div>
           </div>
 
-          {/* ── Order Summary Sidebar ──────────────────────────────────────────── */}
+          {/* Order Summary Sidebar */}
           <div className="bg-brand-card border border-brand-border rounded-2xl p-6 h-fit flex flex-col gap-5">
             <h2 className="font-display text-lg font-bold text-white flex items-center gap-2">
               <ShoppingCart size={18} className="text-brand-accent" /> Order Summary
             </h2>
-
             <div className="flex flex-col gap-3 border-b border-brand-border/60 pb-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-brand-mid">
-                  Subtotal ({cart.reduce((a, c) => a + c.quantity, 0)} items)
-                </span>
+                <span className="text-brand-mid">Subtotal ({cart.reduce((a, c) => a + c.quantity, 0)} items)</span>
                 <span className="text-white font-medium">{formatCurrency(subtotal)}</span>
               </div>
-            
             </div>
-
             <div className="flex items-center justify-between">
               <span className="text-white text-sm font-semibold">Total Amount</span>
               <span className="text-brand-accent font-bold text-xl font-display">{formatCurrency(total)}</span>
@@ -865,6 +463,26 @@ return (
           </div>
         </div>
       </section>
+
+      {/* Flutterwave Modal — only shown when Pay Now is clicked */}
+      {showPayModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <Modal
+            customerInfo={{
+              fullName:        delivery.fullName,
+              phoneNumber:     delivery.phoneNumber,
+              emailAddress:    delivery.emailAddress,
+              deliveryAddress: delivery.deliveryAddress,
+              state:           delivery.state,
+              city:            delivery.city,
+              notes:           notes,
+            }}
+            cartItems={cart}
+            onClose={() => setShowPayModal(false)}
+          />
+        </div>
+      )}
+
       <Footer />
     </main>
   );
