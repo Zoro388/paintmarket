@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +9,7 @@ import {
 } from "@/lib/adminApi";
 import {
   Plus, Trash2, Edit2, Loader, Image as ImageIcon, Video,
-  X, FileText, UploadCloud, AlertCircle,
+  X, FileText, UploadCloud,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -18,6 +17,7 @@ interface MediaItem {
   _id: string;
   title: string;
   description: string;
+  category: string;
   images: string[];
   video?: string;
   createdAt: string;
@@ -37,6 +37,7 @@ function LessonModal({
 
   const [title, setTitle]               = useState(item?.title ?? "");
   const [description, setDescription]   = useState(item?.description ?? "");
+  const [category, setCategory]         = useState(item?.category ?? "");
   const [images, setImages]             = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [video, setVideo]               = useState<File | null>(null);
@@ -92,12 +93,15 @@ function LessonModal({
   const handleSubmit = () => {
     if (!title.trim())       { toast.error("Title is required"); return; }
     if (!description.trim()) { toast.error("Description is required"); return; }
+    if (!category.trim())    { toast.error("Category is required"); return; }
+
     const totalImages = existingImages.length + images.length;
     if (totalImages === 0)   { toast.error("Please add at least one image"); return; }
 
     const fd = new FormData();
     fd.append("title", title);
     fd.append("description", description);
+    fd.append("category", category);
     images.forEach((img) => fd.append("images", img));
     if (video) fd.append("video", video);
 
@@ -131,7 +135,9 @@ function LessonModal({
 
           {/* Title */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-brand-mid text-xs font-semibold uppercase tracking-wider">Training Title *</label>
+            <label className="text-brand-mid text-xs font-semibold uppercase tracking-wider">
+              Training Title *
+            </label>
             <input
               type="text"
               value={title}
@@ -144,7 +150,9 @@ function LessonModal({
 
           {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-brand-mid text-xs font-semibold uppercase tracking-wider">Description *</label>
+            <label className="text-brand-mid text-xs font-semibold uppercase tracking-wider">
+              Description *
+            </label>
             <textarea
               rows={3}
               value={description}
@@ -152,6 +160,21 @@ function LessonModal({
               placeholder="Describe what this Training covers..."
               className="w-full bg-brand-raised text-white border border-brand-border rounded-lg
                 p-2.5 focus:outline-none focus:border-brand-accent/50 resize-none transition-colors"
+            />
+          </div>
+
+          {/* Category */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-brand-mid text-xs font-semibold uppercase tracking-wider">
+              Category *
+            </label>
+            <input
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="e.g. Surface Preparation"
+              className="w-full bg-brand-raised text-white border border-brand-border rounded-lg
+                p-2.5 focus:outline-none focus:border-brand-accent/50 transition-colors"
             />
           </div>
 
