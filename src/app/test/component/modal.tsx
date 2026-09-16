@@ -176,11 +176,11 @@ const Modal: React.FC<ModalProps> = ({ customerInfo, cartItems, onClose }) => {
                 <span>Subtotal</span>
                 <span>{formatCurrency(subtotal)}</span>
               </div>
-              <div className="flex justify-between text-xs text-brand-mid">
+              <div className="flex flex-col justify-between text-xs text-brand-mid">
                 <span>Delivery</span>
                 <span>
                   {deliveryFee === 0
-                    ? <span className="text-emerald-400 font-semibold">Free</span>
+                    ? <span className="text-emerald-400 font-semibold">Delivery free for 50 buckets and above within Abuja</span>
                     : formatCurrency(deliveryFee)}
                 </span>
               </div>
