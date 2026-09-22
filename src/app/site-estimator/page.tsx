@@ -183,7 +183,7 @@ const COLORS = {
   border: "rgba(197, 154, 70, 0.2)",
 };
 
-const propertyTypes = ["House", "Apartment", "Office", "Commercial", "Other"];
+const propertyTypes = ["Duplex", "Bungalow", "Office", "Commercial property"];
 
 // Reusable styling for form input elements
 const inputCls =
