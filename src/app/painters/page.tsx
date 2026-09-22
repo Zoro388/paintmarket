@@ -452,8 +452,7 @@ export default function PaintersPage() {
     useState<Painter | null>(null);
 
   const { data: painters = [], isLoading } = useQuery<Painter[]>({
-    queryKey: ["painters"],
-
+    queryKey: ["painters"],    
     queryFn: async () => {
       try {
         const res = await apiGetPainters();
@@ -465,6 +464,8 @@ export default function PaintersPage() {
       }
     },
   });
+
+  console.log(painters);
 
   // ───────────────────────────────────────────────────────────────────────────
   // Unique states
