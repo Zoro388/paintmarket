@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -19,6 +18,8 @@ import {
   X,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -39,6 +40,11 @@ interface LocationValue {
 
 type LocationField = string | LocationValue | null | undefined;
 
+interface PortfolioImage {
+  url: string;
+  publicId?: string;
+}
+
 interface Painter {
   _id: string;
   fullName: string;
@@ -52,6 +58,7 @@ interface Painter {
   preferredBrands: string[];
   services: string[];
   skills: Skill[];
+  portfolioImages: PortfolioImage[];
 }
 
 const inputCls =
@@ -145,6 +152,218 @@ function StarPicker({
         </button>
       ))}
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Portfolio Viewer
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PortfolioViewer({
+  painter,
+  onClose,
+}: {
+  painter: Painter;
+  onClose: () => void;
+}) {
+  const portfolio = (painter.portfolioImages || [])
+    .filter((item) => item?.url)
+    .slice(0, 3);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+
+  if (portfolio.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+          <div className="p-5 border-b flex items-center justify-between">
+            <div>
+              <p className="text-[#C59A46] text-[10px] font-bold uppercase tracking-widest">
+                Portfolio
+              </p>
+
+              <h2 className="text-[#1F1F1F] font-bold text-base">
+                {painter.fullName}
+              </h2>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-black transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="p-10 text-center">
+            <p className="text-sm text-gray-500">
+              This painter has no portfolio images available yet.
+            </p>
+          </div>
+
+          <div className="p-4 border-t flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-lg bg-[#C59A46] text-white text-xs font-semibold hover:bg-[#B0873B] transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const currentImage = portfolio[currentIndex];
+
+  const goPrevious = () => {
+    setCurrentIndex((current) =>
+      current === 0 ? portfolio.length - 1 : current - 1
+    );
+  };
+
+  const goNext = () => {
+    setCurrentIndex((current) =>
+      current === portfolio.length - 1 ? 0 : current + 1
+    );
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+          {/* Header */}
+          <div className="p-5 border-b flex items-center justify-between">
+            <div>
+              <p className="text-[#C59A46] text-[10px] font-bold uppercase tracking-widest">
+                Painter Portfolio
+              </p>
+
+              <h2 className="text-[#1F1F1F] font-bold text-base">
+                {painter.fullName}
+              </h2>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-black transition-colors p-1"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Carousel */}
+          <div className="p-5">
+            <div className="relative aspect-video bg-[#EFEBE4] rounded-xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setViewingImage(currentImage.url)}
+                className="w-full h-full cursor-zoom-in"
+              >
+                <img
+                  src={currentImage.url}
+                  alt={`${painter.fullName} portfolio ${currentIndex + 1}`}
+                  className="w-full h-full object-contain"
+                />
+              </button>
+
+              {/* Previous */}
+              {portfolio.length > 1 && (
+                <button
+                  type="button"
+                  onClick={goPrevious}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+                  aria-label="Previous portfolio image"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+              )}
+
+              {/* Next */}
+              {portfolio.length > 1 && (
+                <button
+                  type="button"
+                  onClick={goNext}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+                  aria-label="Next portfolio image"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              )}
+
+              {/* Counter */}
+              {portfolio.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full">
+                  {currentIndex + 1} / {portfolio.length}
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnails */}
+            {portfolio.length > 1 && (
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                {portfolio.map((item, index) => (
+                  <button
+                    key={item.publicId || item.url || index}
+                    type="button"
+                    onClick={() => setCurrentIndex(index)}
+                    className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
+                      currentIndex === index
+                        ? "border-[#C59A46] ring-1 ring-[#C59A46]/30"
+                        : "border-transparent hover:border-[#C59A46]/40"
+                    }`}
+                  >
+                    <img
+                      src={item.url}
+                      alt={`${painter.fullName} portfolio thumbnail ${
+                        index + 1
+                      }`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-lg bg-[#C59A46] text-white text-xs font-semibold hover:bg-[#B0873B] transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Full Image Viewer */}
+      {viewingImage && (
+        <div
+          className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4"
+          onClick={() => setViewingImage(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setViewingImage(null)}
+            className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+            aria-label="Close image viewer"
+          >
+            <X size={22} />
+          </button>
+
+          <img
+            src={viewingImage}
+            alt={`${painter.fullName} portfolio`}
+            className="max-w-full max-h-[90vh] object-contain cursor-zoom-out"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </>
   );
 }
 
@@ -451,8 +670,11 @@ export default function PaintersPage() {
   const [bookingPainter, setBookingPainter] =
     useState<Painter | null>(null);
 
+  const [portfolioPainter, setPortfolioPainter] =
+    useState<Painter | null>(null);
+
   const { data: painters = [], isLoading } = useQuery<Painter[]>({
-    queryKey: ["painters"],    
+    queryKey: ["painters"],
     queryFn: async () => {
       try {
         const res = await apiGetPainters();
@@ -824,6 +1046,28 @@ export default function PaintersPage() {
 
                         {/* Actions */}
                         <div className="mt-auto flex flex-col gap-2 pt-1">
+                          {/* View Portfolio Button */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPortfolioPainter(painter)
+                            }
+                            disabled={
+                              !painter.portfolioImages ||
+                              painter.portfolioImages.length === 0
+                            }
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border transition-all font-semibold text-xs active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{
+                              borderColor: COLORS.accent,
+                              color: COLORS.accent,
+                              backgroundColor:
+                                "rgba(197, 154, 70, 0.05)",
+                            }}
+                          >
+                            View Portfolio
+                          </button>
+
+                          {/* Book Painter Button */}
                           <button
                             onClick={() =>
                               setBookingPainter(painter)
@@ -846,6 +1090,14 @@ export default function PaintersPage() {
           )}
         </div>
       </section>
+
+      {/* Portfolio Modal */}
+      {portfolioPainter && (
+        <PortfolioViewer
+          painter={portfolioPainter}
+          onClose={() => setPortfolioPainter(null)}
+        />
+      )}
 
       {/* Booking Modal */}
       {bookingPainter && (
