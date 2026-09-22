@@ -27,27 +27,25 @@ function PaintCalculator() {
     color: COLORS.primaryText,
   };
 
-const calculate = () => {
-  const w = parseFloat(width);
-  const h = parseFloat(height);
-  const cov = parseFloat(coverageType);
+  const calculate = () => {
+    const w = parseFloat(width);
+    const h = parseFloat(height);
+    const cov = parseFloat(coverageType);
 
-  if (!w || !h || isNaN(w) || isNaN(h) || !cov || isNaN(cov)) {
-    return;
-  }
+    if (!w || !h || isNaN(w) || isNaN(h) || !cov || isNaN(cov)) return;
 
-  // Formula: Width + Height
-  const wallArea = w + h;
+    // Wall area = Width × Height
+    const wallArea = w * h;
 
-  // Formula: (Width + Height) ÷ Product Coverage
-  const totalBuckets = wallArea / cov;
+    // Buckets = Wall Area ÷ Product Coverage
+    const totalBuckets = wallArea / cov;
 
-  setResult({
-    buckets: Math.ceil(totalBuckets),
-    tins1B: Math.ceil(totalBuckets / 1),
-    tins4B: Math.ceil(totalBuckets / 4),
-  });
-};
+    setResult({
+      buckets: Math.ceil(totalBuckets),
+      tins1B: Math.ceil(totalBuckets / 1),
+      tins4B: Math.ceil(totalBuckets / 4),
+    });
+  };
 
   const reset = () => {
     setWidth("");
@@ -116,12 +114,14 @@ const calculate = () => {
             style={inputStyle}
           >
             <option value="5">Gravitex (5 m²/bucket)</option>
-<option value="4">Trowel (4 m²/bucket)</option>
-<option value="70">Matt (70 m²/bucket)</option>
-<option value="110">Satin (110 m²/bucket)</option>
-<option value="70">Wax Polish (70 m²/bucket)</option>
-<option value="100">Penetrating Primer (100 m²/bucket)</option>
-<option value="100">Alkali Primer (100 m²/bucket)</option>
+            <option value="4">Trowel (4 m²/bucket)</option>
+            <option value="70">Matt (70 m²/bucket)</option>
+            <option value="110">Satin (110 m²/bucket)</option>
+            <option value="70">Wax Polish (70 m²/bucket)</option>
+            <option value="100">
+              Penetrating Primer (100 m²/bucket)
+            </option>
+            <option value="100">Alkali Primer (100 m²/bucket)</option>
           </select>
         </div>
       </div>
