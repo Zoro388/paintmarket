@@ -1,5 +1,3 @@
-
-
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -9,14 +7,14 @@ import { cn } from "@/lib/utils";
 import { apiGetCart, userGetStatus } from "@/lib/userApi";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
+
 const navLinks = [
   { label: "Home",      href: "/" },
   { label: "Shop",      href: "/shop" },
   { label: "Portfolio", href: "/portfolio" },
-          { label: "Tools", href: "/tools" },
-
-    { label: "Blog", href: "/blog" },
-
+  { label: "Tools", href: "/tools" },
+  { label: "Paint Estimate", href: "/painting-estimator" },
+  { label: "Blog", href: "/blog" },
 
   {
     label: "Services",
@@ -24,7 +22,7 @@ const navLinks = [
       { label: "Request a Painter", href: "/painter-request" },
       { label: "Site Estimator",    href: "/site-estimator" },
       { label: "Painter",    href: "/painters" },
-    { label: "Training",   href: "/lessons" },
+      { label: "Training",   href: "/lessons" },
 
     ],
   },
@@ -145,22 +143,18 @@ console.log(authData)
       </Link>
     );
   };
-const isHome = pathname === "/";
-const isSolid = scrolled || !isHome;
+
+  const isHome = pathname === "/";
+  const isSolid = scrolled || !isHome;
+
   return (
     <header
-      // className={cn(
-      //   "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
-      //   scrolled
-      //     ? `${pathname!=='/'?``:``} bg-brand-black/90 backdrop-blur-md border-b border-brand-border/60 py-3`
-      //     : "bg-brand-black/40 backdrop-blur-md py-5"
-      // )}
       className={cn(
-      "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
-      isSolid
-        ? "bg-brand-black/90 backdrop-blur-md border-b border-brand-border/60 py-3"
-        : "bg-brand-black/40 backdrop-blur-md py-5"
-    )}
+        "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
+        isSolid
+          ? "bg-brand-black/90 backdrop-blur-md border-b border-brand-border/60 py-3"
+          : "bg-brand-black/40 backdrop-blur-md py-5"
+      )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
@@ -243,10 +237,11 @@ const isSolid = scrolled || !isHome;
               Get a Quote
             </Link>
           </div>
- <div className="flex items-center gap-3 px-3 py-2 lg:hidden">
-              <CartIcon onClick={() => setMobileOpen(false)} />
-              {/* <span className="text-brand-mid text-xs">Cart{cartCount > 0 ? ` (${cartCount})` : ""}</span> */}
-            </div>
+
+          <div className="flex items-center gap-3 px-3 py-2 lg:hidden">
+            <CartIcon onClick={() => setMobileOpen(false)} />
+          </div>
+
           {/* Mobile toggle */}
           <button
             className="lg:hidden text-white p-2 rounded-md hover:bg-brand-raised transition-colors"

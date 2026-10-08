@@ -261,3 +261,57 @@ export const apiAddToCart = (body: {
 
 export const apiClearCart  = () =>
   endpointRoute.delete("/cart").then((r) => r.data);
+
+
+
+
+// PAINTER ESTIMATOR
+
+export const apiCreatePaintingEstimate = (body: {
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  buildingType: string;
+  bedrooms: number;
+  paintType: string;
+  finishLevel: string;
+  location: string;
+  extras: string[];
+}) =>
+  endpointRoute
+    .post("/painting-estimator", body)
+    .then((r) => r.data);
+
+
+export const apiInitializePaintingEstimatePayment = (
+  estimateId: string,
+) =>
+  endpointRoute
+    .post(
+      `/painting-estimator/${estimateId}/payment`,
+    )
+    .then((r) => r.data);
+
+
+export const apiVerifyPaintingEstimatePayment = (
+  estimateId: string,
+  transactionId: string,
+) =>
+  endpointRoute
+    .post(
+      `/painting-estimator/${estimateId}/verify-payment`,
+      {
+        transactionId,
+      },
+    )
+    .then((r) => r.data);
+
+
+export const apiGetPaintingEstimate = (
+  estimateId: string,
+) =>
+  endpointRoute
+    .get(
+      `/painting-estimator/${estimateId}`,
+    )
+    .then((r) => r.data);
