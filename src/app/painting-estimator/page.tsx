@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import endpointRoute from "@/lib/endpointRoute";
 
 const STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi",
@@ -14,40 +15,30 @@ const STATES = [
 ];
 
 const BUILDINGS = [
-  {
-    name: "Bungalow",
-    image: "/images/bungalow.jpeg",
-  },
-  {
-    name: "Duplex",
-    image: "/images/duplex.jpeg",
-  },
-  {
-    name: "Block of Flats",
-    image: "/images/block-of-flats.png",
-  },
+  { name: "Bungalow", image: "/images/bungalow.jpg" },
+  { name: "Duplex", image: "/images/duplex.jpg" },
+  { name: "Block of Flats", image: "/images/block-of-flats.jpg" },
 ];
+
 
 const PAINT_TYPES = [
   {
     name: "Marble Trowel Paint",
     description: "Decorative marble-effect wall finish.",
-    image:
-      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=80",
+    image: "/images/paints/marble-trowel.jpg",
   },
   {
     name: "Gravitex Paint",
     description: "Textured exterior coating.",
-    image:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=80",
+    image: "/images/paints/gravitex.jpg",
   },
   {
     name: "Epoxy Floor Paint",
     description: "Smooth, durable resin floor finish.",
-    image:
-      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=80",
+    image: "/images/paints/epoxy-floor.jpg",
   },
 ];
+
 
 const EXTRAS = [
   "Exterior Painting",
@@ -79,6 +70,27 @@ type PriceRange = {
   high: number;
 };
 
+type SavedEstimate = {
+  _id?: string;
+  id?: string;
+  lowEstimate?: number;
+  highEstimate?: number;
+  estimatedBudget?: number;
+};
+
+type InspectionBookingResponse = {
+  success?: boolean;
+  message?: string;
+  booking?: {
+    id?: string;
+    inspectionFee?: number;
+    paymentStatus?: string;
+    bookingStatus?: string;
+  };
+  paymentLink?: string;
+  bookingId?: string;
+};
+
 const PRICES: Record<string, Record<number, PriceRange>> = {
   "Marble Trowel Paint": {
     2: { low: 2250000, high: 2450000 },
@@ -103,7 +115,51 @@ const PRICES: Record<string, Record<number, PriceRange>> = {
   },
 };
 
-const WHATSAPP_NUMBER = "2348084999530";
+// Keep these amounts aligned with the backend controller.
+const INSPECTION_FEES: Record<string, number> = {
+  "FCT - Abuja": 45000,
+
+  Lagos: 180000,
+  Ogun: 180000,
+  Ondo: 180000,
+  Osun: 180000,
+  Oyo: 180000,
+  Ekiti: 180000,
+
+  Kogi: 130000,
+  Kwara: 130000,
+
+  Abia: 150000,
+  Anambra: 150000,
+  Ebonyi: 150000,
+  Enugu: 150000,
+  Imo: 150000,
+
+  Adamawa: 150000,
+  Bauchi: 150000,
+  Benue: 150000,
+  Borno: 150000,
+  Gombe: 150000,
+  Jigawa: 150000,
+  Kaduna: 150000,
+  Kano: 150000,
+  Katsina: 150000,
+  Kebbi: 150000,
+  Nasarawa: 150000,
+  Niger: 150000,
+  Plateau: 150000,
+  Sokoto: 150000,
+  Taraba: 150000,
+  Yobe: 150000,
+  Zamfara: 150000,
+
+  "Akwa Ibom": 95000,
+  Bayelsa: 95000,
+  "Cross River": 95000,
+  Delta: 95000,
+  Edo: 95000,
+  Rivers: 95000,
+};
 
 function formatMoney(amount: number) {
   return new Intl.NumberFormat("en-NG", {
@@ -111,6 +167,14 @@ function formatMoney(amount: number) {
     currency: "NGN",
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+function getLocalDateString() {
+  const now = new Date();
+  const localDate = new Date(
+    now.getTime() - now.getTimezoneOffset() * 60_000,
+  );
+  return localDate.toISOString().slice(0, 10);
 }
 
 export default function PaintingEstimatorPage() {
@@ -127,53 +191,126 @@ export default function PaintingEstimatorPage() {
   const [extras, setExtras] = useState<string[]>([]);
 
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [estimateId, setEstimateId] = useState("");
+
+  const [inspectionDate, setInspectionDate] = useState("");
+  const [isBooking, setIsBooking] = useState(false);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [bookingId, setBookingId] = useState("");
+  const [bookingFee, setBookingFee] = useState<number | null>(null);
+
+  const verificationStarted = useRef(false);
 
   const priceRange =
     bedrooms && paintType
       ? PRICES[paintType]?.[bedrooms] ?? null
       : null;
 
-  const whatsappMessage = [
-    "Hello Paintdomain, I used your Painting Project Estimator and would like an accurate quotation.",
-    "",
-    `Name: ${fullName}`,
-    `WhatsApp number: ${phoneNumber}`,
-    `Email: ${email}`,
-    `Building type: ${buildingType}`,
-    `Bedrooms: ${bedrooms ?? "Not selected"}`,
-    `Paint type: ${paintType}`,
-    `Location: ${location}`,
-    `Additional work: ${extras.join(", ") || "None selected"}`,
-    `Estimated budget: ${
-      priceRange
-        ? `${formatMoney(priceRange.low)} - ${formatMoney(priceRange.high)}`
-        : "Not available"
-    }`,
-    "",
-    "Please help me confirm the accurate cost of this project.",
-  ].join("\n");
+  const inspectionFee = INSPECTION_FEES[location] ?? null;
 
-  const whatsappUrl =
-    `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+  // Flutterwave returns the customer to this page after payment.
+  // Verify the transaction with our backend before showing confirmation.
+  useEffect(() => {
+    if (verificationStarted.current) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const transactionId = params.get("transaction_id");
+    const returnedBookingId = params.get("bookingId");
+    const paymentStatus = params.get("status");
+
+    if (!transactionId || !returnedBookingId) return;
+
+    verificationStarted.current = true;
+    setIsVerifyingPayment(true);
+    setError("");
+    setNotice("Verifying your inspection payment. Please wait.");
+
+    async function verifyPayment() {
+      try {
+        const response = await endpointRoute.post<{
+          success?: boolean;
+          message?: string;
+          booking?: {
+            id?: string;
+            inspectionFee?: number;
+            paymentStatus?: string;
+            bookingStatus?: string;
+          };
+        }>(
+          `/inspection-bookings/${encodeURIComponent(
+            returnedBookingId!,
+          )}/verify-payment`,
+          { transactionId },
+        );
+
+        if (
+          response.data?.success &&
+          response.data.booking?.paymentStatus === "paid" &&
+          response.data.booking?.bookingStatus === "confirmed"
+        ) {
+          setBookingConfirmed(true);
+          setBookingId(returnedBookingId!);
+          setBookingFee(response.data.booking.inspectionFee ?? null);
+          setNotice(
+            "Your payment has been verified and your inspection booking is confirmed.",
+          );
+          setError("");
+        } else {
+          throw new Error(
+            response.data?.message ||
+              "We could not confirm this payment yet.",
+          );
+        }
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Payment verification failed.";
+
+        setError(
+          paymentStatus === "cancelled"
+            ? "The payment was cancelled or could not be completed. Your booking has not been confirmed."
+            : `${message} Your booking is not confirmed until payment is verified.`,
+        );
+        setNotice("");
+      } finally {
+        setIsVerifyingPayment(false);
+
+        // Remove the payment parameters from the address bar after processing.
+        window.history.replaceState(
+          {},
+          "",
+          window.location.pathname,
+        );
+      }
+    }
+
+    void verifyPayment();
+  }, []);
+
+  function invalidateSavedEstimate() {
+    setEstimateId("");
+    setBookingConfirmed(false);
+    setBookingId("");
+    setBookingFee(null);
+  }
 
   function validateStep() {
     setError("");
+    setNotice("");
 
     if (step === 0) {
-      if (
-        !fullName.trim() ||
-        !phoneNumber.trim() ||
-        !email.trim()
-      ) {
+      if (!fullName.trim() || !phoneNumber.trim() || !email.trim()) {
         setError(
-          "Please enter your full name, WhatsApp number, and email address."
+          "Please enter your full name, WhatsApp number, and email address.",
         );
         return false;
       }
 
-      if (
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
-      ) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
         setError("Please enter a valid email address.");
         return false;
       }
@@ -200,36 +337,101 @@ export default function PaintingEstimatorPage() {
     }
 
     if (step === 5 && extras.length === 0) {
-      setError(
-        "Please select an additional work option, or select None."
-      );
+      setError("Please select an additional work option, or select None.");
       return false;
     }
 
     return true;
   }
 
-  function nextStep() {
+  async function saveEstimate() {
+    if (!priceRange || bedrooms === null) {
+      setError("Please select a valid bedroom count and paint type.");
+      return false;
+    }
+
+    if (isSaving) return false;
+
+    setIsSaving(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const response = await endpointRoute.post("/painting-estimator", {
+        fullName: fullName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        email: email.trim(),
+        buildingType,
+        bedrooms,
+        paintType,
+        finishLevel: "Mid-Range",
+        location,
+        extras,
+      });
+
+      const data = response.data;
+      const savedEstimate: SavedEstimate | undefined = data?.estimate;
+
+      if (!data?.success || !savedEstimate) {
+        throw new Error(
+          data?.message || "The server did not return the saved estimate.",
+        );
+      }
+
+      const id = savedEstimate._id || savedEstimate.id;
+
+      if (!id) {
+        throw new Error(
+          "The estimate response did not include a reference ID.",
+        );
+      }
+
+      setEstimateId(id);
+      return true;
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "We could not save your estimate. Please try again.";
+
+      setError(
+        `${message} Your estimate has not been confirmed as saved. Please try again.`,
+      );
+
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function nextStep() {
     if (!validateStep()) return;
+
+    if (step === 5) {
+      const saved = await saveEstimate();
+      if (!saved) return;
+    }
 
     setStep((current) => Math.min(current + 1, STEPS.length - 1));
     setError("");
+    setNotice("");
   }
 
   function previousStep() {
     setError("");
+    setNotice("");
     setStep((current) => Math.max(current - 1, 0));
   }
 
   function toggleExtra(extra: string) {
+    invalidateSavedEstimate();
+
     setExtras((current) => {
       if (extra === "None") {
         return current.includes("None") ? [] : ["None"];
       }
 
-      const withoutNone = current.filter(
-        (item) => item !== "None"
-      );
+      const withoutNone = current.filter((item) => item !== "None");
 
       if (withoutNone.includes(extra)) {
         return withoutNone.filter((item) => item !== extra);
@@ -239,8 +441,101 @@ export default function PaintingEstimatorPage() {
     });
   }
 
+  async function bookInspection() {
+    setError("");
+    setNotice("");
+
+    if (!estimateId) {
+      setError(
+        "Your estimate reference is missing. Please return to the previous step and save your estimate again.",
+      );
+      return;
+    }
+
+    if (!inspectionDate) {
+      setError("Please select your preferred inspection date.");
+      return;
+    }
+
+    if (inspectionDate < getLocalDateString()) {
+      setError("Please select today or a future date.");
+      return;
+    }
+
+    if (!inspectionFee) {
+      setError(
+        "The inspection fee for this state has not yet been configured. Please contact Paintdomain before booking.",
+      );
+      return;
+    }
+
+    if (isBooking) return;
+
+    setIsBooking(true);
+
+    try {
+      // Only send the estimate ID and date.
+      // The backend retrieves customer details and calculates the fee.
+      const response =
+        await endpointRoute.post<InspectionBookingResponse>(
+          "/inspection-bookings",
+          {
+            paintingEstimateId: estimateId,
+            inspectionDate: new Date(
+              `${inspectionDate}T12:00:00`,
+            ).toISOString(),
+          },
+        );
+
+      const data = response.data;
+
+      if (!data?.success || !data.paymentLink) {
+        throw new Error(
+          data?.message ||
+            "The booking was created, but a payment link was not returned.",
+        );
+      }
+
+      setBookingId(data.booking?.id || data.bookingId || "");
+      setBookingFee(data.booking?.inspectionFee ?? inspectionFee);
+      setNotice("Opening Flutterwave to complete your inspection payment.");
+
+      // Send the customer to the payment page returned by the backend.
+      window.location.assign(data.paymentLink);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "We could not start your inspection booking.";
+
+      setError(message);
+      setNotice("");
+    } finally {
+      setIsBooking(false);
+    }
+  }
+
   function printEstimate() {
     window.print();
+  }
+
+  function startAgain() {
+    setStep(0);
+    setError("");
+    setNotice("");
+    setEstimateId("");
+    setFullName("");
+    setPhoneNumber("");
+    setEmail("");
+    setBuildingType("");
+    setBedrooms(null);
+    setPaintType("");
+    setLocation("");
+    setExtras([]);
+    setInspectionDate("");
+    setBookingConfirmed(false);
+    setBookingId("");
+    setBookingFee(null);
   }
 
   return (
@@ -286,8 +581,20 @@ export default function PaintingEstimatorPage() {
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 print:hidden">
+          <div
+            role="alert"
+            className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 print:hidden"
+          >
             {error}
+          </div>
+        )}
+
+        {notice && (
+          <div
+            role="status"
+            className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 print:hidden"
+          >
+            {notice}
           </div>
         )}
 
@@ -305,14 +612,20 @@ export default function PaintingEstimatorPage() {
                   <Field
                     label="Full name"
                     value={fullName}
-                    onChange={setFullName}
+                    onChange={(value) => {
+                      setFullName(value);
+                      invalidateSavedEstimate();
+                    }}
                     placeholder="John Doe"
                   />
 
                   <Field
                     label="WhatsApp number"
                     value={phoneNumber}
-                    onChange={setPhoneNumber}
+                    onChange={(value) => {
+                      setPhoneNumber(value);
+                      invalidateSavedEstimate();
+                    }}
                     placeholder="08012345678"
                     type="tel"
                   />
@@ -321,7 +634,10 @@ export default function PaintingEstimatorPage() {
                     <Field
                       label="Email address"
                       value={email}
-                      onChange={setEmail}
+                      onChange={(value) => {
+                        setEmail(value);
+                        invalidateSavedEstimate();
+                      }}
                       placeholder="you@example.com"
                       type="email"
                     />
@@ -345,7 +661,10 @@ export default function PaintingEstimatorPage() {
                       title={building.name}
                       image={building.image}
                       selected={buildingType === building.name}
-                      onClick={() => setBuildingType(building.name)}
+                      onClick={() => {
+                        setBuildingType(building.name);
+                        invalidateSavedEstimate();
+                      }}
                     />
                   ))}
                 </div>
@@ -365,7 +684,10 @@ export default function PaintingEstimatorPage() {
                     <button
                       key={count}
                       type="button"
-                      onClick={() => setBedrooms(count)}
+                      onClick={() => {
+                        setBedrooms(count);
+                        invalidateSavedEstimate();
+                      }}
                       className={`rounded-2xl border p-5 text-left transition ${
                         bedrooms === count
                           ? "border-[#B8892E] bg-[#171717] text-white shadow-md"
@@ -373,9 +695,7 @@ export default function PaintingEstimatorPage() {
                       }`}
                     >
                       <div className="text-2xl font-bold">{count}</div>
-                      <div className="mt-1 text-sm opacity-80">
-                        Bedrooms
-                      </div>
+                      <div className="mt-1 text-sm opacity-80">Bedrooms</div>
                       {bedrooms === count && (
                         <div className="mt-4 text-xs font-semibold text-[#D7B46A]">
                           Selected
@@ -403,7 +723,10 @@ export default function PaintingEstimatorPage() {
                       description={paint.description}
                       image={paint.image}
                       selected={paintType === paint.name}
-                      onClick={() => setPaintType(paint.name)}
+                      onClick={() => {
+                        setPaintType(paint.name);
+                        invalidateSavedEstimate();
+                      }}
                     />
                   ))}
                 </div>
@@ -420,7 +743,10 @@ export default function PaintingEstimatorPage() {
 
                 <select
                   value={location}
-                  onChange={(event) => setLocation(event.target.value)}
+                  onChange={(event) => {
+                    setLocation(event.target.value);
+                    invalidateSavedEstimate();
+                  }}
                   className="w-full rounded-xl border border-[#D8D8D4] bg-white px-4 py-4 outline-none focus:border-[#B8892E] focus:ring-1 focus:ring-[#B8892E]"
                 >
                   <option value="">Select state</option>
@@ -464,7 +790,7 @@ export default function PaintingEstimatorPage() {
               </div>
             )}
 
-            {/* Step 7: Estimate */}
+            {/* Step 7: Estimate and inspection booking */}
             {step === 6 && (
               <div id="painting-estimate" className="space-y-8">
                 <div className="flex flex-col justify-between gap-4 border-b border-[#E5E3DE] pb-6 sm:flex-row sm:items-center">
@@ -478,6 +804,11 @@ export default function PaintingEstimatorPage() {
                     <p className="mt-2 text-sm text-[#777777]">
                       {location}
                     </p>
+                    {estimateId && (
+                      <p className="mt-2 text-xs text-[#777777]">
+                        Estimate reference: {estimateId}
+                      </p>
+                    )}
                   </div>
 
                   <button
@@ -538,46 +869,128 @@ export default function PaintingEstimatorPage() {
                             Additional work
                           </div>
                           <div className="mt-2 text-sm leading-6 text-[#444444]">
-                            {extras.length
-                              ? extras.join(", ")
-                              : "None selected"}
+                            {extras.length ? extras.join(", ") : "None selected"}
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-[#E7D7B3] bg-[#FAF6EC] p-5 sm:p-6">
-                      <h3 className="text-lg font-bold">
-                        Important disclaimer
-                      </h3>
+                    {/* Book an Inspection */}
+                    <div className="rounded-2xl border border-[#E7D7B3] bg-[#FAF6EC] p-5 sm:p-6 print:hidden">
+                      {bookingConfirmed ? (
+                        <div>
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-2xl text-green-700">
+                            ✓
+                          </div>
+                          <h3 className="mt-4 text-xl font-bold">
+                            Inspection booking confirmed
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-[#555555]">
+                            Flutterwave has verified your payment. Your
+                            inspection booking is confirmed.
+                          </p>
+                          {bookingId && (
+                            <p className="mt-3 break-all text-xs text-[#777777]">
+                              Booking reference: {bookingId}
+                            </p>
+                          )}
+                          {bookingFee !== null && (
+                            <p className="mt-3 font-semibold">
+                              Inspection fee paid: {formatMoney(bookingFee)}
+                            </p>
+                          )}
+                        </div>
+                      ) : isVerifyingPayment ? (
+                        <div>
+                          <h3 className="text-xl font-bold">
+                            Verifying your payment
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-[#555555]">
+                            Please wait while we verify your transaction with
+                            Flutterwave. Do not refresh this page.
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <h3 className="text-xl font-bold">
+                            Book an Inspection
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-[#555555]">
+                            Schedule a property inspection so the project
+                            scope and final painting quotation can be
+                            assessed more accurately. Your painting estimate
+                            remains free.
+                          </p>
 
-                      <p className="mt-3 text-sm leading-6 text-[#555555]">
-                        This is an estimated budget, not a final quotation.
-                        The actual cost may vary depending on measurements,
-                        property condition, surface preparation, materials,
-                        and the complete scope of work. Contact us on
-                        WhatsApp to confirm the accurate cost before making
-                        your budget decision.
-                      </p>
+                          <div className="mt-5">
+                            <label
+                              htmlFor="inspectionDate"
+                              className="mb-2 block text-sm font-semibold text-[#444444]"
+                            >
+                              Preferred inspection date
+                            </label>
+                            <input
+                              id="inspectionDate"
+                              type="date"
+                              min={getLocalDateString()}
+                              value={inspectionDate}
+                              onChange={(event) => {
+                                setInspectionDate(event.target.value);
+                                setError("");
+                              }}
+                              className="w-full rounded-xl border border-[#D8D8D4] bg-white px-4 py-3.5 outline-none focus:border-[#B8892E] focus:ring-1 focus:ring-[#B8892E]"
+                            />
+                          </div>
 
-                      <a
-                        href={whatsappUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-5 inline-flex w-full items-center justify-center gap-3 rounded-xl bg-[#25D366] px-5 py-4 text-center font-semibold text-white transition hover:bg-[#1EBA59] print:hidden"
-                      >
-                        <WhatsAppIcon />
-                        Get an Accurate Quotation on WhatsApp
-                      </a>
+                          <div className="mt-5 rounded-xl border border-[#E7D7B3] bg-white p-4">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-[#999999]">
+                              Inspection fee
+                            </div>
+                            {inspectionFee !== null ? (
+                              <div className="mt-2 text-2xl font-bold text-[#171717]">
+                                {formatMoney(inspectionFee)}
+                              </div>
+                            ) : (
+                              <div className="mt-2 text-sm font-semibold text-[#8A4B08]">
+                                Fee not yet configured for this state
+                              </div>
+                            )}
+                            <p className="mt-2 text-xs leading-5 text-[#777777]">
+                              State: {location}. The backend independently
+                              calculates the payable fee before initializing
+                              payment.
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={bookInspection}
+                            disabled={
+                              isBooking ||
+                              !inspectionDate ||
+                              !estimateId ||
+                              inspectionFee === null
+                            }
+                            className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-[#171717] px-5 py-4 text-center font-semibold text-white transition hover:bg-[#2A2A2A] disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isBooking
+                              ? "Preparing Secure Payment..."
+                              : "Book an Inspection & Pay"}
+                          </button>
+
+                          <p className="mt-3 text-center text-xs leading-5 text-[#777777]">
+                            You will be redirected to Flutterwave for secure
+                            payment. Your booking is not confirmed until the
+                            payment is verified.
+                          </p>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-3 print:hidden">
                       <button
                         type="button"
-                        onClick={() => {
-                          setStep(0);
-                          setError("");
-                        }}
+                        onClick={startAgain}
                         className="rounded-xl border border-[#D8D8D4] bg-white px-5 py-3 text-sm font-semibold text-[#444444] hover:border-[#B8892E]"
                       >
                         Start Again
@@ -608,7 +1021,7 @@ export default function PaintingEstimatorPage() {
                 <button
                   type="button"
                   onClick={previousStep}
-                  disabled={step === 0}
+                  disabled={step === 0 || isSaving}
                   className="rounded-xl border border-[#D8D8D4] bg-white px-5 py-3 text-sm font-semibold text-[#444444] hover:border-[#B8892E] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Back
@@ -617,9 +1030,14 @@ export default function PaintingEstimatorPage() {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="rounded-xl bg-[#171717] px-6 py-3 text-sm font-semibold text-white hover:bg-[#2A2A2A]"
+                  disabled={isSaving}
+                  className="rounded-xl bg-[#171717] px-6 py-3 text-sm font-semibold text-white hover:bg-[#2A2A2A] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {step === 5 ? "View My Estimate" : "Continue"}
+                  {isSaving
+                    ? "Saving Estimate..."
+                    : step === 5
+                      ? "View My Estimate"
+                      : "Continue"}
                 </button>
               </div>
             )}
@@ -826,19 +1244,5 @@ function SummaryRow({
         {value}
       </span>
     </div>
-  );
-}
-
-function WhatsAppIcon() {
-  return (
-    <svg
-      viewBox="0 0 32 32"
-      width="24"
-      height="24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="M16.02 3.2c-7.05 0-12.78 5.72-12.78 12.77 0 2.25.59 4.45 1.7 6.39L3.13 28.8l6.6-1.73a12.78 12.78 0 0 0 6.29 1.65h.01c7.04 0 12.77-5.73 12.77-12.77 0-3.42-1.33-6.63-3.75-9.05a12.7 12.7 0 0 0-9.03-3.7Zm.01 23.36h-.01a10.6 10.6 0 0 1-5.4-1.48l-.39-.23-3.92 1.03 1.05-3.82-.25-.4a10.56 10.56 0 0 1-1.63-5.69c0-5.83 4.74-10.57 10.56-10.57 2.82 0 5.47 1.1 7.46 3.1a10.5 10.5 0 0 1 3.1 7.47c0 5.82-4.74 10.56-10.57 10.56Zm5.8-7.91c-.32-.16-1.89-.93-2.18-1.03-.3-.1-.51-.16-.73.16-.21.32-.83 1.03-1.02 1.24-.19.22-.38.24-.7.08-.33-.16-1.38-.51-2.62-1.62-.97-.87-1.62-1.94-1.81-2.27-.19-.32-.02-.5.14-.66.14-.14.32-.38.49-.56.16-.19.22-.32.32-.54.11-.22.06-.41-.03-.57-.08-.16-.73-1.76-1-2.41-.26-.63-.53-.54-.73-.55l-.62-.01c-.22 0-.57.08-.87.4-.3.33-1.14 1.11-1.14 2.7s1.17 3.13 1.33 3.35c.16.22 2.29 3.5 5.55 4.91.78.34 1.39.54 1.86.69.78.25 1.49.22 2.05.13.63-.09 1.89-.77 2.16-1.51.27-.75.27-1.38.19-1.51-.08-.14-.3-.22-.62-.38Z" />
-    </svg>
   );
 }
