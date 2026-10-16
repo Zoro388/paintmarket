@@ -30,10 +30,18 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(title, options);
 });
 
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
+  const bookingId = event.notification?.data?.bookingId;
+
+  const targetUrl = bookingId
+    ? `https://paintdomain.com/dashboard/inspection-bookings/${encodeURIComponent(bookingId)}`
+    : "https://paintdomain.com/dashboard";
+
   event.waitUntil(
-    clients.openWindow("https://paintdomain.com/dashboard")
+    clients.openWindow(targetUrl)
   );
 });
+
