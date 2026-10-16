@@ -158,7 +158,7 @@ const INSPECTION_FEES: Record<string, number> = {
   "Cross River": 95000,
   Delta: 95000,
   Edo: 95000,
-  Rivers: 95000,
+  Rivers: 100,
 };
 
 function formatMoney(amount: number) {
