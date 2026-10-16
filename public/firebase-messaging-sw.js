@@ -34,6 +34,6 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   event.waitUntil(
-    clients.openWindow("/dashboard")
+    clients.openWindow("https://paintdomain.com/dashboard")
   );
 });
