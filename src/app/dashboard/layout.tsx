@@ -2,6 +2,7 @@
 import { useState } from "react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import AdminPushNotifications from "@/components/dashboard/AdminPushNotifications";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -10,7 +11,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <DashboardSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div className="lg:ml-60">
         <DashboardHeader onMenuClick={() => setMobileOpen(true)} />
-        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="p-4 sm:p-6 lg:p-8">
+  <AdminPushNotifications />
+  {children}
+</main>
       </div>
     </div>
   );
