@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -12,6 +13,7 @@ import {
   Users,
   CheckCircle2,
   Clock,
+  MapPin,
 } from "lucide-react";
 import endpointRoute from "@/lib/endpointRoute";
 
@@ -24,6 +26,9 @@ interface InspectionBooking {
   bedrooms?: number | string;
   paintType?: string;
   location?: string;
+  state?: string;
+  lga?: string;
+  exactAddress?: string;
   inspectionDate?: string;
   inspectionFee?: number;
   currency?: string;
@@ -87,6 +92,30 @@ function StatusBadge({ value }: { value?: string }) {
   );
 }
 
+function PropertyAddress({ booking }: { booking: InspectionBooking }) {
+  const state = booking.state || booking.location;
+  const locality = [booking.lga, state].filter(Boolean).join(", ");
+
+  return (
+    <div className="mt-3 max-w-xs border-t border-brand-border/50 pt-3">
+      <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-brand-accent">
+        <MapPin size={13} />
+        Property address
+      </p>
+
+      <p className="break-words text-xs leading-5 text-white">
+        {booking.exactAddress || "Exact address not available"}
+      </p>
+
+      {locality && (
+        <p className="mt-1 break-words text-xs text-brand-mid">
+          {locality}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function InspectionBookingsPage() {
   const [bookings, setBookings] = useState<InspectionBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,9 +162,14 @@ export default function InspectionBookingsPage() {
       booking.email,
       booking.phoneNumber,
       booking.location,
+      booking.state,
+      booking.lga,
+      booking.exactAddress,
       booking._id,
       booking.paymentStatus,
       booking.bookingStatus,
+      booking.buildingType,
+      booking.paintType,
     ].some((value) =>
       String(value || "").toLowerCase().includes(normalizedSearch)
     );
@@ -176,8 +210,8 @@ export default function InspectionBookingsPage() {
             Inspection Bookings
           </h1>
           <p className="mt-2 text-sm text-brand-mid">
-            Review customer bookings, inspection schedules, fees, and payment
-            status.
+            Review customer bookings, exact property addresses, inspection
+            schedules, fees, and payment status.
           </p>
         </div>
 
@@ -235,7 +269,7 @@ export default function InspectionBookingsPage() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search name, phone, email or ID..."
+              placeholder="Search customer, state, LGA or address..."
               className="w-full rounded-lg border border-brand-border bg-brand-black py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-brand-accent"
             />
           </div>
@@ -323,12 +357,12 @@ export default function InspectionBookingsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-left text-sm">
+            <table className="w-full min-w-[1100px] text-left text-sm">
               <thead>
                 <tr className="border-b border-brand-border/60">
                   {[
                     "Customer",
-                    "Property",
+                    "Property & address",
                     "Inspection date",
                     "Fee",
                     "Payment",
@@ -363,8 +397,8 @@ export default function InspectionBookingsPage() {
                       </p>
                     </td>
 
-                    <td className="px-5 py-4">
-                      <p className="text-white">
+                    <td className="max-w-sm px-5 py-4">
+                      <p className="font-medium text-white">
                         {booking.buildingType || "Not specified"}
                       </p>
                       <p className="mt-1 text-xs text-brand-mid">
@@ -373,8 +407,9 @@ export default function InspectionBookingsPage() {
                           : "Bedrooms not specified"}
                       </p>
                       <p className="mt-1 text-xs text-brand-mid">
-                        {booking.location || "No location"}
+                        {booking.paintType || "Paint type not specified"}
                       </p>
+                      <PropertyAddress booking={booking} />
                     </td>
 
                     <td className="whitespace-nowrap px-5 py-4 text-brand-lt-gray">

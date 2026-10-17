@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -18,6 +19,7 @@ import {
   RefreshCw,
   AlertCircle,
   Receipt,
+  MapPinned,
 } from "lucide-react";
 import endpointRoute from "@/lib/endpointRoute";
 
@@ -31,6 +33,9 @@ interface InspectionBooking {
   bedrooms?: number | string;
   paintType?: string;
   location?: string;
+  state?: string;
+  lga?: string;
+  exactAddress?: string;
   extras?: string[];
   inspectionDate?: string;
   inspectionFee?: number;
@@ -59,11 +64,15 @@ function formatDate(value?: string) {
 function formatMoney(amount?: number, currency = "NGN") {
   if (amount === undefined || amount === null) return "Not available";
 
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  try {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount.toLocaleString()}`;
+  }
 }
 
 function StatusBadge({
@@ -77,20 +86,14 @@ function StatusBadge({
 
   let styles = "bg-gray-500/10 text-gray-300 border-gray-500/30";
 
-  if (
-    normalized === "paid" ||
-    normalized === "confirmed"
-  ) {
+  if (normalized === "paid" || normalized === "confirmed") {
     styles = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
   } else if (
     normalized === "pending" ||
     normalized === "pending_payment"
   ) {
     styles = "bg-amber-500/10 text-amber-400 border-amber-500/30";
-  } else if (
-    normalized === "failed" ||
-    normalized === "cancelled"
-  ) {
+  } else if (normalized === "failed" || normalized === "cancelled") {
     styles = "bg-red-500/10 text-red-400 border-red-500/30";
   }
 
@@ -191,11 +194,11 @@ export default function InspectionBookingDetailsPage() {
     return (
       <div className="mx-auto max-w-3xl py-10">
         <Link
-          href="/dashboard"
+          href="/dashboard/inspection-bookings"
           className="mb-6 inline-flex items-center gap-2 text-sm text-brand-accent hover:underline"
         >
           <ArrowLeft size={16} />
-          Back to dashboard
+          Back to inspection bookings
         </Link>
 
         <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-6">
@@ -219,16 +222,20 @@ export default function InspectionBookingDetailsPage() {
   }
 
   const currency = booking.currency || "NGN";
+  const propertyState = booking.state || booking.location || "";
+  const propertyLocation = [booking.lga, propertyState]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <div>
         <Link
-          href="/dashboard"
+          href="/dashboard/inspection-bookings"
           className="mb-4 inline-flex items-center gap-2 text-sm text-brand-mid transition-colors hover:text-brand-accent"
         >
           <ArrowLeft size={16} />
-          Back to dashboard
+          Back to inspection bookings
         </Link>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -335,9 +342,14 @@ export default function InspectionBookingDetailsPage() {
             icon={<Palette size={14} />}
           />
           <DetailItem
-            label="Property location"
-            value={booking.location || ""}
+            label="State"
+            value={propertyState}
             icon={<MapPin size={14} />}
+          />
+          <DetailItem
+            label="Local Government Area (LGA)"
+            value={booking.lga || ""}
+            icon={<MapPinned size={14} />}
           />
           <DetailItem
             label="Inspection date"
@@ -349,6 +361,25 @@ export default function InspectionBookingDetailsPage() {
             value={formatDate(booking.createdAt)}
             icon={<Clock size={14} />}
           />
+        </div>
+
+        <div className="border-t border-brand-border/60 p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <MapPinned size={19} className="text-brand-accent" />
+            <h3 className="font-semibold text-white">Exact property address</h3>
+          </div>
+
+          <div className="rounded-xl border border-brand-accent/20 bg-brand-raised/40 p-4 sm:p-5">
+            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-white">
+              {booking.exactAddress || "No exact property address was recorded for this booking."}
+            </p>
+
+            {propertyLocation && (
+              <p className="mt-3 border-t border-brand-border/60 pt-3 text-sm text-brand-mid">
+                {propertyLocation}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="border-t border-brand-border/60 p-5">
@@ -392,13 +423,7 @@ export default function InspectionBookingDetailsPage() {
           />
           <DetailItem
             label="Painting estimate ID"
-            value={
-              typeof booking.paintingEstimateId === "string"
-                ? booking.paintingEstimateId
-                : booking.paintingEstimateId
-                  ? JSON.stringify(booking.paintingEstimateId)
-                  : ""
-            }
+            value={booking.paintingEstimateId || ""}
           />
           <DetailItem
             label="Last updated"

@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import endpointRoute from "@/lib/endpointRoute";
+import { NIGERIAN_LGAS } from "@/data/nigerian-lgas";
 
 const STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi",
@@ -19,7 +20,6 @@ const BUILDINGS = [
   { name: "Duplex", image: "/images/duplex.jpg" },
   { name: "Block of Flats", image: "/images/block-of-flats.jpg" },
 ];
-
 
 const PAINT_TYPES = [
   {
@@ -38,7 +38,6 @@ const PAINT_TYPES = [
     image: "/images/paints/epoxy-floor.jpg",
   },
 ];
-
 
 const EXTRAS = [
   "Exterior Painting",
@@ -187,7 +186,16 @@ export default function PaintingEstimatorPage() {
   const [buildingType, setBuildingType] = useState("");
   const [bedrooms, setBedrooms] = useState<number | null>(null);
   const [paintType, setPaintType] = useState("");
+
+  // Location details
   const [location, setLocation] = useState("");
+  const [lga, setLga] = useState("");
+  const [exactAddress, setExactAddress] = useState("");
+
+  const availableLgas: string[] = location
+    ? NIGERIAN_LGAS[location] ?? []
+    : [];
+
   const [extras, setExtras] = useState<string[]>([]);
 
   const [error, setError] = useState("");
@@ -331,9 +339,21 @@ export default function PaintingEstimatorPage() {
       return false;
     }
 
-    if (step === 4 && !location) {
-      setError("Please select your project state.");
-      return false;
+    if (step === 4) {
+      if (!location) {
+        setError("Please select your project state.");
+        return false;
+      }
+
+      if (!lga) {
+        setError("Please select your Local Government Area.");
+        return false;
+      }
+
+      if (!exactAddress.trim()) {
+        setError("Please enter the exact property address.");
+        return false;
+      }
     }
 
     if (step === 5 && extras.length === 0) {
@@ -366,6 +386,9 @@ export default function PaintingEstimatorPage() {
         paintType,
         finishLevel: "Mid-Range",
         location,
+        state: location,
+        lga,
+        exactAddress: exactAddress.trim(),
         extras,
       });
 
@@ -531,6 +554,8 @@ export default function PaintingEstimatorPage() {
     setBedrooms(null);
     setPaintType("");
     setLocation("");
+    setLga("");
+    setExactAddress("");
     setExtras([]);
     setInspectionDate("");
     setBookingConfirmed(false);
@@ -738,24 +763,108 @@ export default function PaintingEstimatorPage() {
               <div>
                 <StepHeading
                   title="Where is the project?"
-                  description="Choose the Nigerian state where the painting work will take place."
+                  description="Select the state, Local Government Area, and exact property address."
                 />
 
-                <select
-                  value={location}
-                  onChange={(event) => {
-                    setLocation(event.target.value);
-                    invalidateSavedEstimate();
-                  }}
-                  className="w-full rounded-xl border border-[#D8D8D4] bg-white px-4 py-4 outline-none focus:border-[#B8892E] focus:ring-1 focus:ring-[#B8892E]"
-                >
-                  <option value="">Select state</option>
-                  {STATES.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
+                <div className="space-y-5">
+                  <div>
+                    <label
+                      htmlFor="project-state"
+                      className="mb-2 block text-sm font-semibold text-[#444444]"
+                    >
+                      State
+                    </label>
+
+                    <select
+                      id="project-state"
+                      value={location}
+                      onChange={(event) => {
+                        const selectedState = event.target.value;
+
+                        setLocation(selectedState);
+                        setLga("");
+                        invalidateSavedEstimate();
+                        setError("");
+                      }}
+                      className="w-full rounded-xl border border-[#D8D8D4] bg-white px-4 py-4 outline-none focus:border-[#B8892E] focus:ring-1 focus:ring-[#B8892E]"
+                    >
+                      <option value="">Select state</option>
+                      {STATES.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="project-lga"
+                      className="mb-2 block text-sm font-semibold text-[#444444]"
+                    >
+                      Local Government Area (LGA)
+                    </label>
+
+                    <select
+                      id="project-lga"
+                      value={lga}
+                      disabled={!location || availableLgas.length === 0}
+                      onChange={(event) => {
+                        setLga(event.target.value);
+                        invalidateSavedEstimate();
+                        setError("");
+                      }}
+                      className="w-full rounded-xl border border-[#D8D8D4] bg-white px-4 py-4 outline-none focus:border-[#B8892E] focus:ring-1 focus:ring-[#B8892E] disabled:cursor-not-allowed disabled:bg-[#F3F2EF]"
+                    >
+                      <option value="">
+                        {!location
+                          ? "Select a state first"
+                          : availableLgas.length === 0
+                            ? "No LGAs found for this state"
+                            : "Select Local Government Area"}
+                      </option>
+
+                      {availableLgas.map((area) => (
+                        <option key={area} value={area}>
+                          {area}
+                        </option>
+                      ))}
+                    </select>
+
+                    {location && availableLgas.length === 0 && (
+                      <p className="mt-2 text-sm text-red-600">
+                        No LGA data was found for this state. Please check
+                        the contents of src/data/nigerian-lgas.ts.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="exact-property-address"
+                      className="mb-2 block text-sm font-semibold text-[#444444]"
+                    >
+                      Exact property address
+                    </label>
+
+                    <textarea
+                      id="exact-property-address"
+                      value={exactAddress}
+                      onChange={(event) => {
+                        setExactAddress(event.target.value);
+                        invalidateSavedEstimate();
+                        setError("");
+                      }}
+                      placeholder="Enter the street address, estate, area, or nearest landmark"
+                      rows={3}
+                      className="w-full rounded-xl border border-[#D8D8D4] bg-white px-4 py-3.5 outline-none focus:border-[#B8892E] focus:ring-1 focus:ring-[#B8892E]"
+                    />
+
+                    <p className="mt-2 text-xs leading-5 text-[#777777]">
+                      Provide enough detail to help our team locate the property.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -802,7 +911,10 @@ export default function PaintingEstimatorPage() {
                       Your Painting Project Budget
                     </h2>
                     <p className="mt-2 text-sm text-[#777777]">
-                      {location}
+                      {location}, {lga}
+                    </p>
+                    <p className="mt-1 text-sm text-[#777777]">
+                      {exactAddress}
                     </p>
                     {estimateId && (
                       <p className="mt-2 text-xs text-[#777777]">
@@ -862,6 +974,11 @@ export default function PaintingEstimatorPage() {
                           />
                           <SummaryRow label="Paint type" value={paintType} />
                           <SummaryRow label="State" value={location} />
+                          <SummaryRow label="LGA" value={lga} />
+                          <SummaryRow
+                            label="Property address"
+                            value={exactAddress}
+                          />
                         </div>
 
                         <div className="mt-5 border-t border-[#E5E3DE] pt-5">
@@ -1079,6 +1196,14 @@ export default function PaintingEstimatorPage() {
                 <SummaryRow
                   label="State"
                   value={location || "Not selected"}
+                />
+                <SummaryRow
+                  label="LGA"
+                  value={lga || "Not selected"}
+                />
+                <SummaryRow
+                  label="Address"
+                  value={exactAddress || "Not entered"}
                 />
 
                 <div>
