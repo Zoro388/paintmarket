@@ -199,7 +199,7 @@ const footerLinks = {
   Services: [
     { label: "Shop Paints", href: "/shop" },
     { label: "Request a Painter", href: "/painter-request" },
-    { label: "Site Estimator", href: "/site-estimator" },
+    { label: "Site Estimator", href: "/painting-estimator" },
     { label: "Get a Quote", href: "/painter-request" },
   ],
   Support: [
