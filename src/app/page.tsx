@@ -25,7 +25,7 @@ export default function HomePage() {
         href="https://wa.me/2348084999530" 
         target="_blank" 
         rel="noopener noreferrer"
-        className="fixed bottom-40 right-6 z-50 flex items-center justify-center bg-[#25D366] text-white p-3.5 rounded-full shadow-xl hover:bg-[#20ba56] hover:scale-110 transition-all duration-300 group"
+       className="fixed bottom-40 right-6 z-50 flex items-center justify-center bg-[#25D366] text-white p-3.5 rounded-full shadow-[0_0_16px_5px_rgba(37,211,102,0.55)] hover:bg-[#20ba56] hover:scale-110 transition-all duration-200 group animate-[pulse_0.9s_ease-in-out_infinite] ring-4 ring-[#25D366]/50"
         aria-label="Chat on WhatsApp"
       >
         {/* WhatsApp SVG Icon */}

@@ -99,3 +99,12 @@ h1, h2, h3, h4, h5, h6 {
 .hover\:text-white:hover { color: var(--brand-white) !important; }
 .group:hover .group-hover\:text-white { color: var(--brand-white) !important; }
 
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}

@@ -59,7 +59,7 @@ export default function CTASection() {
         
         <div className="flex flex-wrap justify-center gap-4">
           <Link
-            href="/painter-request"
+            href="/shop"
             className="flex items-center gap-2 text-white font-semibold px-8 py-4 rounded-md shadow-sm transition-all duration-200 hover:opacity-90 hover:shadow-md"
             style={{ backgroundColor: COLORS.accent }}
           >
@@ -68,7 +68,7 @@ export default function CTASection() {
           </Link>
           
           <Link
-            href="/site-estimator"
+            href="/painting-estimator"
             className="flex items-center gap-2 bg-white font-semibold px-8 py-4 rounded-md border transition-all duration-200 hover:bg-amber-50/30"
             style={{
               borderColor: COLORS.accent,
