@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -182,11 +183,11 @@ export default function PortfolioPage() {
     if (!media || media.length === 0) {
       return (
         <div
-          className={`${heightClass} bg-gradient-to-br from-brand-black to-brand-card flex items-center justify-center`}
+          className={`${heightClass} bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center`}
         >
           <ImageIcon
             size={40}
-            className="text-brand-accent/20"
+            className="text-gray-400"
           />
         </div>
       );
@@ -284,41 +285,42 @@ export default function PortfolioPage() {
   }
 
   return (
-    <main className="bg-brand-black min-h-screen">
+    <main className="bg-[#F8F6F0] min-h-screen">
       <Navbar />
+{/* HERO */}
+<section className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[#F8F6F0] border-b border-[#E8E2D5]">
+  <div className="max-w-7xl mx-auto text-center">
 
-      {/* HERO */}
-      <section className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-brand-black via-brand-card/30 to-brand-black border-b border-brand-mid/20">
-        <div className="max-w-7xl mx-auto text-center">
-          {/* BOOK INSPECTION BUTTON */}
-          <div className="flex justify-end mb-6">
-            <a
-              href="/painting-estimator"
-              className="inline-flex items-center gap-2 rounded-full bg-brand-accent px-5 py-3 text-sm font-bold text-brand-black shadow-lg animate-pulse hover:animate-none hover:scale-105 transition-transform"
-            >
-              <CalendarCheck size={18} />
-              Book Inspection
-              <ArrowRight size={16} />
-            </a>
-          </div>
+    {/* BOOK INSPECTION BUTTON */}
+    <div className="flex justify-end mb-6">
+      <a
+        href="/painting-estimator"
+        className="inline-flex items-center gap-2 rounded-full bg-brand-accent px-5 py-3 text-sm font-bold text-brand-black shadow-lg hover:scale-105 transition-transform"
+      >
+        <CalendarCheck size={18} />
+        Book Inspection
+        <ArrowRight size={16} />
+      </a>
+    </div>
 
-          <p className="text-brand-accent text-xs font-semibold tracking-[0.2em] uppercase mb-3">
-            Our Work
-          </p>
+    <p className="text-[#B8860B] text-xs font-bold tracking-[0.2em] uppercase mb-3">
+      Our Work
+    </p>
 
-          <h1 className="font-display text-5xl font-bold text-brand-white mb-4">
-            Project Portfolio
-          </h1>
+    <h1 className="font-display text-4xl sm:text-5xl font-bold text-[#171717] mb-4">
+      Project Portfolio
+    </h1>
 
-          <p className="text-brand-mid text-lg max-w-xl mx-auto">
-            Explore completed projects from across Nigeria — every one a testament to quality craftsmanship.
-          </p>
-        </div>
-      </section>
+    <p className="text-[#555555] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+      Explore completed projects from across Nigeria, each reflecting our commitment to quality craftsmanship and beautiful finishes.
+    </p>
+
+  </div>
+</section>
 
       {/* CATEGORY FILTER */}
       {categories.length > 1 && (
-        <section className="px-4 sm:px-6 lg:px-8 pt-10">
+        <section className="px-4 sm:px-6 lg:px-8 pt-10 bg-[#F8F6F0]">
           <div className="max-w-7xl mx-auto flex flex-wrap gap-2">
             {categories.map((cat) => (
               <button
@@ -327,7 +329,7 @@ export default function PortfolioPage() {
                 className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all capitalize ${
                   activeCat === cat
                     ? "bg-brand-accent text-brand-black"
-                    : "bg-brand-card border border-brand-mid/30 text-brand-mid hover:text-brand-white hover:border-brand-mid/60"
+                    : "bg-[#FFFEFA] border border-gray-200 text-gray-700 hover:text-gray-900 hover:border-brand-accent/60"
                 }`}
               >
                 {cat}
@@ -337,11 +339,11 @@ export default function PortfolioPage() {
         </section>
       )}
 
-      {/* FEATURED */}
+      {/* FEATURED PROJECTS */}
       {featured.length > 0 && (
-        <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-[#F8F6F0]">
           <div className="max-w-7xl mx-auto">
-            <h2 className="font-display text-2xl font-bold text-brand-white mb-8 flex items-center gap-2">
+            <h2 className="font-display text-2xl font-bold text-gray-900 mb-8 flex items-center gap-2">
               <Star
                 size={20}
                 className="text-brand-accent"
@@ -354,7 +356,7 @@ export default function PortfolioPage() {
               {featured.map((p: any) => (
                 <div
                   key={p._id}
-                  className="bg-brand-card border border-brand-mid/20 rounded-2xl overflow-hidden hover:border-brand-accent/40 transition-colors"
+                  className="bg-[#FFFEFA] border border-[#E8E4DA] rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-brand-accent/40 transition-all"
                 >
                   <MediaSlider
                     media={p.media}
@@ -365,19 +367,19 @@ export default function PortfolioPage() {
                   <div className="p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                       <div>
-                        <h3 className="font-display text-xl font-bold text-brand-white">
+                        <h3 className="font-display text-xl font-bold text-gray-900">
                           {p.projectTitle}
                         </h3>
 
                         {p.projectCategory && (
-                          <span className="inline-block mt-2 text-brand-accent text-xs font-medium uppercase tracking-wider">
+                          <span className="inline-block mt-2 text-brand-accent text-xs font-semibold uppercase tracking-wider">
                             {p.projectCategory}
                           </span>
                         )}
                       </div>
 
                       {p.projectLocation && (
-                        <div className="flex items-center gap-1.5 text-brand-mid text-xs">
+                        <div className="flex items-center gap-1.5 text-gray-600 text-xs">
                           <MapPin
                             size={14}
                             className="text-brand-accent"
@@ -387,7 +389,7 @@ export default function PortfolioPage() {
                       )}
                     </div>
 
-                    <p className="text-brand-mid text-sm leading-relaxed">
+                    <p className="text-gray-600 text-sm leading-relaxed">
                       {p.projectDescription}
                     </p>
 
@@ -396,7 +398,7 @@ export default function PortfolioPage() {
                         {p.materialsUsed.map((m: string) => (
                           <span
                             key={m}
-                            className="bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-xs px-2.5 py-1 rounded-full"
+                            className="bg-brand-accent/10 border border-brand-accent/20 text-gray-700 text-xs px-2.5 py-1 rounded-full"
                           >
                             {m}
                           </span>
@@ -405,14 +407,14 @@ export default function PortfolioPage() {
                     )}
 
                     {p.completionDate && (
-                      <p className="text-brand-mid text-xs border-t border-brand-mid/20 pt-3">
+                      <p className="text-gray-500 text-xs border-t border-gray-200 pt-3">
                         Completed {formatDate(p.completionDate)}
                       </p>
                     )}
 
                     {p.customerTestimonial && (
-                      <div className="border-t border-brand-mid/20 pt-4">
-                        <p className="text-brand-mid text-sm italic">
+                      <div className="border-t border-gray-200 pt-4">
+                        <p className="text-gray-600 text-sm italic leading-relaxed">
                           “{typeof p.customerTestimonial === "string"
                             ? p.customerTestimonial
                             : p.customerTestimonial.content ?? p.customerTestimonial.text ?? ""}”
@@ -429,10 +431,10 @@ export default function PortfolioPage() {
 
       {/* OTHER PROJECTS */}
       {rest.length > 0 && (
-        <section className="pb-16 px-4 sm:px-6 lg:px-8">
+        <section className="pb-16 px-4 sm:px-6 lg:px-8 bg-[#F8F6F0]">
           <div className="max-w-7xl mx-auto">
             {featured.length > 0 && (
-              <h2 className="font-display text-2xl font-bold text-brand-white mb-8">
+              <h2 className="font-display text-2xl font-bold text-gray-900 mb-8">
                 More Projects
               </h2>
             )}
@@ -441,7 +443,7 @@ export default function PortfolioPage() {
               {rest.map((p: any) => (
                 <div
                   key={p._id}
-                  className="bg-brand-card border border-brand-mid/20 rounded-2xl overflow-hidden hover:border-brand-accent/40 transition-colors"
+                  className="bg-[#FFFEFA] border border-[#E8E4DA] rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-brand-accent/40 transition-all"
                 >
                   <MediaSlider
                     media={p.media}
@@ -451,19 +453,19 @@ export default function PortfolioPage() {
 
                   <div className="p-5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-display text-lg font-bold text-brand-white">
+                      <h3 className="font-display text-lg font-bold text-gray-900">
                         {p.projectTitle}
                       </h3>
 
                       {p.projectCategory && (
-                        <span className="text-brand-accent text-[10px] font-medium uppercase tracking-wider shrink-0">
+                        <span className="text-brand-accent text-[10px] font-semibold uppercase tracking-wider shrink-0">
                           {p.projectCategory}
                         </span>
                       )}
                     </div>
 
                     {p.projectLocation && (
-                      <div className="flex items-center gap-1.5 text-brand-mid text-xs">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-xs">
                         <MapPin
                           size={13}
                           className="text-brand-accent"
@@ -472,7 +474,7 @@ export default function PortfolioPage() {
                       </div>
                     )}
 
-                    <p className="text-brand-mid text-xs leading-relaxed line-clamp-2">
+                    <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
                       {p.projectDescription}
                     </p>
 
@@ -480,14 +482,14 @@ export default function PortfolioPage() {
                       {p.materialsUsed.slice(0, 2).map((m: string) => (
                         <span
                           key={m}
-                          className="bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-[10px] px-2 py-0.5 rounded-full"
+                          className="bg-brand-accent/10 border border-brand-accent/20 text-gray-700 text-[10px] px-2 py-0.5 rounded-full"
                         >
                           {m}
                         </span>
                       ))}
                     </div>
 
-                    <p className="text-brand-mid text-xs border-t border-brand-mid/20 pt-2">
+                    <p className="text-gray-500 text-xs border-t border-gray-200 pt-2">
                       Completed{" "}
                       {p.completionDate
                         ? formatDate(p.completionDate)
@@ -503,7 +505,7 @@ export default function PortfolioPage() {
 
       {/* LOADING STATE */}
       {isLoading && (
-        <section className="py-20 flex justify-center">
+        <section className="py-20 flex justify-center bg-[#F8F6F0]">
           <Loader
             size={32}
             className="animate-spin text-brand-accent"
@@ -513,14 +515,14 @@ export default function PortfolioPage() {
 
       {/* EMPTY STATE */}
       {!isLoading && categoryFiltered.length === 0 && (
-        <section className="py-20 px-4 text-center">
+        <section className="py-20 px-4 text-center bg-[#F8F6F0]">
           <div className="max-w-md mx-auto flex flex-col items-center gap-3">
             <ImageIcon
               size={40}
-              className="text-brand-mid"
+              className="text-gray-400"
             />
 
-            <p className="text-brand-mid text-sm">
+            <p className="text-gray-600 text-sm">
               No projects found for{" "}
               <span className="text-brand-accent font-medium">
                 {activeCat}
@@ -649,7 +651,7 @@ export default function PortfolioPage() {
           fill="currentColor"
           aria-hidden="true"
         >
-          <path d="M20.52 3.48A11.87 11.87 0 0 0 12.08 0C5.5 0 .14 5.35.14 11.94c0 2.1.55 4.15 1.6 5.96L0 24l6.25-1.64a11.95 11.95 0 0 0 5.82 1.49h.01c6.59 0 11.94-5.36 11.94-11.94 0-3.19-1.24-6.19-3.5-8.43ZM12.08 21.8a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.71.97.99-3.62-.24-.37a9.85 9.85 0 0 1-1.52-5.25c0-5.46 4.44-9.9 9.9-9.9a9.84 9.84 0 0 1 7 2.9 9.84 9.84 0 0 1 2.9 7c-.01 5.46-4.45 9.86-9.92 9.86Zm5.43-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.47-2.4-1.5-.89-.79-1.5-1.77-1.67-2.07-.17-.3-.02-.46.13-.61.14-.14.3-.35.3-.5.1-.2.05-.38-.03-.53-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.08-.8.38-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.48 1.69.61.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.42.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35Z" />
+          <path d="M20.52 3.48A11.87 11.87 0 0 0 12.08 0C5.5 0 .14 5.35.14 11.94c0 2.1.55 4.15 1.6 5.96L0 24l6.25-1.64a11.95 11.95 0 0 0 5.82 1.49h.01c6.59 0 11.94-5.36 11.94-11.94 0-3.19-1.24-6.19-3.5-8.43ZM12.08 21.8a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.71.97.99-3.62-.24-.37a9.85 9.85 0 0 1-1.52-5.25c0-5.46 4.44-9.9 9.9-9.9a9.84 9.84 0 0 1 7 2.9 9.84 9.84 0 0 1 2.9 7c-.01 5.46-4.45 9.86-9.92 9.86Zm5.43-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.47-2.4-1.5-.89-.79-1.5-1.77-1.67-2.07-.17-.3-.02-.46.13-.61.14-.14.3-.35.3-.5.1-.2.05-.38-.03-.53-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.08-.8.38-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2.05.38.13.61.08.15.3.35.5.5.14.14.3.35.3.5.1.2.05.38-.03.53-.08.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.08-.8.38-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.07-.13-.27-.2-.57-.35Z" />
         </svg>
       </a>
 
