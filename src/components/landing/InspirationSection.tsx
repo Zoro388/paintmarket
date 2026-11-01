@@ -52,6 +52,7 @@ export default function InspirationSection() {
     );
   };
 
+  // Automatic slider
   useEffect(() => {
     if (zoomOpen) return;
 
@@ -59,6 +60,7 @@ export default function InspirationSection() {
     return () => clearInterval(interval);
   }, [zoomOpen]);
 
+  // Close zoom with Escape
   useEffect(() => {
     if (!zoomOpen) return;
 
@@ -96,7 +98,7 @@ export default function InspirationSection() {
 
         {/* Main slider */}
         <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-[#1b1b1b] shadow-2xl">
-          <div className="relative h-[380px] sm:h-[450px] lg:h-[500px]">
+          <div className="relative h-[360px] sm:h-[430px] lg:h-[480px]">
 
             {/* Clickable image */}
             <button
@@ -112,12 +114,12 @@ export default function InspirationSection() {
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, 1200px"
-                className="object-contain p-2 sm:p-3 transition-transform duration-500"
+                className="object-cover object-center transition-transform duration-500"
               />
             </button>
 
-            {/* Lighter bottom overlay */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+            {/* Bottom text overlay */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
 
             {/* Zoom indicator */}
             <div className="pointer-events-none absolute right-5 top-5 z-10 flex items-center gap-2 rounded-full border border-white/30 bg-black/45 px-3 py-2 text-xs text-white backdrop-blur-md">
@@ -128,7 +130,7 @@ export default function InspirationSection() {
             {/* Paint details */}
             <div
               key={activePaint.name}
-              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 p-5 sm:p-8 lg:p-10"
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 p-5 sm:p-8 lg:p-9"
             >
               <span className="inline-block rounded-full border border-brand-accent/50 bg-black/50 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-brand-accent sm:text-[10px]">
                 Paint {activeIndex + 1} of 3
@@ -146,7 +148,7 @@ export default function InspirationSection() {
                 {activePaint.description}
               </p>
 
-              <div className="pointer-events-auto mt-5">
+              <div className="pointer-events-auto mt-4">
                 <Link
                   href="/painting-estimator"
                   className="group inline-flex items-center gap-2 rounded-md bg-brand-accent px-5 py-3 text-xs font-bold text-black shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-white sm:text-sm"
@@ -161,7 +163,7 @@ export default function InspirationSection() {
               </div>
             </div>
 
-            {/* Navigation arrows */}
+            {/* Previous button */}
             <button
               type="button"
               onClick={previousSlide}
@@ -171,6 +173,7 @@ export default function InspirationSection() {
               <ArrowLeft size={20} />
             </button>
 
+            {/* Next button */}
             <button
               type="button"
               onClick={nextSlide}
@@ -234,7 +237,7 @@ export default function InspirationSection() {
               </button>
             </div>
 
-            <div className="relative h-[45vh] min-h-[260px] max-h-[520px] w-full bg-black">
+            <div className="relative h-[40vh] min-h-[240px] max-h-[450px] w-full bg-black">
               <Image
                 src={activePaint.image}
                 alt={activePaint.name}
@@ -248,6 +251,7 @@ export default function InspirationSection() {
               <p className="text-xs font-semibold text-brand-accent sm:text-sm">
                 {activePaint.tagline}
               </p>
+
               <p className="mt-2 text-xs leading-5 text-gray-300 sm:text-sm">
                 {activePaint.description}
               </p>
