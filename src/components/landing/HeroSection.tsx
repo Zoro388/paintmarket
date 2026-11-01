@@ -1,10 +1,16 @@
+
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Play, Loader2 } from "lucide-react";
+import {
+  ArrowRight,
+  Play,
+  Loader2,
+  CalendarCheck,
+} from "lucide-react";
 import { useEffect, useState } from "react";
-import { userGetAllHeroBanners } from "../../lib/userApi"; // Adjust path if needed
+import { userGetAllHeroBanners } from "../../lib/userApi";
 
 interface HeroBanner {
   _id?: string;
@@ -57,7 +63,7 @@ export default function HeroSection() {
     };
   }, []);
 
-  // Reliable Auto-play slider every 5 seconds
+  // Auto-play slider every 5 seconds
   useEffect(() => {
     if (banners.length <= 1) return;
 
@@ -70,24 +76,27 @@ export default function HeroSection() {
 
   const currentBanner = banners[currentIndex];
 
-  // Helper to extract image URL safely
+  // Extract image URL safely
   const getImageUrl = (banner?: HeroBanner): string => {
     if (!banner) return "";
+
     if (typeof banner.image === "object" && banner.image?.url) {
       return banner.image.url;
     }
+
     if (typeof banner.image === "string" && banner.image) {
       return banner.image;
     }
+
     return banner.imageUrl || "";
   };
 
   const backgroundImage = getImageUrl(currentBanner);
 
   return (
-    // ── Mobile height: min-h-[50vh] or min-h-[75vh], Desktop: min-h-screen ──
     <section className="relative min-h-[75vh] lg:min-h-screen flex items-center justify-start overflow-hidden bg-brand-black">
-      {/* ── Background Image & Overlay ── */}
+
+      {/* Background Image & Overlay */}
       {backgroundImage && (
         <div className="absolute inset-0 z-0">
           <Image
@@ -96,10 +105,9 @@ export default function HeroSection() {
             fill
             priority
             unoptimized
-            // object-center keeps the product(s) in the middle
             className="object-cover object-center transition-opacity duration-1000"
           />
-          {/* Subtle gradient to maintain contrast without hiding the center products */}
+
           <div className="absolute inset-0 bg-gradient-to-r from-brand-black/80 via-brand-black/60 to-transparent" />
         </div>
       )}
@@ -121,7 +129,8 @@ export default function HeroSection() {
       ) : (
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 lg:pt-32 lg:pb-24 w-full text-left flex flex-col items-start">
           <div className="flex flex-col items-start gap-4 lg:gap-7 transition-all duration-500 ease-in-out max-w-2xl">
-            {/* Subtitle / Eyebrow pill */}
+
+            {/* Subtitle */}
             {currentBanner?.subtitle && (
               <div className="inline-flex items-center gap-2.5 w-fit rounded-full px-3.5 py-1.5 lg:px-4 lg:py-2 border border-brand-accent/25 bg-brand-accent-muted/80 backdrop-blur-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
@@ -133,35 +142,75 @@ export default function HeroSection() {
 
             {/* Title */}
             <h1 className="font-display text-3xl sm:text-5xl lg:text-[68px] font-bold leading-[1.1] lg:leading-[1.04] tracking-tight text-white">
-              {currentBanner?.title || "Shop Paints That Stand the Test of Time."}
+              {currentBanner?.title ||
+                "Shop Paints That Stand the Test of Time."}
             </h1>
 
             {/* Description */}
             <p className="text-brand-mid text-sm sm:text-base lg:text-lg leading-relaxed">
-              {/* {currentBanner?.description ||
-                "Explore our expertly crafted range of premium paints designed for beauty, strength and long-lasting protection."} */}
+              {/* Existing description intentionally unchanged */}
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap items-center justify-start gap-3 lg:gap-4 mt-2">
+
+              {/* Shop Paints */}
               <Link
                 href={currentBanner?.buttonLink || "/shop"}
                 className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold px-6 py-3 lg:px-8 lg:py-3.5 rounded-md hover:bg-brand-accent-lt transition-all duration-200 text-xs sm:text-sm shadow-lg"
               >
-                {currentBanner?.buttonText || "Shop Paints"} <ArrowRight size={15} />
+                {currentBanner?.buttonText || "Shop Paints"}
+                <ArrowRight size={15} />
               </Link>
+
+              {/* Request a Painter */}
               <Link
                 href="/painter-request"
                 className="flex items-center gap-2 border border-brand-border-lt text-brand-lt-gray bg-black/30 backdrop-blur-md px-6 py-3 lg:px-8 lg:py-3.5 rounded-md hover:border-brand-accent hover:text-brand-accent transition-all duration-200 text-xs sm:text-sm"
               >
-                <Play size={13} fill="currentColor" /> Request a Painter
+                <Play size={13} fill="currentColor" />
+                Request a Painter
               </Link>
+
+              {/* Book an Inspection */}
+              <Link
+  href="/book-inspection"
+  className="
+    group relative inline-flex items-center justify-center gap-2
+    overflow-hidden rounded-md
+    border border-brand-accent
+    bg-brand-accent px-6 py-3
+    text-xs sm:text-sm font-bold text-brand-black
+    shadow-[0_0_12px_rgba(245,158,11,0.25)]
+    animate-[pulse_3s_ease-in-out_infinite]
+    transition-all duration-300 ease-in-out
+    hover:-translate-y-1
+    hover:scale-105
+    hover:bg-white
+    hover:text-brand-accent
+    hover:shadow-[0_0_25px_rgba(245,158,11,0.65)]
+    hover:border-white
+  "
+>
+  <CalendarCheck
+    size={17}
+    className="transition-transform duration-300 group-hover:rotate-[-10deg] group-hover:scale-110"
+  />
+
+  <span>Book an Inspection</span>
+
+  <ArrowRight
+    size={16}
+    className="transition-transform duration-300 group-hover:translate-x-1"
+  />
+</Link>
+
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Bottom Center Dots Navigation ── */}
+      {/* Bottom Center Dots Navigation */}
       {banners.length > 1 && (
         <div className="absolute bottom-4 lg:bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
           {banners.map((_, idx) => (

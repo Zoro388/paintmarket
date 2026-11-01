@@ -251,7 +251,7 @@ export default function Navbar() {
               <CartIcon />
               <AuthButton />
               <Link
-                href="/painter-request"
+                href="/painting-estimator"
                 className="bg-brand-accent text-brand-black text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-brand-accent-lt transition-colors"
               >
                 Get a Quote
