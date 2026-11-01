@@ -150,11 +150,11 @@ export default function InspirationSection() {
 
               <div className="pointer-events-auto mt-4">
                 <Link
-                  href="/painting-estimator"
+                  href="/portfolio"
                   className="group inline-flex items-center gap-2 rounded-md bg-brand-accent px-5 py-3 text-xs font-bold text-black shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-white sm:text-sm"
                 >
                   <CalendarCheck size={16} />
-                  Book an Inspection
+                  Explore our Portfolio
                   <ArrowRight
                     size={15}
                     className="transition-transform group-hover:translate-x-1"
@@ -237,15 +237,15 @@ export default function InspirationSection() {
               </button>
             </div>
 
-            <div className="relative h-[40vh] min-h-[240px] max-h-[450px] w-full bg-black">
-              <Image
-                src={activePaint.image}
-                alt={activePaint.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 768px"
-                className="object-contain"
-              />
-            </div>
+            <div className="relative h-[40vh] min-h-[240px] max-h-[450px] w-full overflow-hidden bg-black">
+  <Image
+    src={activePaint.image}
+    alt={activePaint.name}
+    fill
+    sizes="(max-width: 768px) 100vw, 768px"
+    className="object-cover object-center"
+  />
+</div>
 
             <div className="px-4 py-4 sm:px-6">
               <p className="text-xs font-semibold text-brand-accent sm:text-sm">
