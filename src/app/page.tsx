@@ -25,7 +25,7 @@ export default function HomePage() {
       {/* Plan Your Project Smarter */}
       <ToolsSection />
 
-      {/* <WhyUsSection /> */}
+      <WhyUsSection />
 
       <TestimonialsSection />
 

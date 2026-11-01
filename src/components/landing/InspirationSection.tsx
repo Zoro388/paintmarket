@@ -3,51 +3,67 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
 import {
+  ArrowLeft,
   ArrowRight,
-  MapPin,
-  CalendarDays,
-  ImageIcon,
-  Loader2,
-  Sparkles,
-  CheckCircle2,
+  CalendarCheck,
   X,
   ZoomIn,
 } from "lucide-react";
-import { apiGetPortfolio } from "@/lib/userApi";
-import { formatDate } from "@/lib/utils";
 
-type PortfolioMedia = {
-  type?: string;
-  url: string;
-  publicId?: string;
-};
-
-type PortfolioProject = {
-  _id: string;
-  projectTitle: string;
-  projectDescription: string;
-  projectLocation: string;
-  projectCategory: string;
-  completionDate: string | null;
-  createdAt?: string | null;
-  media: PortfolioMedia[];
-  materialsUsed: string[];
-  customerTestimonial?: string | null;
-};
+const paints = [
+  {
+    name: "Fortishield Gravitex",
+    tagline: "Premium Texture. Lasting Beauty. Superior Protection.",
+    description:
+      "Distinctive textured finishes for beautiful, durable and protected exterior walls.",
+    image: "/images/paints/gravitex-paint.jpg",
+  },
+  {
+    name: "Fortishield Trowel Paint",
+    tagline: "Luxury Finishes. Unmatched Durability. Lasting Beauty.",
+    description:
+      "Elegant marble-inspired finishes that bring sophistication and character to your walls.",
+    image: "/images/paints/marble-trowel1.png",
+  },
+  {
+    name: "Matte Paint",
+    tagline: "Rich Colours. Elegant Finishes. Exceptional Interior Beauty.",
+    description:
+      "Smooth, refined finishes that bring warmth and beauty to interior spaces.",
+    image: "/images/paints/matte-paint.jpg",
+  },
+];
 
 export default function InspirationSection() {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [zoomOpen, setZoomOpen] = useState(false);
 
-  // Close the image viewer with Escape and prevent background scrolling.
+  const activePaint = paints[activeIndex];
+
+  const nextSlide = () => {
+    setActiveIndex((current) => (current + 1) % paints.length);
+  };
+
+  const previousSlide = () => {
+    setActiveIndex(
+      (current) => (current - 1 + paints.length) % paints.length
+    );
+  };
+
   useEffect(() => {
-    if (!selectedImage) return;
+    if (zoomOpen) return;
+
+    const interval = setInterval(nextSlide, 6000);
+    return () => clearInterval(interval);
+  }, [zoomOpen]);
+
+  useEffect(() => {
+    if (!zoomOpen) return;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setSelectedImage(null);
-      }
+      if (event.key === "Escape") setZoomOpen(false);
     };
 
     document.addEventListener("keydown", handleEscape);
@@ -57,373 +73,186 @@ export default function InspirationSection() {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "";
     };
-  }, [selectedImage]);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["homepage-inspiration"],
-    queryFn: async () => {
-      const res = await apiGetPortfolio();
-      return (res?.projects ?? res?.data ?? []) as any[];
-    },
-    staleTime: 1000 * 60 * 5,
-    retry: false,
-  });
-
-  // Normalize projects and media.
-  const projects: PortfolioProject[] = (data ?? [])
-    .map((p: any) => {
-      let media: PortfolioMedia[] = [];
-
-      if (Array.isArray(p.media) && p.media.length > 0) {
-        media = p.media
-          .filter((item: any) => item?.url)
-          .map((item: any) => ({
-            type: item.type === "video" ? "video" : "image",
-            url: item.url,
-            publicId: item.publicId ?? "",
-          }));
-      } else {
-        const oldImages =
-          p.images ?? p.completedImages ?? p.beforeImages ?? [];
-
-        media = Array.isArray(oldImages)
-          ? oldImages
-              .filter(
-                (url: any) =>
-                  typeof url === "string" && url.trim()
-              )
-              .map((url: string) => ({
-                type: "image",
-                url,
-              }))
-          : [];
-      }
-
-      return {
-        _id: String(p._id ?? p.id ?? p.createdAt ?? Math.random()),
-        projectTitle: p.projectTitle ?? p.clientName ?? "Completed Project",
-        projectDescription:
-          p.projectDescription ?? p.description ?? "",
-        projectLocation: p.projectLocation ?? "",
-        projectCategory: p.projectCategory ?? "",
-        completionDate: p.completionDate ?? p.completedDate ?? null,
-        createdAt: p.createdAt ?? null,
-        media,
-        materialsUsed: Array.isArray(p.materialsUsed)
-          ? p.materialsUsed
-          : [],
-        customerTestimonial:
-          p.customerTestimonial ?? p.testimonial ?? null,
-      };
-    })
-
-    // Only show projects with images and absolutely no videos.
-    .filter(
-      (project) =>
-        project.media.length > 0 &&
-        project.media.every((item) => item.type === "image")
-    )
-
-    // Latest projects first.
-    .sort((a, b) => {
-      const dateA = a.createdAt
-        ? new Date(a.createdAt).getTime()
-        : 0;
-      const dateB = b.createdAt
-        ? new Date(b.createdAt).getTime()
-        : 0;
-
-      return dateB - dateA;
-    })
-    .slice(0, 6);
+  }, [zoomOpen]);
 
   return (
-    <section
-      id="inspiration"
-      className="relative overflow-hidden bg-[#101010] py-20 sm:py-24 lg:py-28"
-    >
-      {/* Background decorations */}
-      <div className="pointer-events-none absolute -top-40 right-[-100px] h-[450px] w-[450px] rounded-full bg-brand-accent/[0.10] blur-[130px]" />
+    <section className="relative overflow-hidden bg-[#111111] py-14 sm:py-18 lg:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-      <div className="pointer-events-none absolute bottom-[-150px] left-[-100px] h-[400px] w-[400px] rounded-full bg-brand-accent/[0.07] blur-[120px]" />
+        {/* Compact heading */}
+        <div className="mb-8 text-center sm:mb-10">
+          <span className="text-xs font-bold uppercase tracking-[0.3em] text-brand-accent">
+            Discover Our Collection
+          </span>
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 className="mt-3 text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl">
+            Beautiful Paints. Exceptional Finishes.
+          </h2>
 
-        {/* Section heading */}
-        <div className="mb-14 flex flex-col gap-7 lg:mb-16 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-accent/30 bg-brand-accent/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-brand-accent">
-              <Sparkles size={15} />
-              Our Recent Work
-            </div>
-
-            <h2 className="font-display text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl">
-              Spaces We've{" "}
-              <span className="text-brand-accent">
-                Transformed.
-              </span>
-            </h2>
-
-            <p className="mt-5 max-w-xl text-sm leading-8 text-white/60 sm:text-base">
-              A look at some of the spaces we've brought to life.
-              Get inspired by our completed painting projects and
-              imagine what's possible for your own property.
-            </p>
-          </div>
-
-          <Link
-            href="/portfolio"
-            className="group inline-flex w-fit shrink-0 items-center gap-3 rounded-lg border border-brand-accent/50 px-6 py-3.5 text-sm font-bold text-brand-accent transition-all duration-300 hover:border-brand-accent hover:bg-brand-accent hover:text-brand-black"
-          >
-            Explore All Projects
-            <ArrowRight
-              size={18}
-              className="transition-transform duration-300 group-hover:translate-x-1"
-            />
-          </Link>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-gray-400">
+            Discover finishes that transform and protect your spaces.
+          </p>
         </div>
 
-        {/* Loading state */}
-        {isLoading && (
-          <div className="flex min-h-[300px] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2
-                size={36}
-                className="animate-spin text-brand-accent"
-              />
-              <p className="text-sm text-white/50">
-                Loading our latest projects...
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Main slider */}
+        <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-[#1b1b1b] shadow-2xl">
+          <div className="relative h-[380px] sm:h-[450px] lg:h-[500px]">
 
-        {/* Project cards */}
-        {!isLoading && projects.length > 0 && (
-          <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project, index) => {
-              const coverImage = project.media[0]?.url;
-
-              return (
-                <article
-                  key={project._id}
-                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#191919] transition-all duration-500 hover:-translate-y-2 hover:border-brand-accent/40 hover:shadow-[0_25px_65px_rgba(0,0,0,0.4)]"
-                >
-                  {/* Project image */}
-                  <div className="relative h-64 overflow-hidden bg-[#252525] sm:h-72">
-                    {coverImage ? (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedImage(coverImage)}
-                        aria-label={`View ${project.projectTitle} image`}
-                        className="group/image relative block h-full w-full cursor-zoom-in"
-                      >
-                        <img
-                          src={coverImage}
-                          alt={project.projectTitle}
-                          loading={index < 3 ? "eager" : "lazy"}
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover/image:scale-110"
-                        />
-
-                        {/* Zoom icon */}
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover/image:bg-black/30 group-hover/image:opacity-100">
-                          <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur-md">
-                            <ZoomIn size={25} />
-                          </span>
-                        </span>
-                      </button>
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <ImageIcon
-                          size={42}
-                          className="text-white/30"
-                        />
-                      </div>
-                    )}
-
-                    {/* Image overlay */}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent opacity-90" />
-
-                    {project.projectCategory && (
-                      <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-black/60 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-md">
-                        {project.projectCategory}
-                      </span>
-                    )}
-
-                    {project.media.length > 1 && (
-                      <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/60 px-3 py-2 text-xs font-semibold text-white backdrop-blur-md">
-                        <ImageIcon size={13} />
-                        {project.media.length} Photos
-                      </span>
-                    )}
-
-                    <div className="pointer-events-none absolute bottom-5 left-5 right-5">
-                      <h3 className="font-display text-xl font-bold leading-snug text-white sm:text-2xl">
-                        {project.projectTitle}
-                      </h3>
-
-                      {project.projectLocation && (
-                        <p className="mt-2 flex items-center gap-2 text-xs font-medium text-white/75">
-                          <MapPin
-                            size={14}
-                            className="shrink-0 text-brand-accent"
-                          />
-                          {project.projectLocation}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Project details */}
-                  <div className="flex flex-1 flex-col p-5 sm:p-6">
-                    {project.projectDescription && (
-                      <p className="line-clamp-3 whitespace-pre-line text-sm leading-7 text-white/60">
-                        {project.projectDescription}
-                      </p>
-                    )}
-
-                    {project.materialsUsed.length > 0 && (
-                      <div className="mt-5">
-                        <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.15em] text-brand-accent">
-                          Materials Used
-                        </p>
-
-                        <div className="flex flex-wrap gap-2">
-                          {project.materialsUsed.slice(0, 4).map(
-                            (material, i) => (
-                              <span
-                                key={`${material}-${i}`}
-                                className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] text-white/70"
-                              >
-                                {material}
-                              </span>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {project.customerTestimonial && (
-                      <blockquote className="mt-5 rounded-xl border border-brand-accent/15 bg-brand-accent/[0.06] p-4 text-sm italic leading-6 text-white/70">
-                        &ldquo;{project.customerTestimonial}&rdquo;
-                      </blockquote>
-                    )}
-
-                    <div className="mt-auto">
-                      {project.completionDate && (
-                        <div className="mt-6 flex items-center gap-2 border-t border-white/10 pt-4 text-xs text-white/45">
-                          <CalendarDays
-                            size={14}
-                            className="text-brand-accent"
-                          />
-                          Completed {formatDate(project.completionDate)}
-                        </div>
-                      )}
-
-                      <Link
-                        href="/portfolio"
-                        className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-brand-accent transition-all duration-300 hover:gap-3"
-                      >
-                        View Project
-                        <ArrowRight size={16} />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!isLoading && projects.length === 0 && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-16 text-center">
-            <ImageIcon
-              size={42}
-              className="mx-auto text-white/30"
-            />
-
-            <h3 className="mt-5 font-display text-xl font-bold text-white">
-              Inspiration is on its way
-            </h3>
-
-            <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-white/50">
-              Our latest project images will appear here as soon as
-              they are available.
-            </p>
-
-            <Link
-              href="/portfolio"
-              className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-brand-accent hover:underline"
+            {/* Clickable image */}
+            <button
+              type="button"
+              onClick={() => setZoomOpen(true)}
+              aria-label={`Zoom in on ${activePaint.name}`}
+              className="absolute inset-0 z-0 block h-full w-full cursor-zoom-in"
             >
-              Visit our portfolio
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-        )}
+              <Image
+                key={activePaint.image}
+                src={activePaint.image}
+                alt={activePaint.name}
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 1200px"
+                className="object-contain p-2 sm:p-3 transition-transform duration-500"
+              />
+            </button>
 
-        {/* Bottom call to action */}
-        <div className="relative mt-16 overflow-hidden rounded-2xl border border-brand-accent/25 bg-gradient-to-br from-[#292318] via-[#1c1c1c] to-[#171717] p-7 sm:p-10 lg:p-12">
-          <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-brand-accent/10 blur-[80px]" />
+            {/* Lighter bottom overlay */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
-          <div className="relative flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
-            <div className="max-w-xl">
-              <div className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-brand-accent">
-                <CheckCircle2 size={15} />
-                Let's Bring Your Vision to Life
-              </div>
+            {/* Zoom indicator */}
+            <div className="pointer-events-none absolute right-5 top-5 z-10 flex items-center gap-2 rounded-full border border-white/30 bg-black/45 px-3 py-2 text-xs text-white backdrop-blur-md">
+              <ZoomIn size={15} />
+              Click image to zoom
+            </div>
 
-              <h3 className="font-display text-2xl font-bold leading-tight text-white sm:text-3xl">
-                Have a space that needs a{" "}
-                <span className="text-brand-accent">
-                  fresh look?
-                </span>
+            {/* Paint details */}
+            <div
+              key={activePaint.name}
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 p-5 sm:p-8 lg:p-10"
+            >
+              <span className="inline-block rounded-full border border-brand-accent/50 bg-black/50 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-brand-accent sm:text-[10px]">
+                Paint {activeIndex + 1} of 3
+              </span>
+
+              <h3 className="mt-3 text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl">
+                {activePaint.name}
               </h3>
 
-              <p className="mt-3 text-sm leading-7 text-white/60 sm:text-base">
-                Book an inspection with our team. We'll help you
-                assess your space and plan your painting project.
+              <p className="mt-2 max-w-2xl text-xs font-semibold leading-5 text-brand-accent sm:text-sm">
+                {activePaint.tagline}
               </p>
+
+              <p className="mt-2 max-w-xl text-xs leading-5 text-gray-200 sm:text-sm">
+                {activePaint.description}
+              </p>
+
+              <div className="pointer-events-auto mt-5">
+                <Link
+                  href="/painting-estimator"
+                  className="group inline-flex items-center gap-2 rounded-md bg-brand-accent px-5 py-3 text-xs font-bold text-black shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-white sm:text-sm"
+                >
+                  <CalendarCheck size={16} />
+                  Book an Inspection
+                  <ArrowRight
+                    size={15}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                </Link>
+              </div>
             </div>
 
-            <Link
-              href="/book-inspection"
-              className="group inline-flex shrink-0 items-center justify-center gap-3 rounded-lg bg-brand-accent px-7 py-4 text-sm font-extrabold text-brand-black shadow-lg shadow-brand-accent/10 transition-all duration-300 hover:-translate-y-1 hover:bg-brand-accent-lt hover:shadow-xl"
+            {/* Navigation arrows */}
+            <button
+              type="button"
+              onClick={previousSlide}
+              aria-label="Previous paint"
+              className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/50 text-white backdrop-blur-md transition hover:border-brand-accent hover:bg-brand-accent hover:text-black sm:left-5 sm:h-12 sm:w-12"
             >
-              Start Your Project
-              <ArrowRight
-                size={18}
-                className="transition-transform duration-300 group-hover:translate-x-1"
+              <ArrowLeft size={20} />
+            </button>
+
+            <button
+              type="button"
+              onClick={nextSlide}
+              aria-label="Next paint"
+              className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/50 text-white backdrop-blur-md transition hover:border-brand-accent hover:bg-brand-accent hover:text-black sm:right-5 sm:h-12 sm:w-12"
+            >
+              <ArrowRight size={20} />
+            </button>
+          </div>
+
+          {/* Slide indicators */}
+          <div className="flex items-center justify-center gap-3 border-t border-white/10 bg-[#171717] py-4">
+            {paints.map((paint, index) => (
+              <button
+                key={paint.name}
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                aria-label={`Show ${paint.name}`}
+                aria-current={activeIndex === index}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  activeIndex === index
+                    ? "w-9 bg-brand-accent"
+                    : "w-2 bg-gray-500 hover:bg-white"
+                }`}
               />
-            </Link>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Full-screen image lightbox */}
-      {selectedImage && (
+      {/* Half-screen image zoom */}
+      {zoomOpen && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 p-4 backdrop-blur-md"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+          onClick={() => setZoomOpen(false)}
           role="dialog"
           aria-modal="true"
-          aria-label="Enlarged project image"
+          aria-label={`${activePaint.name} image preview`}
         >
-          <button
-            type="button"
-            onClick={() => setSelectedImage(null)}
-            aria-label="Close image"
-            className="absolute right-5 top-5 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
-          >
-            <X size={24} />
-          </button>
-
-          <img
-            src={selectedImage}
-            alt="Enlarged painting project"
+          <div
+            className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-white/20 bg-[#171717] shadow-2xl animate-in zoom-in-95 fade-in duration-300"
             onClick={(event) => event.stopPropagation()}
-            className="max-h-[90vh] max-w-[95vw] rounded-lg object-contain shadow-2xl"
-          />
+          >
+            <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+              <div>
+                <h3 className="text-base font-bold text-white sm:text-lg">
+                  {activePaint.name}
+                </h3>
+                <p className="text-xs text-gray-400">
+                  Paint Collection
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setZoomOpen(false)}
+                aria-label="Close image preview"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-brand-accent hover:text-black"
+              >
+                <X size={19} />
+              </button>
+            </div>
+
+            <div className="relative h-[45vh] min-h-[260px] max-h-[520px] w-full bg-black">
+              <Image
+                src={activePaint.image}
+                alt={activePaint.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 768px"
+                className="object-contain"
+              />
+            </div>
+
+            <div className="px-4 py-4 sm:px-6">
+              <p className="text-xs font-semibold text-brand-accent sm:text-sm">
+                {activePaint.tagline}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-gray-300 sm:text-sm">
+                {activePaint.description}
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </section>
