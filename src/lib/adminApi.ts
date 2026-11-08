@@ -5,27 +5,49 @@ import endpointRoute from "@/lib/endpointRoute";
 // export const adminUpdateProduct = (id: string, body: Partial<{ productName: string; ... }>) => ...
 
 // AFTER:
-export const adminUpdateProduct = (id: string, body: FormData) => 
-  endpointRoute.put(`/products/${id}`, body, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  }).then((r) => r.data);
+// export const adminUpdateProduct = (id: string, body: FormData) => 
+//   endpointRoute.put(`/products/${id}`, body, {
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   }).then((r) => r.data);
 
-export const adminCreateProduct = (body: FormData) => 
-  endpointRoute.post(`/products`, body, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  }).then((r) => r.data);
+// export const adminCreateProduct = (body: FormData) => 
+//   endpointRoute.post(`/products`, body, {
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   }).then((r) => r.data);
   
-export const adminGetProducts = (params?: { page?: number; limit?: number; search?: string }) =>
+// export const adminGetProducts = (params?: { page?: number; limit?: number; search?: string }) =>
+//   endpointRoute.get("/products", { params }).then((r) => r.data);
+
+
+
+// export const adminDeleteProduct = (id: string) =>
+//   endpointRoute.delete(`/products/${id}`).then((r) => r.data);
+
+
+
+// ── PRODUCTS ──────────────────────────────────────────────────────────────────
+
+export const adminUpdateProduct = (id: string, body: FormData) =>
+  endpointRoute.put(`/products/${id}`, body).then((r) => r.data);
+
+export const adminCreateProduct = (body: FormData) =>
+  endpointRoute.post("/products", body).then((r) => r.data);
+
+export const adminGetProducts = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) =>
   endpointRoute.get("/products", { params }).then((r) => r.data);
-
-
 
 export const adminDeleteProduct = (id: string) =>
   endpointRoute.delete(`/products/${id}`).then((r) => r.data);
+
+
 
 // ── ORDERS ────────────────────────────────────────────────────────────────────
 export const adminGetOrders = (params?: { page?: number; status?: string }) =>
