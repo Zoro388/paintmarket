@@ -18,9 +18,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-// ─────────────────────────────────────────────────────────────
 // Types
-// ─────────────────────────────────────────────────────────────
 
 export interface CheckoutCartItem {
   id: string;
@@ -44,12 +42,11 @@ interface CartCheckoutProps {
   state: string;
   city: string;
   notes?: string;
+  deliveryFee: number;
   onSuccess: () => void;
 }
 
-// ─────────────────────────────────────────────────────────────
 // Component
-// ─────────────────────────────────────────────────────────────
 
 const CartCheckout: React.FC<CartCheckoutProps> = ({
   cartItems,
@@ -58,25 +55,24 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
   state,
   city,
   notes,
+  deliveryFee,
   onSuccess,
 }) => {
   const [loading, setLoading] = useState(false);
 
   const queryClient = useQueryClient();
 
-  // ───────────────────────────────────────────────────────────
   // Calculate total
-  // ───────────────────────────────────────────────────────────
 
-  const total = cartItems.reduce(
+  const subtotal = cartItems.reduce(
     (sum, item) =>
       sum + item.price * item.quantity,
     0
   );
 
-  // ───────────────────────────────────────────────────────────
+  const total = subtotal + deliveryFee;
+
   // Flutterwave configuration
-  // ───────────────────────────────────────────────────────────
 
   const config = {
     public_key:
@@ -118,9 +114,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
   const handleFlutterPayment =
     useFlutterwave(config);
 
-  // ───────────────────────────────────────────────────────────
   // Handle payment
-  // ───────────────────────────────────────────────────────────
 
   const handlePay = () => {
     console.log("=================================");
@@ -138,7 +132,17 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
     );
 
     console.log(
-      "Total:",
+      "Paint subtotal:",
+      subtotal
+    );
+
+    console.log(
+      "Delivery fee:",
+      deliveryFee
+    );
+
+    console.log(
+      "Grand total:",
       total
     );
 
@@ -148,9 +152,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
         .NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY
     );
 
-    // ─────────────────────────────────────
     // Validate email
-    // ─────────────────────────────────────
 
     if (!customerInfo.email) {
       toast.error(
@@ -159,9 +161,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
       return;
     }
 
-    // ─────────────────────────────────────
     // Validate name
-    // ─────────────────────────────────────
 
     if (!customerInfo.name) {
       toast.error(
@@ -170,9 +170,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
       return;
     }
 
-    // ─────────────────────────────────────
     // Validate phone number
-    // ─────────────────────────────────────
 
     if (!customerInfo.phone_number) {
       toast.error(
@@ -181,9 +179,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
       return;
     }
 
-    // ─────────────────────────────────────
     // Validate cart
-    // ─────────────────────────────────────
 
     if (
       !cartItems ||
@@ -195,9 +191,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
       return;
     }
 
-    // ─────────────────────────────────────
     // Validate total
-    // ─────────────────────────────────────
 
     if (total <= 0) {
       toast.error(
@@ -206,9 +200,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
       return;
     }
 
-    // ─────────────────────────────────────
     // Validate Flutterwave public key
-    // ─────────────────────────────────────
 
     if (
       !process.env
@@ -234,9 +226,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
       total
     );
 
-    // ─────────────────────────────────────
     // Open Flutterwave
-    // ─────────────────────────────────────
 
     handleFlutterPayment({
       callback: async (response) => {
@@ -257,11 +247,10 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
         );
 
         // Close Flutterwave modal
+
         closePaymentModal();
 
-        // ─────────────────────────────────
         // Check payment status
-        // ─────────────────────────────────
 
         if (
           response.status ===
@@ -272,9 +261,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
           setLoading(true);
 
           try {
-            // ─────────────────────────────
             // Get payment reference
-            // ─────────────────────────────
 
             const paymentReference =
               String(
@@ -294,9 +281,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
               );
             }
 
-            // ─────────────────────────────
             // Create order
-            // ─────────────────────────────
 
             console.log(
               "Creating order..."
@@ -336,9 +321,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
               "Order created successfully."
             );
 
-            // ─────────────────────────────
             // Clear backend cart
-            // ─────────────────────────────
 
             try {
               console.log(
@@ -360,9 +343,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
               // not cancel the successful order.
             }
 
-            // ─────────────────────────────
             // Refresh cart query
-            // ─────────────────────────────
 
             await queryClient.invalidateQueries(
               {
@@ -376,17 +357,13 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
               "Cart query refreshed."
             );
 
-            // ─────────────────────────────
             // Success message
-            // ─────────────────────────────
 
             toast.success(
               "Order placed successfully!"
             );
 
-            // ─────────────────────────────
             // Tell parent component
-            // ─────────────────────────────
 
             onSuccess();
           } catch (err: unknown) {
@@ -416,9 +393,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
         }
       },
 
-      // ─────────────────────────────────────
       // Flutterwave modal closed
-      // ─────────────────────────────────────
 
       onClose: () => {
         console.log(
@@ -435,9 +410,7 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
     });
   };
 
-  // ───────────────────────────────────────────────────────────
   // Render
-  // ───────────────────────────────────────────────────────────
 
   return (
     <button

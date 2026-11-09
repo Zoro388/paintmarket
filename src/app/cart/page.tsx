@@ -1,18 +1,31 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { apiUpdateCartItem, apiGetCart, apiRemoveFromCart } from "@/lib/userApi";
+import {
+  apiUpdateCartItem,
+  apiGetCart,
+  apiRemoveFromCart,
+} from "@/lib/userApi";
 import { formatCurrency } from "@/lib/utils";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import {
-  ShoppingCart, Trash2, Minus, Plus, Loader, ArrowRight, ArrowLeft,
-  MapPin, CheckCircle, Package, Mail,
+  ShoppingCart,
+  Trash2,
+  Minus,
+  Plus,
+  Loader,
+  ArrowRight,
+  ArrowLeft,
+  MapPin,
+  CheckCircle,
+  Package,
+  Mail,
 } from "lucide-react";
 import Modal from "../test/component/modal";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 interface Variant {
   _id: string;
   colourName: string;
@@ -41,24 +54,26 @@ interface CartItem {
 }
 
 const NIGERIA_STATES = [
-  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River",
-  "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", "Imo", "Jigawa", "Kaduna",
-  "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun",
-  "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa",
+  "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo",
+  "Ekiti", "Enugu", "FCT - Abuja", "Gombe", "Imo", "Jigawa",
+  "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara",
+  "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun",
+  "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe",
+  "Zamfara",
 ];
 
-// 3 steps now — Payment step removed
 const STEPS = ["Cart", "Delivery", "Confirm"];
+const DELIVERY_FEE_PER_BUCKET = 5500;
 
 const inputCls =
   "w-full bg-brand-raised border border-brand-border text-white placeholder-brand-subtle px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-brand-accent/60 transition-all";
 
 export default function CartPage() {
-  const [step, setStep]               = useState(0);
+  const [step, setStep] = useState(0);
   const [showPayModal, setShowPayModal] = useState(false);
-  const [notes, setNotes]             = useState("");
+  const [notes, setNotes] = useState("");
 
-  // Delivery info — now includes fullName and phoneNumber
   const [delivery, setDelivery] = useState({
     fullName: "",
     phoneNumber: "",
@@ -79,7 +94,7 @@ export default function CartPage() {
     },
   });
 
-  const [cart, setCart]                   = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [cartInitialized, setCartInitialized] = useState(false);
 
   useEffect(() => {
@@ -89,13 +104,23 @@ export default function CartPage() {
     }
   }, [fetchedItems, cartInitialized]);
 
-  const getSelectedVariant = (item: CartItem): Variant | undefined =>
-    item.product.variants?.find((v) => v._id === item.selectedColour);
+  const getSelectedVariant = (
+    item: CartItem
+  ): Variant | undefined =>
+    item.product.variants?.find(
+      (v) => v._id === item.selectedColour
+    );
 
-  // Quantity update
+  // Update quantity
   const updateQtyMutation = useMutation({
-    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) =>
-      apiUpdateCartItem(productId, { quantity }),
+    mutationFn: ({
+      productId,
+      quantity,
+    }: {
+      productId: string;
+      quantity: number;
+    }) => apiUpdateCartItem(productId, { quantity }),
+
     onSuccess: (_data, variables) => {
       setCart((prev) =>
         prev.map((item) =>
@@ -104,55 +129,124 @@ export default function CartPage() {
             : item
         )
       );
+
       qc.invalidateQueries({ queryKey: ["cart-product"] });
       toast.success("Cart updated!");
     },
-    onError: (err: Error) => toast.error(err.message || "Failed to update"),
+
+    onError: (err: Error) =>
+      toast.error(err.message || "Failed to update"),
   });
 
   // Remove from cart
   const removeMutation = useMutation({
-    mutationFn: (productId: string) => apiRemoveFromCart(productId),
+    mutationFn: (productId: string) =>
+      apiRemoveFromCart(productId),
+
     onSuccess: (_, productId) => {
-      setCart((prev) => prev.filter((item) => item.product._id !== productId));
+      setCart((prev) =>
+        prev.filter(
+          (item) => item.product._id !== productId
+        )
+      );
+
       qc.invalidateQueries({ queryKey: ["cart-product"] });
       toast.success("Item removed!");
     },
-    onError: (err: Error) => toast.error(err.message || "Failed to remove"),
+
+    onError: (err: Error) =>
+      toast.error(err.message || "Failed to remove"),
   });
 
-  const handleQtyChange = (productId: string, currentQty: number, delta: number) => {
+  const handleQtyChange = (
+    productId: string,
+    currentQty: number,
+    delta: number
+  ) => {
     const nextQty = Math.max(1, currentQty + delta);
+
     if (nextQty === currentQty) return;
-    updateQtyMutation.mutate({ productId, quantity: nextQty });
+
+    updateQtyMutation.mutate({
+      productId,
+      quantity: nextQty,
+    });
   };
 
-  const handleQtyInput = (productId: string, rawValue: string) => {
+  const handleQtyInput = (
+    productId: string,
+    rawValue: string
+  ) => {
     const parsed = parseInt(rawValue, 10);
+
     if (Number.isNaN(parsed) || parsed < 1) return;
-    updateQtyMutation.mutate({ productId, quantity: parsed });
+
+    updateQtyMutation.mutate({
+      productId,
+      quantity: parsed,
+    });
   };
 
-  const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  const total    = subtotal;
+  // Paint subtotal
+  const subtotal = cart.reduce(
+    (acc, item) =>
+      acc + item.product.price * item.quantity,
+    0
+  );
+
+  // Total number of buckets
+  const totalBuckets = cart.reduce(
+    (acc, item) => acc + item.quantity,
+    0
+  );
+
+  // Free delivery for orders of 50 buckets or more within Abuja
+const isAbuja = delivery.state === "FCT - Abuja";
+
+const qualifiesForFreeDelivery =
+  isAbuja && totalBuckets >= 50;
+
+// Delivery fee: ₦5,500 per bucket
+const deliveryFee = qualifiesForFreeDelivery
+  ? 0
+  : totalBuckets * DELIVERY_FEE_PER_BUCKET;
+
+// Grand total
+const total = subtotal + deliveryFee;
 
   const canGoToDelivery = cart.length > 0;
-  const canGoToConfirm  = Boolean(
+
+  const canGoToConfirm = Boolean(
     delivery.fullName.trim() &&
-    delivery.phoneNumber.trim() &&
-    delivery.deliveryAddress.trim() &&
-    delivery.state &&
-    delivery.city.trim() &&
-    delivery.emailAddress.trim() &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(delivery.emailAddress)
+      delivery.phoneNumber.trim() &&
+      delivery.deliveryAddress.trim() &&
+      delivery.state &&
+      delivery.city.trim() &&
+      delivery.emailAddress.trim() &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        delivery.emailAddress
+      )
   );
 
   const goNext = () => {
-    if (step === 0 && !canGoToDelivery) { toast.error("Your cart is empty"); return; }
-    if (step === 1 && !canGoToConfirm)  { toast.error("Please fill in all delivery fields"); return; }
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    if (step === 0 && !canGoToDelivery) {
+      toast.error("Your cart is empty");
+      return;
+    }
+
+    if (step === 1 && !canGoToConfirm) {
+      toast.error("Please fill in all delivery fields");
+      return;
+    }
+
+    setStep((s) =>
+      Math.min(s + 1, STEPS.length - 1)
+    );
   };
-  const goBack = () => setStep((s) => Math.max(s - 1, 0));
+
+  const goBack = () => {
+    setStep((s) => Math.max(s - 1, 0));
+  };
 
   return (
     <main className="bg-brand-black min-h-screen">
@@ -161,8 +255,13 @@ export default function CartPage() {
       {/* Header */}
       <section className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 border-b border-brand-border/40">
         <div className="max-w-5xl mx-auto">
-          <p className="text-brand-accent text-xs font-semibold tracking-[0.2em] uppercase mb-2">Checkout</p>
-          <h1 className="font-display text-4xl font-bold text-white">Your Cart</h1>
+          <p className="text-brand-accent text-xs font-semibold tracking-[0.2em] uppercase mb-2">
+            Checkout
+          </p>
+
+          <h1 className="font-display text-4xl font-bold text-white">
+            Your Cart
+          </h1>
         </div>
       </section>
 
@@ -171,22 +270,47 @@ export default function CartPage() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center">
             {STEPS.map((label, i) => (
-              <div key={label} className="flex items-center flex-1 last:flex-none">
+              <div
+                key={label}
+                className="flex items-center flex-1 last:flex-none"
+              >
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                    ${i < step
-                      ? "bg-brand-accent text-brand-black"
-                      : i === step
-                      ? "bg-brand-accent text-brand-black ring-4 ring-brand-accent-muted"
-                      : "bg-brand-raised border border-brand-border text-brand-mid"}`}>
-                    {i < step ? <CheckCircle size={15} /> : i + 1}
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
+                    ${
+                      i < step
+                        ? "bg-brand-accent text-brand-black"
+                        : i === step
+                        ? "bg-brand-accent text-brand-black ring-4 ring-brand-accent-muted"
+                        : "bg-brand-raised border border-brand-border text-brand-mid"
+                    }`}
+                  >
+                    {i < step ? (
+                      <CheckCircle size={15} />
+                    ) : (
+                      i + 1
+                    )}
                   </div>
-                  <span className={`text-sm font-medium hidden sm:inline ${i <= step ? "text-white" : "text-brand-mid"}`}>
+
+                  <span
+                    className={`text-sm font-medium hidden sm:inline ${
+                      i <= step
+                        ? "text-white"
+                        : "text-brand-mid"
+                    }`}
+                  >
                     {label}
                   </span>
                 </div>
+
                 {i < STEPS.length - 1 && (
-                  <div className={`flex-1 h-px mx-3 transition-colors ${i < step ? "bg-brand-accent" : "bg-brand-border"}`} />
+                  <div
+                    className={`flex-1 h-px mx-3 transition-colors ${
+                      i < step
+                        ? "bg-brand-accent"
+                        : "bg-brand-border"
+                    }`}
+                  />
                 )}
               </div>
             ))}
@@ -204,77 +328,181 @@ export default function CartPage() {
             {/* STEP 0 — Cart */}
             {step === 0 && (
               <div className="flex flex-col gap-5">
-                <h2 className="font-display text-xl font-bold text-white">Review Your Items</h2>
+                <h2 className="font-display text-xl font-bold text-white">
+                  Review Your Items
+                </h2>
+
                 {isLoading ? (
                   <div className="py-16 flex justify-center">
-                    <Loader size={26} className="animate-spin text-brand-accent" />
+                    <Loader
+                      size={26}
+                      className="animate-spin text-brand-accent"
+                    />
                   </div>
                 ) : cart.length === 0 ? (
                   <div className="py-16 text-center flex flex-col items-center gap-3">
-                    <Package size={40} className="text-brand-border" />
-                    <p className="text-brand-mid text-sm">Your cart is empty</p>
-                    <a href="/shop" className="text-brand-accent text-sm underline underline-offset-4">Browse the shop</a>
+                    <Package
+                      size={40}
+                      className="text-brand-border"
+                    />
+
+                    <p className="text-brand-mid text-sm">
+                      Your cart is empty
+                    </p>
+
+                    <a
+                      href="/shop"
+                      className="text-brand-accent text-sm underline underline-offset-4"
+                    >
+                      Browse the shop
+                    </a>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
                     {cart.map((item) => {
-                      const isUpdating = updateQtyMutation.isPending && updateQtyMutation.variables?.productId === item.product._id;
-                      const selectedVariant = getSelectedVariant(item);
+                      const isUpdating =
+                        updateQtyMutation.isPending &&
+                        updateQtyMutation.variables?.productId ===
+                          item.product._id;
+
+                      const selectedVariant =
+                        getSelectedVariant(item);
+
                       return (
-                        <div key={`${item.product._id}-${item.selectedColour}`}
-                          className="flex flex-col sm:flex-row gap-4 bg-brand-raised border border-brand-border rounded-xl p-4">
+                        <div
+                          key={`${item.product._id}-${item.selectedColour}`}
+                          className="flex flex-col sm:flex-row gap-4 bg-brand-raised border border-brand-border rounded-xl p-4"
+                        >
                           <div className="w-full sm:w-24 h-24 rounded-xl overflow-hidden bg-brand-card border border-brand-border flex-shrink-0">
                             {selectedVariant?.image?.url ? (
-                              <img src={selectedVariant.image.url} alt={selectedVariant.colourName} className="w-full h-full object-cover" />
+                              <img
+                                src={selectedVariant.image.url}
+                                alt={selectedVariant.colourName}
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-brand-mid text-xs">No Image</div>
+                              <div className="w-full h-full flex items-center justify-center text-brand-mid text-xs">
+                                No Image
+                              </div>
                             )}
                           </div>
 
                           <div className="flex-1 flex flex-col gap-3">
                             <div className="flex justify-between items-start">
                               <div>
-                                <h3 className="text-white font-semibold text-base">{item.product.productName}</h3>
-                                <p className="text-brand-mid text-xs mt-1">{item.product.productCategory}</p>
+                                <h3 className="text-white font-semibold text-base">
+                                  {item.product.productName}
+                                </h3>
+
+                                <p className="text-brand-mid text-xs mt-1">
+                                  {item.product.productCategory}
+                                </p>
+
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-accent">
-                                    {selectedVariant?.colourName ?? "Unknown Colour"}
+                                    {selectedVariant?.colourName ??
+                                      "Unknown Colour"}
                                   </span>
+
                                   <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-mid">
                                     {selectedVariant?.colourCode ?? ""}
                                   </span>
                                 </div>
                               </div>
-                              <button onClick={() => removeMutation.mutate(item.product._id)}
-                                className="text-brand-subtle hover:text-red-400 transition-colors">
+
+                              <button
+                                onClick={() =>
+                                  removeMutation.mutate(
+                                    item.product._id
+                                  )
+                                }
+                                className="text-brand-subtle hover:text-red-400 transition-colors"
+                              >
                                 <Trash2 size={16} />
                               </button>
                             </div>
 
                             <div className="flex items-center gap-3">
-                              <span className="text-xs text-brand-mid">Buckets</span>
+                              <span className="text-xs text-brand-mid">
+                                Buckets
+                              </span>
+
                               <div className="flex items-center bg-brand-card border border-brand-border rounded-md">
-                                <button onClick={() => handleQtyChange(item.product._id, item.quantity, -1)} disabled={isUpdating} className="p-2">
+                                <button
+                                  onClick={() =>
+                                    handleQtyChange(
+                                      item.product._id,
+                                      item.quantity,
+                                      -1
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                  className="p-2"
+                                >
                                   <Minus size={12} />
                                 </button>
-                                <input type="number" min={1} value={item.quantity} disabled={isUpdating}
-                                  onChange={(e) => handleQtyInput(item.product._id, e.target.value)}
-                                  className="bg-transparent text-white text-center w-12 outline-none" />
-                                <button onClick={() => handleQtyChange(item.product._id, item.quantity, 1)} disabled={isUpdating} className="p-2">
+
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={item.quantity}
+                                  disabled={isUpdating}
+                                  onChange={(e) =>
+                                    handleQtyInput(
+                                      item.product._id,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="bg-transparent text-white text-center w-12 outline-none"
+                                />
+
+                                <button
+                                  onClick={() =>
+                                    handleQtyChange(
+                                      item.product._id,
+                                      item.quantity,
+                                      1
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                  className="p-2"
+                                >
                                   <Plus size={12} />
                                 </button>
                               </div>
-                              {isUpdating && <Loader size={12} className="animate-spin text-brand-accent" />}
+
+                              {isUpdating && (
+                                <Loader
+                                  size={12}
+                                  className="animate-spin text-brand-accent"
+                                />
+                              )}
                             </div>
 
                             <div className="flex items-center justify-between pt-2 border-t border-brand-border">
                               <div>
-                                <p className="text-brand-mid text-xs">Unit Price</p>
-                                <p className="text-white font-medium">{formatCurrency(item.product.price)}</p>
+                                <p className="text-brand-mid text-xs">
+                                  Unit Price
+                                </p>
+
+                                <p className="text-white font-medium">
+                                  {formatCurrency(
+                                    item.product.price
+                                  )}
+                                </p>
                               </div>
+
                               <div className="text-right">
-                                <p className="text-brand-mid text-xs">Total</p>
-                                <p className="text-brand-accent font-bold text-lg">{formatCurrency(item.product.price * item.quantity)}</p>
+                                <p className="text-brand-mid text-xs">
+                                  Total
+                                </p>
+
+                                <p className="text-brand-accent font-bold text-lg">
+                                  {formatCurrency(
+                                    item.product.price *
+                                      item.quantity
+                                  )}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -291,70 +519,162 @@ export default function CartPage() {
               <div className="flex flex-col gap-5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-lg bg-brand-accent-muted border border-brand-accent/20 flex items-center justify-center">
-                    <MapPin size={16} className="text-brand-accent" />
+                    <MapPin
+                      size={16}
+                      className="text-brand-accent"
+                    />
                   </div>
+
                   <div>
-                    <h2 className="font-display text-xl font-bold text-white">Delivery Details</h2>
-                    <p className="text-brand-mid text-xs mt-0.5">Where should we deliver your order?</p>
+                    <h2 className="font-display text-xl font-bold text-white">
+                      Delivery Details
+                    </h2>
+
+                    <p className="text-brand-mid text-xs mt-0.5">
+                      Where should we deliver your order?
+                    </p>
                   </div>
                 </div>
 
-                {/* Full Name + Phone — added here, used by Flutterwave */}
+                {/* Full Name + Phone */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-brand-lt-gray text-xs font-medium">Full Name *</label>
-                    <input value={delivery.fullName}
-                      onChange={(e) => setDelivery((p) => ({ ...p, fullName: e.target.value }))}
-                      placeholder="John Doe" className={inputCls} />
+                    <label className="text-brand-lt-gray text-xs font-medium">
+                      Full Name *
+                    </label>
+
+                    <input
+                      value={delivery.fullName}
+                      onChange={(e) =>
+                        setDelivery((p) => ({
+                          ...p,
+                          fullName: e.target.value,
+                        }))
+                      }
+                      placeholder="John Doe"
+                      className={inputCls}
+                    />
                   </div>
+
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-brand-lt-gray text-xs font-medium">Phone Number *</label>
-                    <input type="tel" value={delivery.phoneNumber}
-                      onChange={(e) => setDelivery((p) => ({ ...p, phoneNumber: e.target.value }))}
-                      placeholder="08012345678" className={inputCls} />
+                    <label className="text-brand-lt-gray text-xs font-medium">
+                      Phone Number *
+                    </label>
+
+                    <input
+                      type="tel"
+                      value={delivery.phoneNumber}
+                      onChange={(e) =>
+                        setDelivery((p) => ({
+                          ...p,
+                          phoneNumber: e.target.value,
+                        }))
+                      }
+                      placeholder="08012345678"
+                      className={inputCls}
+                    />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-brand-lt-gray text-xs font-medium">Delivery Address *</label>
-                  <input value={delivery.deliveryAddress}
-                    onChange={(e) => setDelivery((p) => ({ ...p, deliveryAddress: e.target.value }))}
-                    placeholder="House number, street name, area" className={inputCls} />
+                  <label className="text-brand-lt-gray text-xs font-medium">
+                    Delivery Address *
+                  </label>
+
+                  <input
+                    value={delivery.deliveryAddress}
+                    onChange={(e) =>
+                      setDelivery((p) => ({
+                        ...p,
+                        deliveryAddress: e.target.value,
+                      }))
+                    }
+                    placeholder="House number, street name, area"
+                    className={inputCls}
+                  />
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-brand-lt-gray text-xs font-medium">State *</label>
-                    <select value={delivery.state}
-                      onChange={(e) => setDelivery((p) => ({ ...p, state: e.target.value }))}
-                      className={`${inputCls} cursor-pointer`}>
+                    <label className="text-brand-lt-gray text-xs font-medium">
+                      State *
+                    </label>
+
+                    <select
+                      value={delivery.state}
+                      onChange={(e) =>
+                        setDelivery((p) => ({
+                          ...p,
+                          state: e.target.value,
+                        }))
+                      }
+                      className={`${inputCls} cursor-pointer`}
+                    >
                       <option value="">Select state</option>
-                      {NIGERIA_STATES.map((s) => <option key={s}>{s}</option>)}
+
+                      {NIGERIA_STATES.map((s) => (
+                        <option key={s}>{s}</option>
+                      ))}
                     </select>
                   </div>
+
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-brand-lt-gray text-xs font-medium">City *</label>
-                    <input value={delivery.city}
-                      onChange={(e) => setDelivery((p) => ({ ...p, city: e.target.value }))}
-                      placeholder="e.g. Lekki, Wuse II..." className={inputCls} />
+                    <label className="text-brand-lt-gray text-xs font-medium">
+                      City *
+                    </label>
+
+                    <input
+                      value={delivery.city}
+                      onChange={(e) =>
+                        setDelivery((p) => ({
+                          ...p,
+                          city: e.target.value,
+                        }))
+                      }
+                      placeholder="e.g. Lekki, Wuse II..."
+                      className={inputCls}
+                    />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-brand-lt-gray text-xs font-medium">Email Address *</label>
+                  <label className="text-brand-lt-gray text-xs font-medium">
+                    Email Address *
+                  </label>
+
                   <div className="relative">
-                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-subtle" />
-                    <input type="email" value={delivery.emailAddress}
-                      onChange={(e) => setDelivery((p) => ({ ...p, emailAddress: e.target.value }))}
-                      placeholder="you@example.com" className={`${inputCls} pl-9`} />
+                    <Mail
+                      size={14}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-subtle"
+                    />
+
+                    <input
+                      type="email"
+                      value={delivery.emailAddress}
+                      onChange={(e) =>
+                        setDelivery((p) => ({
+                          ...p,
+                          emailAddress: e.target.value,
+                        }))
+                      }
+                      placeholder="you@example.com"
+                      className={`${inputCls} pl-9`}
+                    />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-brand-lt-gray text-xs font-medium">Order Notes (optional)</label>
-                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-                    rows={3} placeholder="Delivery instructions, special handling, etc."
-                    className={`${inputCls} resize-none`} />
+                  <label className="text-brand-lt-gray text-xs font-medium">
+                    Order Notes (optional)
+                  </label>
+
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                    placeholder="Delivery instructions, special handling, etc."
+                    className={`${inputCls} resize-none`}
+                  />
                 </div>
               </div>
             )}
@@ -362,33 +682,61 @@ export default function CartPage() {
             {/* STEP 2 — Confirm */}
             {step === 2 && (
               <div className="flex flex-col gap-5">
-                <h2 className="font-display text-xl font-bold text-white">Confirm Your Order</h2>
+                <h2 className="font-display text-xl font-bold text-white">
+                  Confirm Your Order
+                </h2>
 
                 {/* Items */}
                 <div>
-                  <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">Items</p>
+                  <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">
+                    Items
+                  </p>
+
                   <div className="flex flex-col gap-2">
                     {cart.map((item) => {
-                      const selectedVariant = getSelectedVariant(item);
+                      const selectedVariant =
+                        getSelectedVariant(item);
+
                       return (
-                        <div key={`${item.product._id}-${item.selectedColour}`}
-                          className="flex items-center justify-between bg-brand-raised border border-brand-border rounded-lg px-4 py-3 text-sm">
+                        <div
+                          key={`${item.product._id}-${item.selectedColour}`}
+                          className="flex items-center justify-between bg-brand-raised border border-brand-border rounded-lg px-4 py-3 text-sm"
+                        >
                           <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-lg overflow-hidden border border-brand-border bg-brand-card">
                               {selectedVariant?.image?.url ? (
-                                <img src={selectedVariant.image.url} alt={selectedVariant.colourName} className="w-full h-full object-cover" />
+                                <img
+                                  src={selectedVariant.image.url}
+                                  alt={selectedVariant.colourName}
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
                                 <div className="w-full h-full bg-brand-border" />
                               )}
                             </div>
+
                             <div>
-                              <p className="text-white font-medium">{item.product.productName}</p>
-                              <p className="text-brand-mid text-xs">{selectedVariant?.colourName ?? "Unknown Colour"}</p>
-                              <p className="text-brand-subtle text-[11px]">{selectedVariant?.colourCode} · Qty: {item.quantity}</p>
+                              <p className="text-white font-medium">
+                                {item.product.productName}
+                              </p>
+
+                              <p className="text-brand-mid text-xs">
+                                {selectedVariant?.colourName ??
+                                  "Unknown Colour"}
+                              </p>
+
+                              <p className="text-brand-subtle text-[11px]">
+                                {selectedVariant?.colourCode} · Qty:{" "}
+                                {item.quantity}
+                              </p>
                             </div>
                           </div>
+
                           <span className="text-brand-accent font-semibold">
-                            {formatCurrency(item.product.price * item.quantity)}
+                            {formatCurrency(
+                              item.product.price *
+                                item.quantity
+                            )}
                           </span>
                         </div>
                       );
@@ -396,21 +744,74 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {/* Delivery summary */}
+                {/* Delivery To */}
                 <div>
-                  <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">Delivery To</p>
+                  <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">
+                    Delivery To
+                  </p>
+
                   <div className="bg-brand-raised border border-brand-border rounded-lg p-4 text-sm flex flex-col gap-1">
-                    <p className="text-white font-medium">{delivery.fullName}</p>
-                    <p className="text-brand-mid text-xs">{delivery.phoneNumber} · {delivery.emailAddress}</p>
-                    <p className="text-brand-mid text-xs">{delivery.deliveryAddress}</p>
-                    <p className="text-brand-mid text-xs">{delivery.city}, {delivery.state}</p>
+                    <p className="text-white font-medium">
+                      {delivery.fullName}
+                    </p>
+
+                    <p className="text-brand-mid text-xs">
+                      {delivery.phoneNumber} ·{" "}
+                      {delivery.emailAddress}
+                    </p>
+
+                    <p className="text-brand-mid text-xs">
+                      {delivery.deliveryAddress}
+                    </p>
+
+                    <p className="text-brand-mid text-xs">
+                      {delivery.city}, {delivery.state}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Price summary */}
+                <div className="bg-brand-raised border border-brand-border rounded-lg p-4 flex flex-col gap-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-mid">
+                      Paint subtotal
+                    </span>
+
+                    <span className="text-white">
+                      {formatCurrency(subtotal)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-mid">
+                      Delivery ({totalBuckets} buckets × ₦5,500)
+                    </span>
+
+                    <span className="text-white">
+                      {formatCurrency(deliveryFee)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between border-t border-brand-border pt-2 mt-1">
+                    <span className="text-white font-semibold">
+                      Total Amount
+                    </span>
+
+                    <span className="text-brand-accent font-bold">
+                      {formatCurrency(total)}
+                    </span>
                   </div>
                 </div>
 
                 {notes && (
                   <div>
-                    <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">Notes</p>
-                    <div className="bg-brand-raised border border-brand-border rounded-lg p-4 text-sm text-brand-lt-gray">{notes}</div>
+                    <p className="text-brand-accent text-xs font-semibold uppercase tracking-wider mb-3">
+                      Notes
+                    </p>
+
+                    <div className="bg-brand-raised border border-brand-border rounded-lg p-4 text-sm text-brand-lt-gray">
+                      {notes}
+                    </div>
                   </div>
                 )}
               </div>
@@ -418,28 +819,31 @@ export default function CartPage() {
 
             {/* Navigation */}
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-brand-border/50">
-              <button onClick={goBack} disabled={step === 0}
-                className="flex items-center gap-2 text-brand-mid hover:text-white text-sm
-                  disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-4 py-2.5
-                  rounded-lg border border-brand-border hover:border-brand-border-lt">
-                <ArrowLeft size={14} /> Back
+              <button
+                onClick={goBack}
+                disabled={step === 0}
+                className="flex items-center gap-2 text-brand-mid hover:text-white text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-4 py-2.5 rounded-lg border border-brand-border hover:border-brand-border-lt"
+              >
+                <ArrowLeft size={14} />
+                Back
               </button>
 
               {step < STEPS.length - 1 ? (
-                <button onClick={goNext}
-                  className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold
-                    px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm">
-                  Continue <ArrowRight size={14} />
+                <button
+                  onClick={goNext}
+                  className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm"
+                >
+                  Continue
+                  <ArrowRight size={14} />
                 </button>
               ) : (
-                /* On confirm step — open Flutterwave modal */
                 <button
                   onClick={() => setShowPayModal(true)}
                   disabled={!canGoToConfirm}
-                  className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold
-                    px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm
-                    disabled:opacity-50 disabled:cursor-not-allowed">
-                  Pay Now <ArrowRight size={14} />
+                  className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Pay Now
+                  <ArrowRight size={14} />
                 </button>
               )}
             </div>
@@ -448,34 +852,60 @@ export default function CartPage() {
           {/* Order Summary Sidebar */}
           <div className="bg-brand-card border border-brand-border rounded-2xl p-6 h-fit flex flex-col gap-5">
             <h2 className="font-display text-lg font-bold text-white flex items-center gap-2">
-              <ShoppingCart size={18} className="text-brand-accent" /> Order Summary
+              <ShoppingCart
+                size={18}
+                className="text-brand-accent"
+              />
+              Order Summary
             </h2>
+
             <div className="flex flex-col gap-3 border-b border-brand-border/60 pb-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-brand-mid">Subtotal ({cart.reduce((a, c) => a + c.quantity, 0)} items)</span>
-                <span className="text-white font-medium">{formatCurrency(subtotal)}</span>
+                <span className="text-brand-mid">
+                  Paint Subtotal ({totalBuckets} buckets)
+                </span>
+
+                <span className="text-white font-medium">
+                  {formatCurrency(subtotal)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-brand-mid">
+                  Delivery Fee (₦5,500 × {totalBuckets})
+                </span>
+
+                <span className="text-white font-medium">
+                  {formatCurrency(deliveryFee)}
+                </span>
               </div>
             </div>
+
             <div className="flex items-center justify-between">
-              <span className="text-white text-sm font-semibold">Total Amount</span>
-              <span className="text-brand-accent font-bold text-xl font-display">{formatCurrency(total)}</span>
+              <span className="text-white text-sm font-semibold">
+                Total Amount
+              </span>
+
+              <span className="text-brand-accent font-bold text-xl font-display">
+                {formatCurrency(total)}
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Flutterwave Modal — only shown when Pay Now is clicked */}
+      {/* Flutterwave Modal */}
       {showPayModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <Modal
             customerInfo={{
-              fullName:        delivery.fullName,
-              phoneNumber:     delivery.phoneNumber,
-              emailAddress:    delivery.emailAddress,
+              fullName: delivery.fullName,
+              phoneNumber: delivery.phoneNumber,
+              emailAddress: delivery.emailAddress,
               deliveryAddress: delivery.deliveryAddress,
-              state:           delivery.state,
-              city:            delivery.city,
-              notes:           notes,
+              state: delivery.state,
+              city: delivery.city,
+              notes: notes,
             }}
             cartItems={cart}
             onClose={() => setShowPayModal(false)}
