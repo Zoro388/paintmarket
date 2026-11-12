@@ -315,3 +315,16 @@ export const apiGetPaintingEstimate = (
       `/painting-estimator/${estimateId}`,
     )
     .then((r) => r.data);
+
+
+    // QR CODE GENERATOR
+export const apiCreateQRCode = (body: {
+  title: string;
+  url: string;
+}) => endpointRoute.post("/qr-codes", body).then((r) => r.data);
+
+export const apiGetQRCodes = () =>
+  endpointRoute.get("/qr-codes").then((r) => r.data);
+
+export const apiDeleteQRCode = (id: string) =>
+  endpointRoute.delete(`/qr-codes/${id}`).then((r) => r.data);

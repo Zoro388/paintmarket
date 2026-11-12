@@ -20,6 +20,7 @@ import {
   MessageSquare,
   PenBox,
   CalendarDays,
+  QrCode,
 } from "lucide-react";
 import { clearToken } from "@/lib/endpointRoute";
 
@@ -33,6 +34,7 @@ const navItems = [
   },
 
   { label: "Tools", href: "/dashboard/tools", icon: PenTool },
+  { label: "QR Code Generator", href: "/dashboard/qr-code", icon: QrCode },
   { label: "Training", href: "/dashboard/lesson", icon: PenBox },
 
   // { label: "Products", href: "/dashboard/products", icon: Package },
