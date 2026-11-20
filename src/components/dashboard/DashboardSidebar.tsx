@@ -33,6 +33,12 @@ const navItems = [
     icon: CalendarDays,
   },
 
+  {
+  label: "Painter Bookings",
+  href: "/dashboard/painter-bookings",
+  icon: Brush,
+},
+
   { label: "Tools", href: "/dashboard/tools", icon: PenTool },
   { label: "QR Code Generator", href: "/dashboard/qr-code", icon: QrCode },
   { label: "Training", href: "/dashboard/lesson", icon: PenBox },

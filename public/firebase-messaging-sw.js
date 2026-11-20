@@ -31,17 +31,28 @@ messaging.onBackgroundMessage((payload) => {
 });
 
 
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const bookingId = event.notification?.data?.bookingId;
+  const notificationData = event.notification?.data || {};
 
-  const targetUrl = bookingId
-    ? `https://paintdomain.com/dashboard/inspection-bookings/${encodeURIComponent(bookingId)}`
-    : "https://paintdomain.com/dashboard";
+  const requestId = notificationData.requestId;
+  const bookingId = notificationData.bookingId;
+
+  let targetUrl;
+
+  if (requestId) {
+    targetUrl = "https://paintdomain.com/dashboard/painter-bookings";
+  } else if (bookingId) {
+    targetUrl = `https://paintdomain.com/dashboard/inspection-bookings/${encodeURIComponent(bookingId)}`;
+  } else {
+    targetUrl = "https://paintdomain.com/dashboard";
+  }
 
   event.waitUntil(
     clients.openWindow(targetUrl)
   );
 });
+
 
