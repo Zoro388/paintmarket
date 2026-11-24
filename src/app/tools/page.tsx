@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   useQuery,
   useMutation,
@@ -22,6 +21,7 @@ import {
 import toast from "react-hot-toast";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import ToolAuthModal from "@/components/ToolAuthModal";
 
 interface Tool {
   _id: string;
@@ -34,7 +34,10 @@ interface Tool {
 
 export default function ToolsPage() {
   const queryClient = useQueryClient();
-  const router = useRouter();
+
+  // Authentication popup state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingToolId, setPendingToolId] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery<Tool[]>({
     queryKey: ["tools"],
@@ -90,16 +93,18 @@ export default function ToolsPage() {
     },
   });
 
+  // Called after successful login or signup in the popup
+  const handleAuthenticated = () => {
+    setShowAuthModal(false);
+
+    if (pendingToolId) {
+      addToCartMutation.mutate(pendingToolId);
+      setPendingToolId(null);
+    }
+  };
+
   // Handle adding tools to cart
   const handleAddToCart = (tool: Tool) => {
-    // Check whether the customer is logged in
-    const token = getToken();
-
-    if (!token) {
-      router.push("/login?redirect=/tools");
-      return;
-    }
-
     const toolId = tool._id || tool.id;
     const numericPrice = Number(tool.price);
 
@@ -119,6 +124,16 @@ export default function ToolsPage() {
       return;
     }
 
+    // If the customer is not logged in, open the popup
+    const token = getToken();
+
+    if (!token) {
+      setPendingToolId(toolId);
+      setShowAuthModal(true);
+      return;
+    }
+
+    // Customer is already logged in
     addToCartMutation.mutate(toolId);
   };
 
@@ -363,6 +378,16 @@ export default function ToolsPage() {
       </div>
 
       <Footer />
+
+      {/* Login / Signup Popup */}
+      <ToolAuthModal
+        isOpen={showAuthModal}
+        onClose={() => {
+          setShowAuthModal(false);
+          setPendingToolId(null);
+        }}
+        onAuthenticated={handleAuthenticated}
+      />
 
       {/* Dynamic Lightbox Carousel Modal */}
       {isOpen && lightboxImages.length > 0 && (
