@@ -40,23 +40,23 @@ export const apiGetProduct = (id: string) =>
   endpointRoute.get(`/products/${id}`).then((r) => r.data);
 
 // ── ORDERS ────────────────────────────────────────────────────────────────────
-// export const apiCreateOrder = (body: {
-//   customerName: string; email: string; phoneNumber: string;
-//   deliveryAddress: string; state: string; city: string;
-//   orderedProducts: { productId: string; quantity: number; selectedColour: string }[];
-//   paymentMethod: string; notes?: string;
-  
-// }) => endpointRoute.post("/orders", body).then((r) => r.data);
+
 export const apiCreateOrder = (body: {
-  deliveryAddress: string; state: string; city: string;
-  orderedProducts: { productId: string; selectedColour: string; quantity: number }[];
+  deliveryAddress: string;
+  state: string;
+  city: string;
+  orderedProducts: {
+    itemType?: "product" | "tool";
+    productId?: string;
+    toolId?: string;
+    selectedColour?: string;
+    quantity: number;
+  }[];
   paymentMethod: "flutterwave" | "paystack" | "bank-transfer";
   notes?: string;
   paymentReference?: string;
 }) => endpointRoute.post("/orders", body).then((r) => r.data);
 
-export const apiGetMyOrders = () =>
-  endpointRoute.get("/users/orders").then((r) => r.data);
 
 export const apiGetOrder = (id: string) =>
   endpointRoute.get(`/orders/${id}`).then((r) => r.data);
@@ -125,15 +125,26 @@ export const apiGetPaymentHistory = () =>
 // export const apiAddToCart = (body: { productId: string; quantity: number; selectedColour: string }) =>
 //   endpointRoute.post("/cart", body).then((r) => r.data);
 
+
 export const apiGetCart = () =>
   endpointRoute.get("/cart").then((r) => r.data);
 
-export const apiUpdateCartItem = (id: string, body: { quantity: number }) =>
-  endpointRoute.patch(`/cart/${id}`, body).then((r) => r.data);
+export const apiUpdateCartItem = (
+  id: string,
+  body: {
+    quantity: number;
+    itemType?: "product" | "tool";
+  }
+) => endpointRoute.patch(`/cart/${id}`, body).then((r) => r.data);
 
+export const apiRemoveFromCart = (
+  id: string,
+  itemType: "product" | "tool" = "product"
+) =>
+  endpointRoute.delete(`/cart/${id}`, {
+    params: { itemType },
+  }).then((r) => r.data);
 
-export const apiRemoveFromCart = (id: string) =>
-  endpointRoute.delete(`/cart/${id}`).then((r) => r.data);
 
 // 
 // ════════════════════════════════════════════════════════════════════════════
@@ -252,11 +263,26 @@ export const apiGetSingleProduct = (id: string) =>
  
 // ── CART (updated — selectedColour should now be the variant _id) ─────────────
  
+
 export const apiAddToCart = (body: {
   productId: string;
   quantity: number;
-  selectedColour: string; // pass variant._id (not colourName) per new spec
+  selectedColour: string;
 }) => endpointRoute.post("/cart", body).then((r) => r.data);
+
+export const apiAddToolToCart = (body: {
+  toolId: string;
+  quantity: number;
+}) =>
+  endpointRoute.post(
+    "/cart",
+    {
+      itemType: "tool",
+      toolId: body.toolId,
+      quantity: body.quantity,
+    }
+  ).then((r) => r.data);
+
 
 
 export const apiClearCart  = () =>

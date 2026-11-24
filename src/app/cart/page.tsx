@@ -1,16 +1,25 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import toast from "react-hot-toast";
+
 import {
   apiUpdateCartItem,
   apiGetCart,
   apiRemoveFromCart,
 } from "@/lib/userApi";
+
 import { formatCurrency } from "@/lib/utils";
+
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+
 import {
   ShoppingCart,
   Trash2,
@@ -23,7 +32,9 @@ import {
   CheckCircle,
   Package,
   Mail,
+  Wrench,
 } from "lucide-react";
+
 import Modal from "../test/component/modal";
 
 interface Variant {
@@ -47,10 +58,20 @@ interface Product {
   variants: Variant[];
 }
 
+interface Tool {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  images?: string[];
+}
+
 interface CartItem {
-  product: Product;
+  itemType?: "product" | "tool";
+  product?: Product | null;
+  tool?: Tool | null;
   quantity: number;
-  selectedColour: string;
+  selectedColour?: string;
 }
 
 const NIGERIA_STATES = [
@@ -64,7 +85,10 @@ const NIGERIA_STATES = [
 ];
 
 const STEPS = ["Cart", "Delivery", "Confirm"];
+
 const DELIVERY_FEE_PER_BUCKET = 5500;
+const FREE_DELIVERY_MINIMUM = 50;
+const ABUJA_STATE = "FCT - Abuja";
 
 const inputCls =
   "w-full bg-brand-raised border border-brand-border text-white placeholder-brand-subtle px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-brand-accent/60 transition-all";
@@ -85,7 +109,10 @@ export default function CartPage() {
 
   const qc = useQueryClient();
 
-  const { data: fetchedItems, isLoading } = useQuery<CartItem[]>({
+  const {
+    data: fetchedItems,
+    isLoading,
+  } = useQuery<CartItem[]>({
     queryKey: ["cart-product"],
     queryFn: async () => {
       const res = await apiGetCart();
@@ -98,83 +125,165 @@ export default function CartPage() {
   const [cartInitialized, setCartInitialized] = useState(false);
 
   useEffect(() => {
-    if (!cartInitialized && fetchedItems && fetchedItems.length > 0) {
+    if (fetchedItems) {
       setCart(fetchedItems);
       setCartInitialized(true);
     }
-  }, [fetchedItems, cartInitialized]);
+  }, [fetchedItems]);
 
-  const getSelectedVariant = (
-    item: CartItem
-  ): Variant | undefined =>
-    item.product.variants?.find(
+  // Identify tool items
+  const isToolItem = (item: CartItem) =>
+    item.itemType === "tool" || !!item.tool;
+
+  // Get item ID
+  const getItemId = (item: CartItem) =>
+    isToolItem(item)
+      ? item.tool?._id || ""
+      : item.product?._id || "";
+
+  // Get item name
+  const getItemName = (item: CartItem) =>
+    isToolItem(item)
+      ? item.tool?.name || "Tool"
+      : item.product?.productName || "Paint Product";
+
+  // Get item price
+  const getItemPrice = (item: CartItem) =>
+    Number(
+      isToolItem(item)
+        ? item.tool?.price || 0
+        : item.product?.price || 0
+    );
+
+  // Get item image
+  const getItemImage = (item: CartItem) => {
+    if (isToolItem(item)) {
+      return item.tool?.images?.[0] || "";
+    }
+
+    const variant = item.product?.variants?.find(
       (v) => v._id === item.selectedColour
     );
+
+    return (
+      variant?.image?.url ||
+      item.product?.productImages?.[0] ||
+      ""
+    );
+  };
+
+  // Get selected paint variant
+  const getSelectedVariant = (
+    item: CartItem
+  ): Variant | undefined => {
+    if (isToolItem(item)) return undefined;
+
+    return item.product?.variants?.find(
+      (v) => v._id === item.selectedColour
+    );
+  };
 
   // Update quantity
   const updateQtyMutation = useMutation({
     mutationFn: ({
-      productId,
+      itemId,
+      itemType,
       quantity,
     }: {
-      productId: string;
+      itemId: string;
+      itemType: "product" | "tool";
       quantity: number;
-    }) => apiUpdateCartItem(productId, { quantity }),
+    }) =>
+      apiUpdateCartItem(itemId, {
+        quantity,
+        itemType,
+      }),
 
     onSuccess: (_data, variables) => {
       setCart((prev) =>
         prev.map((item) =>
-          item.product._id === variables.productId
+          getItemId(item) === variables.itemId &&
+          (isToolItem(item) ? "tool" : "product") ===
+            variables.itemType
             ? { ...item, quantity: variables.quantity }
             : item
         )
       );
 
-      qc.invalidateQueries({ queryKey: ["cart-product"] });
+      qc.invalidateQueries({
+        queryKey: ["cart-product"],
+      });
+
       toast.success("Cart updated!");
     },
 
-    onError: (err: Error) =>
-      toast.error(err.message || "Failed to update"),
+    onError: (err: any) => {
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to update cart"
+      );
+    },
   });
 
-  // Remove from cart
+  // Remove item from cart
   const removeMutation = useMutation({
-    mutationFn: (productId: string) =>
-      apiRemoveFromCart(productId),
+    mutationFn: ({
+      itemId,
+      itemType,
+    }: {
+      itemId: string;
+      itemType: "product" | "tool";
+    }) => apiRemoveFromCart(itemId, itemType),
 
-    onSuccess: (_, productId) => {
+    onSuccess: (_data, variables) => {
       setCart((prev) =>
         prev.filter(
-          (item) => item.product._id !== productId
+          (item) =>
+            !(
+              getItemId(item) === variables.itemId &&
+              (isToolItem(item) ? "tool" : "product") ===
+                variables.itemType
+            )
         )
       );
 
-      qc.invalidateQueries({ queryKey: ["cart-product"] });
+      qc.invalidateQueries({
+        queryKey: ["cart-product"],
+      });
+
       toast.success("Item removed!");
     },
 
-    onError: (err: Error) =>
-      toast.error(err.message || "Failed to remove"),
+    onError: (err: any) => {
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to remove item"
+      );
+    },
   });
 
   const handleQtyChange = (
-    productId: string,
-    currentQty: number,
+    item: CartItem,
     delta: number
   ) => {
-    const nextQty = Math.max(1, currentQty + delta);
+    const nextQty = Math.max(
+      1,
+      item.quantity + delta
+    );
 
-    if (nextQty === currentQty) return;
+    if (nextQty === item.quantity) return;
 
     updateQtyMutation.mutate({
-      productId,
+      itemId: getItemId(item),
+      itemType: isToolItem(item) ? "tool" : "product",
       quantity: nextQty,
     });
   };
 
   const handleQtyInput = (
-    productId: string,
+    item: CartItem,
     rawValue: string
   ) => {
     const parsed = parseInt(rawValue, 10);
@@ -182,37 +291,45 @@ export default function CartPage() {
     if (Number.isNaN(parsed) || parsed < 1) return;
 
     updateQtyMutation.mutate({
-      productId,
+      itemId: getItemId(item),
+      itemType: isToolItem(item) ? "tool" : "product",
       quantity: parsed,
     });
   };
 
-  // Paint subtotal
+  // Subtotal includes both paint products and tools
   const subtotal = cart.reduce(
     (acc, item) =>
-      acc + item.product.price * item.quantity,
+      acc + getItemPrice(item) * item.quantity,
     0
   );
 
-  // Total number of buckets
+  // Count paint buckets only
   const totalBuckets = cart.reduce(
-    (acc, item) => acc + item.quantity,
+    (acc, item) =>
+      acc + (isToolItem(item) ? 0 : item.quantity),
     0
   );
 
-  // Free delivery for orders of 50 buckets or more within Abuja
-const isAbuja = delivery.state === "FCT - Abuja";
+  // Count tools
+  const totalTools = cart.reduce(
+    (acc, item) =>
+      acc + (isToolItem(item) ? item.quantity : 0),
+    0
+  );
 
-const qualifiesForFreeDelivery =
-  isAbuja && totalBuckets >= 50;
+  // Abuja free delivery for 50 or more paint buckets
+  const isAbuja = delivery.state === ABUJA_STATE;
 
-// Delivery fee: ₦5,500 per bucket
-const deliveryFee = qualifiesForFreeDelivery
-  ? 0
-  : totalBuckets * DELIVERY_FEE_PER_BUCKET;
+  const qualifiesForFreeDelivery =
+    isAbuja && totalBuckets >= FREE_DELIVERY_MINIMUM;
 
-// Grand total
-const total = subtotal + deliveryFee;
+  // Tools do not attract per-bucket delivery fees
+  const deliveryFee = qualifiesForFreeDelivery
+    ? 0
+    : totalBuckets * DELIVERY_FEE_PER_BUCKET;
+
+  const total = subtotal + deliveryFee;
 
   const canGoToDelivery = cart.length > 0;
 
@@ -322,17 +439,17 @@ const total = subtotal + deliveryFee;
       <section className="py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto grid lg:grid-cols-3 gap-8">
 
-          {/* Main panel */}
+          {/* Main Panel */}
           <div className="lg:col-span-2 bg-brand-card border border-brand-border rounded-2xl p-6 lg:p-8">
 
-            {/* STEP 0 — Cart */}
+            {/* STEP 0 - Cart */}
             {step === 0 && (
               <div className="flex flex-col gap-5">
                 <h2 className="font-display text-xl font-bold text-white">
                   Review Your Items
                 </h2>
 
-                {isLoading ? (
+                {isLoading || !cartInitialized ? (
                   <div className="py-16 flex justify-center">
                     <Loader
                       size={26}
@@ -359,85 +476,123 @@ const total = subtotal + deliveryFee;
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
-                    {cart.map((item) => {
-                      const isUpdating =
-                        updateQtyMutation.isPending &&
-                        updateQtyMutation.variables?.productId ===
-                          item.product._id;
+                    {cart.map((item, index) => {
+                      const toolItem = isToolItem(item);
+                      const itemId = getItemId(item);
+                      const itemType = toolItem
+                        ? "tool"
+                        : "product";
+
+                      const itemName = getItemName(item);
+                      const itemPrice = getItemPrice(item);
+                      const itemImage = getItemImage(item);
 
                       const selectedVariant =
                         getSelectedVariant(item);
 
+                      const isUpdating =
+                        updateQtyMutation.isPending &&
+                        updateQtyMutation.variables?.itemId === itemId &&
+                        updateQtyMutation.variables?.itemType === itemType;
+
+                      const isRemoving =
+                        removeMutation.isPending &&
+                        removeMutation.variables?.itemId === itemId &&
+                        removeMutation.variables?.itemType === itemType;
+
                       return (
                         <div
-                          key={`${item.product._id}-${item.selectedColour}`}
+                          key={`${itemType}-${itemId}-${item.selectedColour || ""}-${index}`}
                           className="flex flex-col sm:flex-row gap-4 bg-brand-raised border border-brand-border rounded-xl p-4"
                         >
+                          {/* Image */}
                           <div className="w-full sm:w-24 h-24 rounded-xl overflow-hidden bg-brand-card border border-brand-border flex-shrink-0">
-                            {selectedVariant?.image?.url ? (
+                            {itemImage ? (
                               <img
-                                src={selectedVariant.image.url}
-                                alt={selectedVariant.colourName}
+                                src={itemImage}
+                                alt={itemName}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-brand-mid text-xs">
-                                No Image
+                              <div className="w-full h-full flex items-center justify-center text-brand-mid">
+                                {toolItem ? (
+                                  <Wrench size={28} />
+                                ) : (
+                                  <Package size={28} />
+                                )}
                               </div>
                             )}
                           </div>
 
+                          {/* Details */}
                           <div className="flex-1 flex flex-col gap-3">
-                            <div className="flex justify-between items-start">
+                            <div className="flex justify-between items-start gap-3">
                               <div>
                                 <h3 className="text-white font-semibold text-base">
-                                  {item.product.productName}
+                                  {itemName}
                                 </h3>
 
                                 <p className="text-brand-mid text-xs mt-1">
-                                  {item.product.productCategory}
+                                  {toolItem
+                                    ? "Professional Tool"
+                                    : item.product?.productCategory}
                                 </p>
 
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                  <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-accent">
-                                    {selectedVariant?.colourName ??
-                                      "Unknown Colour"}
+                                {toolItem ? (
+                                  <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-accent">
+                                    <Wrench size={11} />
+                                    Tool
                                   </span>
+                                ) : (
+                                  <div className="mt-2 flex flex-wrap gap-2">
+                                    <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-accent">
+                                      {selectedVariant?.colourName ??
+                                        "Unknown Colour"}
+                                    </span>
 
-                                  <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-mid">
-                                    {selectedVariant?.colourCode ?? ""}
-                                  </span>
-                                </div>
+                                    <span className="px-2 py-1 rounded-full bg-brand-card border border-brand-border text-xs text-brand-mid">
+                                      {selectedVariant?.colourCode ?? ""}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
 
                               <button
+                                type="button"
+                                disabled={isRemoving}
                                 onClick={() =>
-                                  removeMutation.mutate(
-                                    item.product._id
-                                  )
+                                  removeMutation.mutate({
+                                    itemId,
+                                    itemType,
+                                  })
                                 }
-                                className="text-brand-subtle hover:text-red-400 transition-colors"
+                                className="text-brand-subtle hover:text-red-400 transition-colors disabled:opacity-50"
                               >
-                                <Trash2 size={16} />
+                                {isRemoving ? (
+                                  <Loader
+                                    size={16}
+                                    className="animate-spin"
+                                  />
+                                ) : (
+                                  <Trash2 size={16} />
+                                )}
                               </button>
                             </div>
 
+                            {/* Quantity */}
                             <div className="flex items-center gap-3">
                               <span className="text-xs text-brand-mid">
-                                Buckets
+                                Quantity
                               </span>
 
                               <div className="flex items-center bg-brand-card border border-brand-border rounded-md">
                                 <button
+                                  type="button"
                                   onClick={() =>
-                                    handleQtyChange(
-                                      item.product._id,
-                                      item.quantity,
-                                      -1
-                                    )
+                                    handleQtyChange(item, -1)
                                   }
                                   disabled={isUpdating}
-                                  className="p-2"
+                                  className="p-2 text-white disabled:opacity-40"
                                 >
                                   <Minus size={12} />
                                 </button>
@@ -449,7 +604,7 @@ const total = subtotal + deliveryFee;
                                   disabled={isUpdating}
                                   onChange={(e) =>
                                     handleQtyInput(
-                                      item.product._id,
+                                      item,
                                       e.target.value
                                     )
                                   }
@@ -457,15 +612,12 @@ const total = subtotal + deliveryFee;
                                 />
 
                                 <button
+                                  type="button"
                                   onClick={() =>
-                                    handleQtyChange(
-                                      item.product._id,
-                                      item.quantity,
-                                      1
-                                    )
+                                    handleQtyChange(item, 1)
                                   }
                                   disabled={isUpdating}
-                                  className="p-2"
+                                  className="p-2 text-white disabled:opacity-40"
                                 >
                                   <Plus size={12} />
                                 </button>
@@ -479,6 +631,7 @@ const total = subtotal + deliveryFee;
                               )}
                             </div>
 
+                            {/* Price */}
                             <div className="flex items-center justify-between pt-2 border-t border-brand-border">
                               <div>
                                 <p className="text-brand-mid text-xs">
@@ -486,9 +639,7 @@ const total = subtotal + deliveryFee;
                                 </p>
 
                                 <p className="text-white font-medium">
-                                  {formatCurrency(
-                                    item.product.price
-                                  )}
+                                  {formatCurrency(itemPrice)}
                                 </p>
                               </div>
 
@@ -499,8 +650,7 @@ const total = subtotal + deliveryFee;
 
                                 <p className="text-brand-accent font-bold text-lg">
                                   {formatCurrency(
-                                    item.product.price *
-                                      item.quantity
+                                    itemPrice * item.quantity
                                   )}
                                 </p>
                               </div>
@@ -514,7 +664,7 @@ const total = subtotal + deliveryFee;
               </div>
             )}
 
-            {/* STEP 1 — Delivery */}
+            {/* STEP 1 - Delivery */}
             {step === 1 && (
               <div className="flex flex-col gap-5">
                 <div className="flex items-center gap-2.5">
@@ -613,7 +763,9 @@ const total = subtotal + deliveryFee;
                       <option value="">Select state</option>
 
                       {NIGERIA_STATES.map((s) => (
-                        <option key={s}>{s}</option>
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -679,7 +831,7 @@ const total = subtotal + deliveryFee;
               </div>
             )}
 
-            {/* STEP 2 — Confirm */}
+            {/* STEP 2 - Confirm */}
             {step === 2 && (
               <div className="flex flex-col gap-5">
                 <h2 className="font-display text-xl font-bold text-white">
@@ -693,49 +845,59 @@ const total = subtotal + deliveryFee;
                   </p>
 
                   <div className="flex flex-col gap-2">
-                    {cart.map((item) => {
+                    {cart.map((item, index) => {
+                      const toolItem = isToolItem(item);
+                      const itemName = getItemName(item);
+                      const itemPrice = getItemPrice(item);
+                      const itemImage = getItemImage(item);
                       const selectedVariant =
                         getSelectedVariant(item);
 
                       return (
                         <div
-                          key={`${item.product._id}-${item.selectedColour}`}
-                          className="flex items-center justify-between bg-brand-raised border border-brand-border rounded-lg px-4 py-3 text-sm"
+                          key={`${getItemId(item)}-${index}`}
+                          className="flex items-center justify-between bg-brand-raised border border-brand-border rounded-lg px-4 py-3 text-sm gap-3"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-brand-border bg-brand-card">
-                              {selectedVariant?.image?.url ? (
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-brand-border bg-brand-card flex-shrink-0">
+                              {itemImage ? (
                                 <img
-                                  src={selectedVariant.image.url}
-                                  alt={selectedVariant.colourName}
+                                  src={itemImage}
+                                  alt={itemName}
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <div className="w-full h-full bg-brand-border" />
+                                <div className="w-full h-full flex items-center justify-center text-brand-mid">
+                                  {toolItem ? (
+                                    <Wrench size={18} />
+                                  ) : (
+                                    <Package size={18} />
+                                  )}
+                                </div>
                               )}
                             </div>
 
-                            <div>
-                              <p className="text-white font-medium">
-                                {item.product.productName}
+                            <div className="min-w-0">
+                              <p className="text-white font-medium truncate">
+                                {itemName}
                               </p>
 
                               <p className="text-brand-mid text-xs">
-                                {selectedVariant?.colourName ??
-                                  "Unknown Colour"}
+                                {toolItem
+                                  ? "Tool"
+                                  : selectedVariant?.colourName ??
+                                    "Unknown Colour"}
                               </p>
 
                               <p className="text-brand-subtle text-[11px]">
-                                {selectedVariant?.colourCode} · Qty:{" "}
-                                {item.quantity}
+                                Qty: {item.quantity}
                               </p>
                             </div>
                           </div>
 
-                          <span className="text-brand-accent font-semibold">
+                          <span className="text-brand-accent font-semibold flex-shrink-0">
                             {formatCurrency(
-                              item.product.price *
-                                item.quantity
+                              itemPrice * item.quantity
                             )}
                           </span>
                         </div>
@@ -770,11 +932,11 @@ const total = subtotal + deliveryFee;
                   </div>
                 </div>
 
-                {/* Price summary */}
+                {/* Price Summary */}
                 <div className="bg-brand-raised border border-brand-border rounded-lg p-4 flex flex-col gap-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-brand-mid">
-                      Paint subtotal
+                      Products & Tools Subtotal
                     </span>
 
                     <span className="text-white">
@@ -784,13 +946,45 @@ const total = subtotal + deliveryFee;
 
                   <div className="flex justify-between text-sm">
                     <span className="text-brand-mid">
-                      Delivery ({totalBuckets} buckets × ₦5,500)
+                      Paint Buckets
                     </span>
 
                     <span className="text-white">
-                      {formatCurrency(deliveryFee)}
+                      {totalBuckets}
                     </span>
                   </div>
+
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-mid">
+                      Tools
+                    </span>
+
+                    <span className="text-white">
+                      {totalTools}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-mid">
+                      Delivery Fee
+                    </span>
+
+                    <span className="text-white">
+                      {qualifiesForFreeDelivery ? (
+                        <span className="text-green-500 font-bold">
+                          FREE
+                        </span>
+                      ) : (
+                        formatCurrency(deliveryFee)
+                      )}
+                    </span>
+                  </div>
+
+                  {qualifiesForFreeDelivery && (
+                    <p className="text-green-500 text-xs">
+                      Your order qualifies for free delivery in Abuja.
+                    </p>
+                  )}
 
                   <div className="flex justify-between border-t border-brand-border pt-2 mt-1">
                     <span className="text-white font-semibold">
@@ -820,6 +1014,7 @@ const total = subtotal + deliveryFee;
             {/* Navigation */}
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-brand-border/50">
               <button
+                type="button"
                 onClick={goBack}
                 disabled={step === 0}
                 className="flex items-center gap-2 text-brand-mid hover:text-white text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-4 py-2.5 rounded-lg border border-brand-border hover:border-brand-border-lt"
@@ -830,6 +1025,7 @@ const total = subtotal + deliveryFee;
 
               {step < STEPS.length - 1 ? (
                 <button
+                  type="button"
                   onClick={goNext}
                   className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm"
                 >
@@ -838,6 +1034,7 @@ const total = subtotal + deliveryFee;
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => setShowPayModal(true)}
                   disabled={!canGoToConfirm}
                   className="flex items-center gap-2 bg-brand-accent text-brand-black font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-accent-lt transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -862,7 +1059,7 @@ const total = subtotal + deliveryFee;
             <div className="flex flex-col gap-3 border-b border-brand-border/60 pb-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-brand-mid">
-                  Paint Subtotal ({totalBuckets} buckets)
+                  Products & Tools
                 </span>
 
                 <span className="text-white font-medium">
@@ -872,13 +1069,35 @@ const total = subtotal + deliveryFee;
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-brand-mid">
-                  Delivery Fee (₦5,500 × {totalBuckets})
+                  Paint Buckets
                 </span>
 
                 <span className="text-white font-medium">
-                  {formatCurrency(deliveryFee)}
+                  {totalBuckets}
                 </span>
               </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-brand-mid">
+                  Delivery Fee
+                </span>
+
+                <span className="text-white font-medium">
+                  {qualifiesForFreeDelivery ? (
+                    <span className="text-green-500 font-bold">
+                      FREE
+                    </span>
+                  ) : (
+                    formatCurrency(deliveryFee)
+                  )}
+                </span>
+              </div>
+
+              {qualifiesForFreeDelivery && (
+                <p className="text-green-500 text-xs">
+                  Abuja free delivery applied.
+                </p>
+              )}
             </div>
 
             <div className="flex items-center justify-between">
@@ -896,7 +1115,7 @@ const total = subtotal + deliveryFee;
 
       {/* Flutterwave Modal */}
       {showPayModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <Modal
             customerInfo={{
               fullName: delivery.fullName,

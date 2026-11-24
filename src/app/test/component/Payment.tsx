@@ -20,15 +20,15 @@ import {
 
 // Types
 
-export interface CheckoutCartItem {
+interface CheckoutCartItem {
   id: string;
+  itemType?: "product" | "tool";
   productName: string;
   name: string;
   price: number;
   quantity: number;
-  selectedColour: string;
+  selectedColour?: string;
 }
-
 export interface CheckoutCustomerInfo {
   email: string;
   name: string;
@@ -294,19 +294,16 @@ const CartCheckout: React.FC<CartCheckoutProps> = ({
 
               city,
 
-              orderedProducts:
-                cartItems.map(
-                  (item) => ({
-                    productId:
-                      item.id,
-
-                    selectedColour:
-                      item.selectedColour,
-
-                    quantity:
-                      item.quantity,
-                  })
-                ),
+              orderedProducts: cartItems.map((item) => ({
+  itemType: item.itemType || "product",
+  ...(item.itemType === "tool"
+    ? { toolId: item.id }
+    : {
+        productId: item.id,
+        selectedColour: item.selectedColour || "",
+      }),
+  quantity: item.quantity,
+})),
 
               paymentMethod:
                 "flutterwave",

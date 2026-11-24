@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState } from "react";
 import CartCheckout from "./Payment";
 import OrderSuccess from "./OrdeScuccess";
 import { formatCurrency } from "@/lib/utils";
-import { X } from "lucide-react";
+import { X, Wrench } from "lucide-react";
 
 export interface Variant {
   _id: string;
@@ -27,10 +28,20 @@ export interface Product {
   variants: Variant[];
 }
 
+export interface Tool {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  images?: string[];
+}
+
 export interface CartItem {
-  product: Product;
+  itemType?: "product" | "tool";
+  product?: Product | null;
+  tool?: Tool | null;
   quantity: number;
-  selectedColour: string;
+  selectedColour?: string;
 }
 
 export interface CustomerInfo {
@@ -50,6 +61,8 @@ interface ModalProps {
 }
 
 const DELIVERY_FEE_PER_BUCKET = 5500;
+const ABUJA_STATE = "FCT - Abuja";
+const FREE_DELIVERY_MINIMUM = 50;
 
 const inputCls =
   "w-full border border-brand-border bg-brand-black text-brand-white placeholder-brand-mid " +
@@ -74,35 +87,73 @@ const Modal: React.FC<ModalProps> = ({
 
   const [orderSuccess, setOrderSuccess] = useState(false);
 
-  // Paint subtotal
+  // Identify tool cart items
+  const isToolItem = (item: CartItem) =>
+    item.itemType === "tool" || !!item.tool;
+
+  // Get item name
+  const getItemName = (item: CartItem) =>
+    isToolItem(item)
+      ? item.tool?.name || "Tool"
+      : item.product?.productName || "Paint Product";
+
+  // Get item price
+  const getItemPrice = (item: CartItem) =>
+    Number(
+      isToolItem(item)
+        ? item.tool?.price || 0
+        : item.product?.price || 0
+    );
+
+  // Get item ID
+  const getItemId = (item: CartItem) =>
+    isToolItem(item)
+      ? item.tool?._id || ""
+      : item.product?._id || "";
+
+  // Calculate subtotal for ALL items
   const subtotal = cartItems.reduce(
     (sum, item) =>
-      sum + item.product.price * item.quantity,
+      sum + getItemPrice(item) * item.quantity,
     0
   );
 
-  // Total number of buckets
+  // Count PAINT BUCKETS ONLY
   const totalBuckets = cartItems.reduce(
-    (sum, item) => sum + item.quantity,
+    (sum, item) =>
+      sum + (isToolItem(item) ? 0 : item.quantity),
     0
   );
 
-  // Delivery fee: ₦5,500 per bucket
-  const deliveryFee =
-    totalBuckets * DELIVERY_FEE_PER_BUCKET;
+  // Abuja free delivery applies to paint buckets only
+  const qualifiesForFreeDelivery =
+    customerInfo?.state === ABUJA_STATE &&
+    totalBuckets >= FREE_DELIVERY_MINIMUM;
 
-  // Grand total
+  // Delivery fee excludes tools
+  const deliveryFee = qualifiesForFreeDelivery
+    ? 0
+    : totalBuckets * DELIVERY_FEE_PER_BUCKET;
+
+  // Grand total includes products, tools and delivery
   const total = subtotal + deliveryFee;
 
-  // Formatted items for Payment component
-  const formattedCartItems = cartItems.map((item) => ({
-    id: item.product._id,
-    productName: item.product.productName,
-    name: item.product.productName,
-    price: item.product.price,
-    quantity: item.quantity,
-    selectedColour: item.selectedColour,
-  }));
+  // Format mixed cart items for Payment component
+  const formattedCartItems = cartItems.map((item) => {
+    const toolItem = isToolItem(item);
+
+    return {
+      id: getItemId(item),
+      itemType: toolItem ? "tool" as const : "product" as const,
+      productName: getItemName(item),
+      name: getItemName(item),
+      price: getItemPrice(item),
+      quantity: item.quantity,
+      selectedColour: toolItem
+        ? undefined
+        : item.selectedColour || "",
+    };
+  });
 
   // Show success screen after successful order
   if (orderSuccess) {
@@ -124,6 +175,7 @@ const Modal: React.FC<ModalProps> = ({
 
         {onClose && (
           <button
+            type="button"
             onClick={onClose}
             className="text-brand-mid hover:text-brand-white p-1 rounded transition-colors"
           >
@@ -134,7 +186,7 @@ const Modal: React.FC<ModalProps> = ({
 
       <div className="p-6 flex flex-col gap-5">
 
-        {/* Customer details form */}
+        {/* Customer Details */}
         <div className="flex flex-col gap-3">
           <p className="text-brand-accent text-[10px] font-bold uppercase tracking-widest">
             Your Details
@@ -183,71 +235,125 @@ const Modal: React.FC<ModalProps> = ({
           </div>
         </div>
 
-        {/* Order summary */}
+        {/* Order Summary */}
         <div className="flex flex-col gap-2">
           <p className="text-brand-accent text-[10px] font-bold uppercase tracking-widest">
             Order Summary
           </p>
 
-          <div className="bg-brand-raised border border-brand-border/30 rounded-xl p-4 flex flex-col gap-2">
-            {cartItems.map((item) => {
-              const variant =
-                item.product.variants?.find(
-                  (v) => v._id === item.selectedColour
-                );
+          <div className="bg-brand-raised border border-brand-border/30 rounded-xl p-4 flex flex-col gap-3">
 
-              const colourLabel =
-                variant?.colourName ?? item.selectedColour;
+            {cartItems.map((item, index) => {
+              const toolItem = isToolItem(item);
+
+              const itemName = getItemName(item);
+              const itemPrice = getItemPrice(item);
+
+              const variant = !toolItem
+                ? item.product?.variants?.find(
+                    (v) => v._id === item.selectedColour
+                  )
+                : undefined;
+
+              const colourLabel = toolItem
+                ? "Tool"
+                : variant?.colourName ??
+                  item.selectedColour ??
+                  "Default";
+
+              const image = toolItem
+                ? item.tool?.images?.[0]
+                : item.product?.productImages?.[0];
 
               return (
                 <div
-                  key={`${item.product._id}-${item.selectedColour}`}
-                  className="flex items-center justify-between text-xs"
+                  key={`${getItemId(item)}-${index}`}
+                  className="flex items-center justify-between text-xs gap-3"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    {item.product.productImages?.[0] && (
+                    {image ? (
                       <img
-                        src={item.product.productImages[0]}
-                        alt=""
-                        className="w-8 h-8 rounded-md object-cover flex-shrink-0 border border-brand-border/30"
+                        src={image}
+                        alt={itemName}
+                        className="w-9 h-9 rounded-md object-cover flex-shrink-0 border border-brand-border/30"
                       />
+                    ) : (
+                      <div className="w-9 h-9 rounded-md flex items-center justify-center bg-brand-black border border-brand-border/30 flex-shrink-0">
+                        {toolItem ? (
+                          <Wrench
+                            size={16}
+                            className="text-brand-mid"
+                          />
+                        ) : (
+                          <span className="text-brand-mid text-[10px]">
+                            Paint
+                          </span>
+                        )}
+                      </div>
                     )}
 
                     <div className="min-w-0">
                       <p className="text-brand-white font-medium truncate">
-                        {item.product.productName}
+                        {itemName}
                       </p>
 
                       <p className="text-brand-mid truncate">
                         {colourLabel} · ×{item.quantity}
                       </p>
+
+                      {toolItem && (
+                        <span className="text-brand-accent text-[9px] uppercase font-bold tracking-wider">
+                          Tool
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <span className="text-brand-accent font-semibold ml-3 flex-shrink-0">
+                  <span className="text-brand-accent font-semibold ml-2 flex-shrink-0">
                     {formatCurrency(
-                      item.product.price * item.quantity
+                      itemPrice * item.quantity
                     )}
                   </span>
                 </div>
               );
             })}
 
-            <div className="border-t border-brand-border/30 pt-2 mt-1 flex flex-col gap-2">
+            {/* Price Breakdown */}
+            <div className="border-t border-brand-border/30 pt-3 mt-1 flex flex-col gap-2">
+
               <div className="flex justify-between text-xs text-brand-mid">
-                <span>Paint Subtotal</span>
+                <span>Products & Tools Subtotal</span>
                 <span>{formatCurrency(subtotal)}</span>
               </div>
 
               <div className="flex justify-between text-xs text-brand-mid">
                 <span>
-                  Delivery ({totalBuckets} buckets × ₦5,500)
+                  Paint Buckets ({totalBuckets})
                 </span>
-
-                <span>{formatCurrency(deliveryFee)}</span>
+                <span>{totalBuckets} buckets</span>
               </div>
 
-              <div className="flex justify-between text-sm font-bold text-brand-white border-t border-brand-border/30 pt-1.5 mt-0.5">
+              <div className="flex justify-between text-xs text-brand-mid">
+                <span>Delivery Fee</span>
+
+                <span>
+                  {qualifiesForFreeDelivery ? (
+                    <span className="text-green-500 font-bold">
+                      FREE
+                    </span>
+                  ) : (
+                    formatCurrency(deliveryFee)
+                  )}
+                </span>
+              </div>
+
+              {qualifiesForFreeDelivery && (
+                <p className="text-green-500 text-[10px] font-medium">
+                  Congratulations! Your order qualifies for free delivery in Abuja.
+                </p>
+              )}
+
+              <div className="flex justify-between text-sm font-bold text-brand-white border-t border-brand-border/30 pt-2 mt-1">
                 <span>Total</span>
 
                 <span className="text-brand-accent">
@@ -258,7 +364,7 @@ const Modal: React.FC<ModalProps> = ({
           </div>
         </div>
 
-        {/* Flutterwave payment */}
+        {/* Flutterwave Payment */}
         <CartCheckout
           cartItems={formattedCartItems}
           deliveryFee={deliveryFee}
