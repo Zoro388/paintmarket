@@ -1,11 +1,14 @@
+
 "use client";
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGetProducts, apiAddToCart } from "@/lib/userApi";
 import { formatCurrency } from "@/lib/utils";
+import { getToken } from "@/lib/endpointRoute";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import ToolAuthModal from "@/components/ToolAuthModal";
 import {
   ShoppingCart,
   Search,
@@ -17,7 +20,6 @@ import {
 } from "lucide-react";
 import LoadingSkeleton from "../dashboard/components/Loading";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const COLORS = {
@@ -58,6 +60,12 @@ interface Product {
   variants: Variant[];
 }
 
+interface PendingCartItem {
+  productId: string;
+  quantity: number;
+  selectedColour: string;
+}
+
 const getStockLabel = (product: Product) =>
   product.stockAvailability === "out_of_stock"
     ? "Out of Stock"
@@ -74,7 +82,6 @@ const isProductOutOfStock = (product: Product) =>
 export default function ShopPage() {
   const [cat, setCat] = useState("All");
   const [search, setSearch] = useState("");
-  const router = useRouter();
 
   // Track added items: productId -> selectedVariantId
   const [addedItems, setAddedItems] = useState<Record<string, string>>({});
@@ -100,6 +107,13 @@ export default function ShopPage() {
   const [selectedVariants, setSelectedVariants] = useState<
     Record<string, string>
   >({});
+
+  // Authentication popup
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Preserve the selected product, colour and quantity during authentication
+  const [pendingCartItem, setPendingCartItem] =
+    useState<PendingCartItem | null>(null);
 
   const { data, isLoading } = useQuery<Product[]>({
     queryKey: ["shop-products"],
@@ -173,8 +187,8 @@ export default function ShopPage() {
       return { res, productId, selectedColour };
     },
 
-    onSuccess: (result) => {
-      qc.invalidateQueries({ queryKey: ["cart-product"] });
+    onSuccess: async (result) => {
+      await qc.invalidateQueries({ queryKey: ["cart-product"] });
 
       toast.success("Colour added to cart!");
 
@@ -187,15 +201,23 @@ export default function ShopPage() {
     },
 
     onError: (err: Error) => {
-      if (err.message?.includes("Access denied")) {
-        toast.error("Please log in to add to cart");
-        router.push("/login");
-      } else {
-        toast.error(err.message || "Failed to add to cart");
-        closeColourPicker();
-      }
+      console.error("Add product to cart error:", err);
+
+      toast.error(err.message || "Failed to add to cart");
     },
   });
+
+  // Called after successful login or signup
+  const handleAuthenticated = () => {
+    setShowAuthModal(false);
+
+    if (pendingCartItem) {
+      // Add the exact product, colour and quantity selected before login
+      mutation.mutate(pendingCartItem);
+
+      setPendingCartItem(null);
+    }
+  };
 
   // Add selected colour and quantity to cart
   const handleAddToCart = () => {
@@ -218,16 +240,29 @@ export default function ShopPage() {
       return;
     }
 
+    const cartItem: PendingCartItem = {
+      productId: colourPickerProduct._id,
+      quantity: Math.max(1, quantity),
+      selectedColour: pickerSelectedVariant,
+    };
+
     setSelectedVariants((prev) => ({
       ...prev,
       [colourPickerProduct._id]: pickerSelectedVariant,
     }));
 
-    mutation.mutate({
-      productId: colourPickerProduct._id,
-      quantity: Math.max(1, quantity),
-      selectedColour: pickerSelectedVariant,
-    });
+    // Check whether the customer is logged in
+    const token = getToken();
+
+    if (!token) {
+      // Keep the selected product details while the customer authenticates
+      setPendingCartItem(cartItem);
+      setShowAuthModal(true);
+      return;
+    }
+
+    // Customer is already logged in
+    mutation.mutate(cartItem);
   };
 
   if (isLoading) return <LoadingSkeleton />;
@@ -1055,6 +1090,16 @@ export default function ShopPage() {
           </div>
         </div>
       )}
+
+      {/* Login / Signup Popup */}
+      <ToolAuthModal
+        isOpen={showAuthModal}
+        onClose={() => {
+          setShowAuthModal(false);
+          setPendingCartItem(null);
+        }}
+        onAuthenticated={handleAuthenticated}
+      />
 
       <Footer />
     </main>
