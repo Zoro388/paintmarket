@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   useQuery,
   useMutation,
@@ -9,6 +10,7 @@ import {
 } from "@tanstack/react-query";
 import { apiGetTools } from "@/lib/adminApi";
 import { apiAddToolToCart } from "@/lib/userApi";
+import { getToken } from "@/lib/endpointRoute";
 import {
   Loader,
   Wrench,
@@ -32,6 +34,7 @@ interface Tool {
 
 export default function ToolsPage() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { data, isLoading, isError, refetch } = useQuery<Tool[]>({
     queryKey: ["tools"],
@@ -87,7 +90,16 @@ export default function ToolsPage() {
     },
   });
 
+  // Handle adding tools to cart
   const handleAddToCart = (tool: Tool) => {
+    // Check whether the customer is logged in
+    const token = getToken();
+
+    if (!token) {
+      router.push("/login?redirect=/tools");
+      return;
+    }
+
     const toolId = tool._id || tool.id;
     const numericPrice = Number(tool.price);
 
