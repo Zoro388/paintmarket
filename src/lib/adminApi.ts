@@ -1,34 +1,4 @@
 import endpointRoute from "@/lib/endpointRoute";
-
-// ── PRODUCTS ──────────────────────────────────────────────────────────────────
-// BEFORE:
-// export const adminUpdateProduct = (id: string, body: Partial<{ productName: string; ... }>) => ...
-
-// AFTER:
-// export const adminUpdateProduct = (id: string, body: FormData) => 
-//   endpointRoute.put(`/products/${id}`, body, {
-//     headers: {
-//       "Content-Type": "multipart/form-data",
-//     },
-//   }).then((r) => r.data);
-
-// export const adminCreateProduct = (body: FormData) => 
-//   endpointRoute.post(`/products`, body, {
-//     headers: {
-//       "Content-Type": "multipart/form-data",
-//     },
-//   }).then((r) => r.data);
-  
-// export const adminGetProducts = (params?: { page?: number; limit?: number; search?: string }) =>
-//   endpointRoute.get("/products", { params }).then((r) => r.data);
-
-
-
-// export const adminDeleteProduct = (id: string) =>
-//   endpointRoute.delete(`/products/${id}`).then((r) => r.data);
-
-
-
 // ── PRODUCTS ──────────────────────────────────────────────────────────────────
 
 export const adminUpdateProduct = (id: string, body: FormData) =>
@@ -94,34 +64,6 @@ export const adminGetSiteEstimator = (id: string) =>
 export const adminUpdateSiteEstimatorStatus = (id: string, body: { status: string }) =>
   endpointRoute.patch(`/site-estimator/${id}`, body).then((r) => r.data);
 
-// export const adminReplySiteEstimator = (id: string, body: { adminResponse: string; status: string; estimateAmount: number }) =>
-//   endpointRoute.patch(`/site-estimator/${id}/respond`, body).then((r) => r.data);
-
-// ── PORTFOLIO ─────────────────────────────────────────────────────────────────
-// export const adminCreatePortfolioProject = (body: {
-//   projectTitle: string; projectDescription: string; projectLocation: string;
-//   beforeImages: string[]; workInProgressImages: string[]; completedImages: string[];
-//   materialsUsed: string[]; customerTestimonial?: string;
-//   completionDate: string; featuredProject: boolean;
-// }) => endpointRoute.post("/portfolio", body).then((r) => r.data);
-
-// export const adminGetPortfolio = () =>
-//   endpointRoute.get("/portfolio").then((r) => r.data);
-
-// export const adminUpdatePortfolioProject = (id: string, body: object) =>
-//   endpointRoute.put(`/portfolio/${id}`, body).then((r) => r.data);
-
-// export const adminDeletePortfolioProject = (id: string) =>
-//   endpointRoute.delete(`/portfolio/${id}`).then((r) => r.data);
-
-// ── BLOG ──────────────────────────────────────────────────────────────────────
-// export const adminCreateBlog = (body: {
-//   title: string; featuredImages: string[]; shortDescription: string;
-//   content: string; author: string; status: "draft" | "published"; tags: string[];
-// }) => endpointRoute.post("/blogs", body).then((r) => r.data);
-// export const adminCreateBlog = (body: FormData) => endpointRoute.post("/blogs", body).then((r) => r.data);
-
-// Update your API wrappers to append the multi-part content-type configuration explicitly:
 
 export const adminCreateBlog = (body: FormData) => 
   endpointRoute.post("/blogs", body, {
@@ -163,24 +105,6 @@ export const adminGetEnquiry = (id: string) =>
 export const adminGetPayments = (params?: { page?: number }) =>
   endpointRoute.get("/payments/history", { params }).then((r) => r.data);
 
-
-// portfolio
-// export const adminCreatePortfolioProject = (formData: FormData) =>
-//   endpointRoute.post("/portfolio", formData, {
-//     headers: { "Content-Type": "multipart/form-data" },
-//   }).then((r) => r.data);
-//   export const adminCreatePortfolioProject = (formData: FormData) =>
-//   endpointRoute.post("/portfolio", formData) // Let Axios auto-detect FormData
-//     .then((r) => r.data);
- 
-// export const adminGetPortfolio = () =>
-//   endpointRoute.get("/portfolio").then((r) => r.data);
- 
-// export const adminUpdatePortfolioProject = (id: string, body: object) =>
-//   endpointRoute.put(`/portfolio/${id}`, body).then((r) => r.data);
- 
-// export const adminDeletePortfolioProject = (id: string) =>
-//   endpointRoute.delete(`/portfolio/${id}`).then((r) => r.data);
 
 // ── PORTFOLIO ─────────────────────────────────────────────────────────────────
 export const adminCreatePortfolioProject = (formData: FormData) =>
@@ -375,16 +299,3 @@ export const adminUpdateVariant = (productId: string, variantId: string, fd: For
 export const adminDeleteVariant = (productId: string, variantId: string) =>
   endpointRoute.delete(`/products/${productId}/variants/${variantId}`).then((r) => r.data);
 
-
-
-// const adminUpdateProduct = (id: string, fd: FormData) =>
-//   endpointRoute.put(`/products/${id}`, fd).then((r) => r.data);
-
-// const adminAddVariant = (productId: string, fd: FormData) =>
-//   endpointRoute.post(`/products/${productId}/variants`, fd).then((r) => r.data);
-
-// const adminUpdateVariant = (productId: string, variantId: string, fd: FormData) =>
-//   endpointRoute.put(`/products/${productId}/variants/${variantId}`, fd).then((r) => r.data);
-
-// const adminDeleteVariant = (productId: string, variantId: string) =>
-//   endpointRoute.delete(`/products/${productId}/variants/${variantId}`).then((r) => r.data);
