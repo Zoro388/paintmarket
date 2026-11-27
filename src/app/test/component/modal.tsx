@@ -386,7 +386,7 @@ const Modal: React.FC<ModalProps> = ({
         />
 
         <p className="text-brand-subtle text-[11px] text-center">
-          Secured by Flutterwave. Your payment info is never stored.
+          Secured by Nomba. Your payment info is never stored.
         </p>
       </div>
     </div>

@@ -221,83 +221,97 @@ export default function PaintingEstimatorPage() {
 
   // Flutterwave returns the customer to this page after payment.
   // Verify the transaction with our backend before showing confirmation.
-  useEffect(() => {
-    if (verificationStarted.current) return;
+  // Nomba returns the customer to this page after checkout.
+// The backend verifies the payment directly with Nomba.
+useEffect(() => {
+  if (verificationStarted.current) return;
 
-    const params = new URLSearchParams(window.location.search);
-    const transactionId = params.get("transaction_id");
-    const returnedBookingId = params.get("bookingId");
-    const paymentStatus = params.get("status");
+  const params = new URLSearchParams(window.location.search);
 
-    if (!transactionId || !returnedBookingId) return;
+  const returnedBookingId = params.get("bookingId");
 
-    verificationStarted.current = true;
-    setIsVerifyingPayment(true);
-    setError("");
-    setNotice("Verifying your inspection payment. Please wait.");
+  const paymentReference =
+    params.get("orderReference") ||
+    params.get("order_reference") ||
+    params.get("reference");
 
-    async function verifyPayment() {
-      try {
-        const response = await endpointRoute.post<{
-          success?: boolean;
-          message?: string;
-          booking?: {
-            id?: string;
-            inspectionFee?: number;
-            paymentStatus?: string;
-            bookingStatus?: string;
-          };
-        }>(
-          `/inspection-bookings/${encodeURIComponent(
-            returnedBookingId!,
-          )}/verify-payment`,
-          { transactionId },
+  const paymentStatus = params.get("status");
+
+  if (!returnedBookingId || !paymentReference) return;
+
+  verificationStarted.current = true;
+  setIsVerifyingPayment(true);
+  setError("");
+  setNotice("Verifying your inspection payment with Nomba. Please wait.");
+
+  async function verifyPayment() {
+    try {
+      const response = await endpointRoute.post<{
+        success?: boolean;
+        message?: string;
+        booking?: {
+          id?: string;
+          inspectionFee?: number;
+          paymentStatus?: string;
+          bookingStatus?: string;
+        };
+      }>(
+        `/inspection-bookings/${encodeURIComponent(
+          returnedBookingId!,
+        )}/verify-payment`,
+        {
+          reference: paymentReference,
+          orderReference: paymentReference,
+          transactionId: paymentReference,
+        },
+      );
+
+      if (
+        response.data?.success &&
+        response.data.booking?.paymentStatus === "paid" &&
+        response.data.booking?.bookingStatus === "confirmed"
+      ) {
+        setBookingConfirmed(true);
+        setBookingId(returnedBookingId!);
+        setBookingFee(response.data.booking.inspectionFee ?? null);
+
+        setNotice(
+          "Your payment has been verified and your inspection booking is confirmed.",
         );
 
-        if (
-          response.data?.success &&
-          response.data.booking?.paymentStatus === "paid" &&
-          response.data.booking?.bookingStatus === "confirmed"
-        ) {
-          setBookingConfirmed(true);
-          setBookingId(returnedBookingId!);
-          setBookingFee(response.data.booking.inspectionFee ?? null);
-          setNotice(
-            "Your payment has been verified and your inspection booking is confirmed.",
-          );
-          setError("");
-        } else {
-          throw new Error(
-            response.data?.message ||
-              "We could not confirm this payment yet.",
-          );
-        }
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Payment verification failed.";
-
-        setError(
-          paymentStatus === "cancelled"
-            ? "The payment was cancelled or could not be completed. Your booking has not been confirmed."
-            : `${message} Your booking is not confirmed until payment is verified.`,
-        );
-        setNotice("");
-      } finally {
-        setIsVerifyingPayment(false);
-
-        // Remove the payment parameters from the address bar after processing.
-        window.history.replaceState(
-          {},
-          "",
-          window.location.pathname,
+        setError("");
+      } else {
+        throw new Error(
+          response.data?.message ||
+            "We could not confirm this payment yet.",
         );
       }
-    }
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Payment verification failed.";
 
-    void verifyPayment();
-  }, []);
+      setError(
+        paymentStatus === "cancelled"
+          ? "The payment was cancelled or could not be completed. Your booking has not been confirmed."
+          : `${message} Your booking is not confirmed until payment is verified.`,
+      );
+
+      setNotice("");
+    } finally {
+      setIsVerifyingPayment(false);
+
+      window.history.replaceState(
+        {},
+        "",
+        window.location.pathname,
+      );
+    }
+  }
+
+  void verifyPayment();
+}, []);
 
   function invalidateSavedEstimate() {
     setEstimateId("");
@@ -521,7 +535,7 @@ export default function PaintingEstimatorPage() {
 
       setBookingId(data.booking?.id || data.bookingId || "");
       setBookingFee(data.booking?.inspectionFee ?? inspectionFee);
-      setNotice("Opening Flutterwave to complete your inspection payment.");
+      setNotice("Opening Nomba to complete your inspection payment.");
 
       // Send the customer to the payment page returned by the backend.
       window.location.assign(data.paymentLink);
@@ -1003,7 +1017,7 @@ export default function PaintingEstimatorPage() {
                             Inspection booking confirmed
                           </h3>
                           <p className="mt-2 text-sm leading-6 text-[#555555]">
-                            Flutterwave has verified your payment. Your
+                            Nomba has verified your payment. Your
                             inspection booking is confirmed.
                           </p>
                           {bookingId && (
@@ -1024,7 +1038,7 @@ export default function PaintingEstimatorPage() {
                           </h3>
                           <p className="mt-2 text-sm leading-6 text-[#555555]">
                             Please wait while we verify your transaction with
-                            Flutterwave. Do not refresh this page.
+                            Nomba. Do not refresh this page.
                           </p>
                         </div>
                       ) : (
@@ -1096,7 +1110,7 @@ export default function PaintingEstimatorPage() {
                           </button>
 
                           <p className="mt-3 text-center text-xs leading-5 text-[#777777]">
-                            You will be redirected to Flutterwave for secure
+                            You will be redirected to Nomba for secure
                             payment. Your booking is not confirmed until the
                             payment is verified.
                           </p>

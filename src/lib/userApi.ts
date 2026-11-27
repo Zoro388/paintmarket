@@ -354,3 +354,33 @@ export const apiGetQRCodes = () =>
 
 export const apiDeleteQRCode = (id: string) =>
   endpointRoute.delete(`/qr-codes/${id}`).then((r) => r.data);
+
+
+
+
+
+// ==========================================
+// NOMBA PAYMENT API
+// ==========================================
+
+export const apiInitializeNombaPayment = (body: {
+  deliveryAddress: string;
+  state: string;
+  city: string;
+  notes?: string;
+  orderedProducts: {
+    itemType?: "product" | "tool";
+    productId?: string;
+    toolId?: string;
+    selectedColour?: string;
+    quantity: number;
+  }[];
+}) =>
+  endpointRoute
+    .post("/payments/nomba/initialize", body)
+    .then((response) => response.data);
+
+export const apiVerifyNombaPayment = (reference: string) =>
+  endpointRoute
+    .post("/payments/nomba/verify", { reference })
+    .then((response) => response.data);
